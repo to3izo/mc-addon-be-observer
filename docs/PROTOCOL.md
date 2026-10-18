@@ -614,7 +614,9 @@ name, and `details.scriptError` holds that name: `InvalidEntityError` → `TARGE
 
 - `protocol` is an integer that changes only for incompatible changes (renamed/removed fields, changed meaning).
   Adding a method, an optional field, or a new error code is compatible and does not change it.
-- The Add-On version (`capabilities.addon.version`) follows `docs/adr/0002-versioning.md` and is independent.
+- The Add-On version (`capabilities.addon.version`) follows Semantic Versioning (`AGENTS.md` Version policy,
+  `docs/adr/0013-semantic-versioning.md`) and is independent. A new `protocol` number always comes with a new major
+  Add-On version; compatible additions come with a minor version.
 - Tools call `capabilities` first, check `protocol.supported`, and use only listed methods and sections.
 
 ## 9. Responsibilities of an external tool

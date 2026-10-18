@@ -58,12 +58,12 @@ export function checkManifests(ctx: CheckContext): void {
     }
   }
 
-  // The two packs depend on each other by UUID (Marketplace cooperative Add-On rule), and on nothing
+  // The two packs depend on each other by UUID (cooperative Add-On rule), and on nothing
   // else: 1 Add-On = 1 repository.
   checkPackDependency(ctx, bp, bpFile, rp, rpFile, "resource pack");
   checkPackDependency(ctx, rp, rpFile, bp, bpFile, "behavior pack");
 
-  // The resource pack must not be usable as a global resource pack (Marketplace cooperative Add-On rule).
+  // The resource pack must not be usable as a global resource pack (cooperative Add-On rule).
   if (rp.header?.pack_scope !== "world") {
     strictWarn(ctx, `${rpFile}: header.pack_scope should be "world" so the resource pack cannot be applied globally; re-run "pnpm init:addon"`);
   }
@@ -118,7 +118,7 @@ function checkPackDependency(ctx: CheckContext, from: Manifest, fromFile: string
   }
 }
 
-/** A Marketplace requirement: a warning while developing, an error for release builds (--strict). */
+/** A cooperative Add-On requirement: a warning while developing, an error for release builds (--strict). */
 function strictWarn(ctx: CheckContext, message: string): void {
   if (ctx.strict) ctx.reporter.error(message);
   else ctx.reporter.warn(message);

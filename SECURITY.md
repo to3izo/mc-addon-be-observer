@@ -6,8 +6,9 @@ and `docs/adr/0004-bds-network-adapter.md`; the wire format is in `docs/PROTOCOL
 
 ## Supported versions
 
-Only the latest released version (and `main`) receives fixes. Before 1.0.0, the public protocol may change
-between minor versions; the `protocol` field of every response says which version a tool is talking to.
+Only the latest release of the latest major version (and `main`) receives fixes. Versions follow Semantic
+Versioning: an incompatible protocol change needs a new major version, and the `protocol` field of every response
+says which protocol version a tool is talking to.
 
 ## Reporting a vulnerability
 

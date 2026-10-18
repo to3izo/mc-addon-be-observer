@@ -39,7 +39,7 @@ Create a folder only when you add content to it. Do not add folders Minecraft do
    namespaces and duplicate identifiers.
 3. **Namespace.** `minecraft:` only to reference vanilla things (components, vanilla items in recipes,
    entity families). Do not override vanilla definitions (blocks, items, entities, recipes, loot tables,
-   spawn rules): the Marketplace cooperative guidelines forbid it. If an explicit instruction ever
+   spawn rules): the cooperative Add-On guidelines forbid it (root `AGENTS.md`). If an explicit instruction ever
    requires one, record it in `docs/CONTENT.md`.
 4. **manifest.json is managed.** Do not hand-edit name, description, versions, `min_engine_version`,
    UUIDs or the RP dependency. Use `pnpm init:addon`, `pnpm version:set`. The only manual edits are
@@ -63,7 +63,7 @@ Create a folder only when you add content to it. Do not add folders Minecraft do
     `entity.<namespace>:<name>.name`, `tile.<namespace>:<name>.name`); do not hard-code English in
     definitions when a lang key exists for that content type.
 
-11. **Marketplace folder layout.** Loot tables, functions and trade tables live under
+11. **Cooperative folder layout.** Loot tables, functions and trade tables live under
     `<folder>/<creator>/<pack>/` (`<creator>` = `addon.config.json` → `author`, `<pack>` = slug with `_`;
     e.g. author `alice` + slug `ruby-tools` → `loot_tables/alice/ruby_tools/`). Structures live under
     `structures/<namespace>/`. No loose files directly in `<folder>/<creator>/`.

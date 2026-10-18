@@ -16,7 +16,7 @@
 
 ## 決定
 1. `docs/PROMPTS.md` を消す。
-2. 上の 9 つのテーマを、`docs/knowledge/` から消す。このアドオンにはブロックもアイテムもなく、リソースパックは空で（ADR-0005）、BDS だけを対象にして（ADR-0006）、iOS への配布も Marketplace への出品もしない。消したテーマへの参照（`AGENTS.md`、ADR-0001・0002、vanilla-reference）は、`AGENTS.md` の Marketplace policy や、このリポジトリの ADR に付け替える。
+2. 上の 9 つのテーマを、`docs/knowledge/` から消す。このアドオンにはブロックもアイテムもなく、リソースパックは空で（ADR-0005）、BDS だけを対象にして（ADR-0006）、iOS への配布も Marketplace への出品もしない。消したテーマへの参照（`AGENTS.md`、ADR-0001・0002、vanilla-reference）は、`AGENTS.md` の Marketplace policy（いまの Cooperative Add-On policy）や、このリポジトリの ADR に付け替える。
 3. 残すテーマ（device-testing-windows-vm、bds-local-server、vanilla-reference）は残す。ほかのアドオンの識別子や試験の ID の例は、このアドオンの例か、一般的な書き方に直す。`docs/knowledge/README.md` の「補足」（ほかのアドオンの ADR の番号の説明）は消す。
 4. 作者の非公開のツールの名前は「外部ツール」と書く。そのツールの側の未完の作業の項目（ROADMAP の「運用・外部」）は、このリポジトリの利用者に関係がないので消す。外部ツールを作るときの提案は、一般の提案として残す。
 5. 文書のコミットの SHA は、書き換えのあとの、同じ件名のコミットに直す。ADR-0011 の本文にある書き換えの前の SHA は、その例として正しいので残す。
@@ -36,3 +36,4 @@
 
 ## 経過
 - 2026-10-18: 公開のあとに文書を点検し、整理の案を利用者が承認した。上の決定のとおりに直した。
+- 2026-10-18: 続けて、vanilla-reference の作者のローカルのパスを消し、Marketplace 向けの文言を除いた（ADR-0006 の経過）。

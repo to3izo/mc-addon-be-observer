@@ -202,7 +202,7 @@ function planManifests(cfg: AddonConfig): { changes: Change[]; generated: string
   apply(bp, "[BP]");
   apply(rp, "[RP]");
 
-  // The packs depend on each other by UUID (Marketplace cooperative Add-On rule), derived from the
+  // The packs depend on each other by UUID (cooperative Add-On rule), derived from the
   // other pack's header. The RP is world-scoped so it cannot be applied as a global resource pack.
   syncPackDependency(bp, rp);
   syncPackDependency(rp, bp);

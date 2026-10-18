@@ -14,6 +14,12 @@ and must match `package.json` and both pack manifests (`pnpm version:set <x.y.z>
 ### Changed
 - Docs no longer depend on private repositories or tools: the author's tool is called "an external tool",
   examples from other add-ons were replaced, and commit references point at the rewritten history (ADR-0012).
+- The Add-On is not distributed through the Minecraft Marketplace: the "Marketplace policy" is now the
+  "Cooperative Add-On policy" (additive, no experiments, namespaced), and Marketplace-only wording, the
+  `media/marketplace/` folder and the block permutation counter were removed.
+- Versioning follows Semantic Versioning 2.0.0 with a defined public API (protocol, entry points, BDS, world
+  data), deprecation before removal, and no pre-release versions (ADR-0013, replacing ADR-0002). `SECURITY.md`
+  supports the latest release of the latest major.
 
 ## [1.0.0] - 2026-10-18
 

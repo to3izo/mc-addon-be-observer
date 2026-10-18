@@ -7,7 +7,7 @@
 | JSON の形式、項目、名前、サウンドのイベント名、粒子の定義、翻訳キー | `bedrock-samples` のクローン（下） | 本体の処理は載っていない |
 | バニラのブロック・アイテムの数値と挙動（硬度、爆発耐性、発光、ドロップ、仕様の履歴） | **Minecraft Wiki**（日本語版 `ja.minecraft.wiki`、英語版 `minecraft.wiki`） | Java 版と統合版が書き分けられていない箇所がある。更新で古くなることがある |
 | アドオンの機能が、いつ追加され、実験的機能かどうか（形式のバージョンごとの履歴） | **Bedrock Wiki**（`wiki.bedrock.dev`）。特に `blocks/block-format-history` | 例が足りないページがある（たとえば `placement_direction` の回転の値の例はなかった） |
-| 公式のガイドライン（協調型アドオン、Marketplace の要件） | Microsoft Learn の原文 | AI の支援で書かれたページは古いことがある |
+| 公式のガイドライン（協調型アドオン） | Microsoft Learn の原文 | AI の支援で書かれたページは古いことがある |
 | ベータ API の中身 | npm のベータ版の型定義（下） | ベータ API は実験的機能 |
 | 最終的な正解 | 実機（Windows の VM、iOS） | 上のどれとも食い違ったら、実機を信じ、食い違いを記録する |
 
@@ -22,7 +22,7 @@ Microsoft Learn のページには AI の支援で書かれたものがあり、
 
 ## bedrock-samples をクローンして使う
 
-- 取得は、このリポジトリと同じ階層に `git clone https://github.com/Mojang/bedrock-samples`（この環境では `~/git/to3izo/minecraft/bedrock-samples`）。GitHub の API で 1 ファイルずつ取るより、クローンのほうが、検索（`grep`）と一覧（`git ls-files`）が速い。
+- 取得は、このリポジトリと同じ階層に `git clone https://github.com/Mojang/bedrock-samples`。GitHub の API で 1 ファイルずつ取るより、クローンのほうが、検索（`grep`）と一覧（`git ls-files`）が速い。
 - **使う前に版を確認する**: `git log -1` と `version.json`（`latest` が最新のリリース）。古ければ `git pull`。ブランチ `main` が最新のリリース、`preview` がプレビュー版（確認済み）。
 - 探し方の例:
   - `git ls-files | grep -i <名前>`: アセットを探す。
@@ -37,7 +37,7 @@ Microsoft Learn のページには AI の支援で書かれたものがあり、
   - エンダーチェストのブロックモデルとワールド上のテクスチャ: 公開されているのは、インベントリ用の 16×16 の面だけだった。
   - コンテナ画面のタイトル: UI の JSON は `$container_title` という変数を使うだけで、値は本体が決める（実機で、プロキシの `nameTag` に翻訳キーを入れるとタイトルになると分かった）。
 - **スキーマがある ≠ 実験的機能ではない**: `server/block/1.26.20/container.json`（`block_entity.container`）のスキーマがサンプルにあったが、`container` は 1.26.50 でも実験的機能だった。フォルダの版と、機能が追加・正式化された版は、一致するとは限らない。実験的機能かどうかは、Bedrock Wiki の履歴か実機で確かめる。
-- **Mojang のファイルは、パックにコピーしない**（再配布や色替えにあたる）。参照用に読むだけにして、名前（テクスチャのキー、サウンドのイベント名、粒子のアトラスのパス）で参照する。`AGENTS.md` の Marketplace policy と Reference sources 参照。
+- **Mojang のファイルは、パックにコピーしない**（再配布や色替えにあたる）。参照用に読むだけにして、名前（テクスチャのキー、サウンドのイベント名、粒子のアトラスのパス）で参照する。`AGENTS.md` の Reference sources 参照。
 
 ## ベータ版の型定義を見る
 
@@ -66,4 +66,3 @@ Microsoft Learn のページには AI の支援で書かれたものがあり、
 | --- | --- |
 | `scripts/fetch-bedrock-samples.sh <ディレクトリ>` | 上の場所だけを取得する |
 | `scripts/png-alpha-dump.py <ファイル.png>…` | 16×16 のテクスチャの透明度を1ピクセルずつ表示する（`..` は完全に透明）。枠や光の筋の位置を確認できる |
-| `scripts/count-block-permutations.mjs [behavior_pack]` | ブロックのパーミュテーションの合計を出す（Marketplace の上限は `AGENTS.md` の Marketplace policy 参照） |

@@ -225,7 +225,7 @@ function checkBehaviorReferences(ctx: CheckContext, catalog: Catalog): void {
         for (const [face, inst] of entriesOf(instances)) {
           const tex = get(inst, "texture");
           // Keys without a namespace are vanilla terrain atlas keys ("glass", "red_stained_glass"): custom
-          // keys are always "<namespace>:<name>" (Marketplace naming), so only those must exist here.
+          // keys are always "<namespace>:<name>" (cooperative Add-On naming), so only those must exist here.
           if (typeof tex === "string" && tex.includes(":") && !catalog.terrainTextureKeys.has(tex)) {
             ctx.reporter.error(`${rel(file)}: material_instances.${face}.texture "${tex}" is not a key in resource_pack/textures/terrain_texture.json`);
           }

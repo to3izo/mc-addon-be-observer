@@ -50,7 +50,7 @@
 | ADR | 決定 | 状態 |
 |---|---|---|
 | [0001](0001-no-experimental-features.md) | 実験的機能を使わない | 採用 |
-| [0002](0002-versioning.md) | バージョン番号の付け方 | 採用 |
+| [0002](0002-versioning.md) | バージョン番号の付け方 | 置き換え済み（ADR-0013） |
 | [0003](0003-read-only-scriptevent-protocol.md) | 読み取り専用の観測を、/scriptevent と 1 行 JSON ログで提供する | 採用（protocol 1 を確定） |
 | [0004](0004-bds-network-adapter.md) | BDS 専用の通信アダプター（server-net）は作らない | 却下（2026-10-18。Phase 3 を閉じた） |
 | [0005](0005-keep-template-resource-pack.md) | 中身のないリソースパックを、テンプレートどおり残す | 採用 |
@@ -61,3 +61,4 @@
 | [0010](0010-operator-custom-command-entry.md) | チートなしの入口として、operator 用のカスタムコマンドを足す | 採用 |
 | [0011](0011-rewrite-history-before-publishing.md) | 公開の前に、履歴から環境の値とゲーマータグを除く | 採用 |
 | [0012](0012-public-docs-without-private-setup.md) | 公開の文書を、非公開のリポジトリとツールに頼らない形にする | 採用 |
+| [0013](0013-semantic-versioning.md) | バージョンを、セマンティック バージョニングに沿って付ける | 採用 |

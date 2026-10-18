@@ -30,7 +30,7 @@ flowchart LR
   end
 
   MC[(Minecraft<br/>Bedrock)]
-  STORE[(Marketplace / SNS / YouTube)]
+  STORE[(GitHub Releases / SNS / YouTube)]
 
   A -- "export by hand" --> RP
   CFG -- "pnpm init:addon" --> BP
@@ -72,8 +72,7 @@ Editable originals that produce resource pack content (Blockbench projects, laye
 projects, references). Not read by Minecraft, not copied anywhere automatically.
 
 ### Media (`media/`)
-Marketing and distribution material (Marketplace key art and screenshots, SNS and YouTube images,
-trailers, press kit). Separated into `source/` (editable) and per-destination export folders.
+Promotional material (screenshots, SNS and YouTube images, trailers, press kit). Separated into `source/` (editable) and per-destination export folders.
 Never enters a pack. See `media/AGENTS.md`.
 
 ### Build (`tools/`)

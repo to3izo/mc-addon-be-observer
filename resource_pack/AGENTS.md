@@ -36,8 +36,8 @@ Source projects (`.bbmodel`, `.psd`, `.wav`) go in `assets/`, promotional images
 
 ## Rules
 
-Folder and naming rules follow the Minecraft Marketplace "Guidelines for Building Cooperative
-Add-Ons" so that the Add-On can be submitted to the Marketplace and coexist with other Add-Ons.
+Folder and naming rules follow the official "Guidelines for Building Cooperative Add-Ons", so that the
+Add-On coexists with other Add-Ons (root `AGENTS.md`, Cooperative Add-On policy).
 `<creator>` is `addon.config.json` → `author` and `<pack>` is the slug with `_` instead of `-`
 (e.g. author `alice` + slug `ruby-tools` → `alice/ruby_tools`). `<namespace>` is `addon.config.json` → `namespace`.
 
@@ -68,7 +68,7 @@ Add-Ons" so that the Add-On can be submitted to the Marketplace and coexist with
    Mojang texture file into this pack. `pnpm validate` treats un-namespaced material texture keys as
    vanilla keys.
 8. **No vanilla overrides.** Do not replace vanilla textures, models, sounds, UI, fonts or `.lang`
-   strings: the Marketplace cooperative guidelines forbid it. If an explicit instruction ever requires
+   strings: the cooperative Add-On guidelines forbid it. If an explicit instruction ever requires
    one, list it in `docs/CONTENT.md`. Do not ship stray copies of vanilla files.
 9. **manifest.json is managed** (same rules as the behavior pack). `header.pack_scope` is `"world"` and
    the RP depends on the BP by UUID; both are written by `pnpm init:addon`. A resource pack never

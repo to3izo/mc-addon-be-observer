@@ -34,7 +34,7 @@ dist/<slug>_BP, dist/<slug>_RP ──(zip)──► dist/<slug>-<version>.mcaddo
 | `resource_pack/` | Resource pack source: manifest + textures, models, animations, sounds, texts | yes (via dist) |
 | `scripts/` | TypeScript source of the script module. Compiled JS goes to `dist/`, never into `behavior_pack/` | no (compiled output is) |
 | `assets/` | Editable originals used to produce pack content (.bbmodel, .psd, .wav, references) | no |
-| `media/` | Promotional material: Marketplace key art, screenshots, SNS/YouTube images, trailers, press kit | no |
+| `media/` | Promotional material: screenshots, SNS/YouTube images, trailers, press kit | no |
 | `docs/` | Specification, architecture, content ledger, test plan, knowledge base (`docs/knowledge/`), decision records (`docs/adr/`) | no |
 | `tests/` | Unit tests for tooling/pure logic, validation tests, fixtures | no |
 | `tools/` | Build, validate, package, deploy, init scripts (Node.js + TypeScript, no framework) | no |
@@ -57,11 +57,11 @@ a `.bbmodel` into `resource_pack/models/`, a `.ts` into `behavior_pack/`).
   that the current official documentation (learn.microsoft.com/minecraft/creator) shows for the target
   game version. Do not copy format versions from old tutorials.
 
-## Marketplace policy
+## Cooperative Add-On policy
 
-This Add-On is built to be submitted to the Minecraft Marketplace as a *cooperative Add-On*. The
-official "Guidelines for Building Cooperative Add-Ons" (learn.microsoft.com/minecraft/creator) are
-requirements here:
+This Add-On is not distributed through the Minecraft Marketplace. It still follows the rules of the official
+"Guidelines for Building Cooperative Add-Ons" (learn.microsoft.com/minecraft/creator), so that it coexists with
+other Add-Ons and can be removed without breaking a world:
 
 - **Additive only.** Add new content; never override or change vanilla blocks, items, entities,
   recipes, loot tables, textures, sounds, UI, fonts or `.lang` strings, and never use scripts to change
@@ -70,8 +70,7 @@ requirements here:
 - **Namespacing.** Unique namespace `<creator>_<pack abbreviation>`; namespaced texture/geometry/
   culling/sound/lang names; `<creator>/<pack>/` folders for textures, sounds, loot tables, functions and
   trade tables (see `behavior_pack/AGENTS.md` and `resource_pack/AGENTS.md`).
-- **Size and performance.** Under 25 MB / 3,500 files; total block permutations under 10,000;
-  block/item textures at most 256×256; no ticking areas.
+- **Performance.** No ticking areas; keep the packs small.
 
 ## Namespace policy
 
@@ -80,8 +79,8 @@ requirements here:
 - Every custom identifier is `<namespace>:<snake_case_name>`: blocks, items, entities, recipes,
   features, spawn rules, client entities, attachables, particles, sound events, scoreboard objectives,
   dynamic properties, tags.
-- `minecraft:` is used only to reference vanilla content. Overrides are not allowed (Marketplace
-  policy); if an explicit instruction ever requires one, record it in `docs/CONTENT.md`.
+- `minecraft:` is used only to reference vanilla content. Overrides are not allowed (Cooperative
+  Add-On policy); if an explicit instruction ever requires one, record it in `docs/CONTENT.md`.
 - Never change the namespace of existing content without an explicit instruction (it breaks worlds).
 
 ## Build commands
@@ -167,7 +166,7 @@ regenerate, swap or "clean up" any of:
 - the UUID inside the behavior pack's `dependencies` (it must equal the resource pack header UUID)
 
 Changing a UUID makes Minecraft treat the pack as a different pack: existing worlds lose the Add-On,
-Marketplace updates break, and players get duplicates. Template placeholder UUIDs
+updates of installed packs break, and players get duplicates. Template placeholder UUIDs
 (`00000000-0000-4000-8000-0000000000xx`) are replaced exactly once by `pnpm init:addon`; after that,
 `pnpm validate` only warns if any placeholder remains and `pnpm package` refuses to ship them.
 New UUIDs are needed only when adding a *new* module, and must be generated with `crypto.randomUUID()`
@@ -177,14 +176,26 @@ or an equivalent v4 generator, never typed by hand.
 
 - Single version for the whole Add-On: `package.json` `version` == BP `header.version` == RP
   `header.version` == every module version == BP→RP dependency version. `pnpm validate` enforces it.
-- Change it only with `pnpm version:set <major.minor.patch>` and add a `CHANGELOG.md` entry.
-- Release tags are `v<major.minor.patch>`; `release.yml` fails if the tag and `package.json` disagree.
-- Bump `minor` for new content/features, `patch` for fixes, `major` for world-incompatible changes.
-- **1.0.0 is the first public release that outside users can install and use** (protocol frozen, release
-  checklist passed on BDS); Marketplace publication is not a milestone for this BDS-only Add-On. After 1.0.0, the
-  major rises for changes that break tools or worlds (a new `protocol` number, world-incompatible changes, a
-  narrower set of supported environments); a compatible spec change raises the minor, anything else the patch
-  (`docs/adr/0002-versioning.md`).
+- Change it only with `pnpm version:set <major.minor.patch>` (and `ADDON_VERSION` in
+  `scripts/shared/constants/version.ts` in the same change) and add a `CHANGELOG.md` entry.
+- Release tags are `v<major.minor.patch>`; `release.yml` fails if the tag and `package.json` disagree. A published
+  tag or release is never moved or recreated; a mistake is fixed by the next patch release.
+- Versions follow [Semantic Versioning 2.0.0](https://semver.org/). The public API is the protocol
+  (`docs/PROTOCOL.md`), the entry points (`/scriptevent to3izo_bo:query`, `/to3izo_bo:query`), the supported
+  environment (BDS) and anything stored in worlds:
+  - **major**: an incompatible change to that API: a new `protocol` number; removing or renaming a method, field,
+    error code, event kind or entry point; changing a field's type, unit or meaning; rejecting requests that were
+    accepted (lower limits, stricter permissions); dropping a supported platform; a world-incompatible change.
+  - **minor**: a compatible change: a new method, section, optional parameter, response field, event kind or error
+    code; a deprecation; a higher limit; following a new Bedrock release (raising `min_engine_version` or the
+    `@minecraft/server` version).
+  - **patch**: anything that keeps the API: fixes that make the Add-On behave as `docs/PROTOCOL.md` says,
+    performance, docs, tests, tooling.
+- Deprecate before removing: mark it in a minor release (CHANGELOG *Deprecated*, `docs/PROTOCOL.md`), remove it
+  in the next major at the earliest.
+- No pre-release versions (`-beta`, `-rc`): manifest versions are three numbers. In-game tests use unnumbered
+  local builds; only published releases get a version. Only the latest release of the latest major gets fixes.
+- Details and reasons: `docs/adr/0013-semantic-versioning.md`.
 
 ## Generated files policy
 
@@ -253,7 +264,7 @@ write it from memory**. Which source answers which question (details, commands a
 | JSON format, fields, names, sound event names, particle definitions, translation keys | **Mojang's official Bedrock samples**: a local clone of `https://github.com/Mojang/bedrock-samples` (next to this repository, e.g. `../bedrock-samples`; branch `main` = latest release, `preview` = preview). Check `version.json` / `git log -1` first and `git pull` if old. Search with `grep` and `git ls-files`. |
 | Vanilla block/item numbers and behaviour (hardness, blast resistance, light, drops, history) | **Minecraft Wiki** (`ja.minecraft.wiki`, `minecraft.wiki`). Java and Bedrock may be mixed on a page: check which edition a statement is about. |
 | When a feature was added, whether it is experimental (per format version) | **Bedrock Wiki** (`wiki.bedrock.dev`), especially `blocks/block-format-history` |
-| Guidelines (cooperative Add-Ons, Marketplace) | Microsoft Learn originals (some pages are AI-assisted and can be outdated) |
+| Guidelines (cooperative Add-Ons) | Microsoft Learn originals (some pages are AI-assisted and can be outdated) |
 | Beta Script API contents | the beta typings on npm (read only; beta APIs are experimental and must not be used) |
 | Final answer | the game itself (Windows VM, iOS); if sources disagree, trust the game and record the difference in `docs/knowledge/` |
 
@@ -261,7 +272,7 @@ Rules:
 
 - These are **reading material only**. Never copy Mojang's files (textures, models, sounds, ...) or another
   Add-On's files into a pack; refer to vanilla assets by name (texture key, sound event, particle atlas path).
-  Recolouring or tracing Mojang textures is also a Marketplace risk.
+  Recolouring or tracing Mojang textures counts as copying them.
 - Another published Add-On or a sample project may be used to learn *how* something is done. Adapt the
   idea, re-implement it with this Add-On's namespace and folders, and keep it additive and non-experimental.
 - A schema or sample existing does not mean the feature is stable (a `container` schema existed while the

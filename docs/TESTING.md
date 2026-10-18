@@ -42,7 +42,7 @@ must extend and that a release must pass.
       (「購入済み」 in Japanese) — tap it and tap *Activate*.
    3. Open *Resource Packs* and check that `<Add-On name> [RP]` is in *Active* too (activating the BP normally
       adds it through the dependency; if not, activate it the same way).
-   4. Check *Experiments*: everything must be off (Marketplace Add-Ons use no experiments).
+   4. Check *Experiments*: everything must be off (this Add-On uses no experiments, ADR-0001).
    5. Start the world. Activating packs on an existing world makes Minecraft suggest a backup copy;
       for test worlds that is optional.
 

@@ -95,7 +95,7 @@ export function syncPackDependency(from: Manifest, to: Manifest): void {
   }
 }
 
-/** Sets header.pack_scope, placing it right after header.uuid as the Marketplace guidelines show. */
+/** Sets header.pack_scope, placing it right after header.uuid as the cooperative Add-On guidelines show. */
 export function setPackScope(manifest: Manifest, scope: "world" | "global" | "any"): void {
   const header: Record<string, unknown> = {};
   for (const [key, value] of Object.entries(manifest.header)) {

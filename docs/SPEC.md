@@ -81,7 +81,7 @@ dynamic properties, scoreboard objectives or tags.
 - **Tool-independent.** No AI, MCP, HTTP or WebSocket assumptions in the core; external tools own sending,
   collecting, timeouts, and clock alignment (`docs/PROTOCOL.md` §9).
 - **No consistency guarantees** beyond "taken in one script call at `tick`". Not synchronised with screenshots.
-- Marketplace cooperative rules still apply (additive, namespaced, no experiments). The resource pack stays empty
+- The cooperative Add-On rules still apply (additive, namespaced, no experiments; `AGENTS.md`). The resource pack stays empty
   (ADR-0005).
 - Multiplayer: any operator (or the server console) can observe every player, with `/to3izo_bo:query` or
   `/scriptevent`; players without operator permission cannot (`SECURITY.md`).
