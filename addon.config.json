@@ -1,0 +1,8 @@
+{
+  "name": "Addon Template",
+  "slug": "addon-template",
+  "namespace": "addon_template",
+  "description": "Describe your Add-On here.",
+  "minEngineVersion": "1.26.50",
+  "author": ""
+}

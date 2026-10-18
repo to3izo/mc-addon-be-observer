@@ -1,0 +1,31 @@
+{
+  // Minecraft Bedrock Debugger (mojang-studios.minecraft-debugger).
+  // Build with inline source maps first: `pnpm build --sourcemap` or `pnpm dev --deploy --sourcemap`.
+  // The dist/<slug>_BP path below is rewritten by `pnpm init:addon`; do not edit it by hand.
+  "version": "0.2.0",
+  "configurations": [
+    {
+      // Minecraft client: start this, then run `/script debugger connect` in game (cheats on).
+      "type": "minecraft-js",
+      "request": "attach",
+      "name": "Debug with Minecraft (listen)",
+      "mode": "listen",
+      "port": 19144,
+      "localRoot": "${workspaceFolder}/scripts/",
+      "sourceMapRoot": "${workspaceFolder}/dist/addon-template_BP/scripts/",
+      "generatedSourceRoot": "${workspaceFolder}/dist/addon-template_BP/scripts/"
+    },
+    {
+      // Bedrock Dedicated Server: run `script debugger listen 19144` on the server, then start this.
+      "type": "minecraft-js",
+      "request": "attach",
+      "name": "Debug with Bedrock Dedicated Server (connect)",
+      "mode": "connect",
+      "host": "localhost",
+      "port": 19144,
+      "localRoot": "${workspaceFolder}/scripts/",
+      "sourceMapRoot": "${workspaceFolder}/dist/addon-template_BP/scripts/",
+      "generatedSourceRoot": "${workspaceFolder}/dist/addon-template_BP/scripts/"
+    }
+  ]
+}

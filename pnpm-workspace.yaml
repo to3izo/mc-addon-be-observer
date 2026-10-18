@@ -1,0 +1,4 @@
+# pnpm settings (pnpm 10+ reads these from pnpm-workspace.yaml, not package.json).
+# esbuild needs its postinstall script to place the platform-specific binary.
+allowBuilds:
+  esbuild: true

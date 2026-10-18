@@ -1,0 +1,19 @@
+# Dependencies
+node_modules/
+
+# Generated output (never edit, never commit)
+dist/
+
+# Local environment
+.env
+.env.*
+!.env.example
+
+# OS / editor noise
+.DS_Store
+Thumbs.db
+*.log
+.idea/
+.vscode/*
+!.vscode/extensions.json
+!.vscode/launch.json

@@ -1,0 +1,40 @@
+{
+  "format_version": 2,
+  "header": {
+    "name": "Addon Template [BP]",
+    "description": "Describe your Add-On here.",
+    "uuid": "00000000-0000-4000-8000-000000000001",
+    "version": [0, 1, 0],
+    "min_engine_version": [1, 26, 50]
+  },
+  "modules": [
+    {
+      "description": "Behavior data",
+      "type": "data",
+      "uuid": "00000000-0000-4000-8000-000000000002",
+      "version": [0, 1, 0]
+    },
+    {
+      "description": "Scripts (built from scripts/ by pnpm build)",
+      "type": "script",
+      "language": "javascript",
+      "uuid": "00000000-0000-4000-8000-000000000003",
+      "version": [0, 1, 0],
+      "entry": "scripts/main.js"
+    }
+  ],
+  "dependencies": [
+    {
+      "uuid": "00000000-0000-4000-8000-000000000004",
+      "version": [0, 1, 0]
+    },
+    {
+      "module_name": "@minecraft/server",
+      "version": "2.10.0"
+    }
+  ],
+  "metadata": {
+    "authors": [],
+    "product_type": "addon"
+  }
+}
