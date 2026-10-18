@@ -21,7 +21,7 @@
 
 ## 影響
 - `CHANGELOG.md`、`package.json`、両パックの `manifest.json`、`AGENTS.md`。
-- 確認用ビルドの変更は、最初の公開版の CHANGELOG にまとめて書く（`docs/knowledge/release-and-media/`）。
+- 確認用ビルドの変更は、最初の公開版の CHANGELOG にまとめて書く。
 
 ## 経過
 - 2026-10-18: Bedrock Observer の初期設定で見直し、このアドオンでも採用した。アドオンのバージョン（`package.json`・マニフェスト）と、公開プロトコルのバージョン（応答の `protocol`）は別に管理する（ADR-0003）。このアドオンは GitHub での OSS 公開が主で、Marketplace に出すかは未定。「1.0.0 = Marketplace 公開」のままにするか、「1.0.0 = 最初の安定した OSS リリース」に読み替えるかは、最初のリリースの前に決め直す（承認待ち）。

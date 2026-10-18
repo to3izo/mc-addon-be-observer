@@ -6,6 +6,15 @@ and must match `package.json` and both pack manifests (`pnpm version:set <x.y.z>
 
 ## [Unreleased]
 
+### Removed
+- Documentation inherited from the private template that does not apply to this BDS-only Add-On:
+  `docs/PROMPTS.md` and the knowledge topics on blocks, particles, textures, shared containers, iOS testing,
+  releases/media and the Marketplace (ADR-0012).
+
+### Changed
+- Docs no longer depend on private repositories or tools: the author's tool is called "an external tool",
+  examples from other add-ons were replaced, and commit references point at the rewritten history (ADR-0012).
+
 ## [1.0.0] - 2026-10-18
 
 First public release: a read-only observation Add-On for Bedrock Dedicated Server, protocol 1.

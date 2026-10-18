@@ -60,3 +60,4 @@
 | [0009](0009-phase2-additional-observations.md) | Phase 2 に観測を 6 つ足し、残りの候補は後回しにする | 採用 |
 | [0010](0010-operator-custom-command-entry.md) | チートなしの入口として、operator 用のカスタムコマンドを足す | 採用 |
 | [0011](0011-rewrite-history-before-publishing.md) | 公開の前に、履歴から環境の値とゲーマータグを除く | 採用 |
+| [0012](0012-public-docs-without-private-setup.md) | 公開の文書を、非公開のリポジトリとツールに頼らない形にする | 採用 |

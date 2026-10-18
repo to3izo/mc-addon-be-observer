@@ -261,7 +261,7 @@ Rules:
 
 - These are **reading material only**. Never copy Mojang's files (textures, models, sounds, ...) or another
   Add-On's files into a pack; refer to vanilla assets by name (texture key, sound event, particle atlas path).
-  Recolouring or tracing Mojang textures is also a Marketplace risk (`docs/knowledge/marketplace/`).
+  Recolouring or tracing Mojang textures is also a Marketplace risk.
 - Another published Add-On or a sample project may be used to learn *how* something is done. Adapt the
   idea, re-implement it with this Add-On's namespace and folders, and keep it additive and non-experimental.
 - A schema or sample existing does not mean the feature is stable (a `container` schema existed while the

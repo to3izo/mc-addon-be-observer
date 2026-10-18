@@ -23,7 +23,7 @@ macOS 上の VMPal の Windows 11 VM で、Minecraft Bedrock（Windows 版）を
 
 ## 操作の落とし穴（VMPal の MCP 経由）
 
-- キーボード配列が日本語（JIS）なので、`type` での文字入力は US 配列として解釈されて化ける。`key` で物理キーを送る。例: `_` は `shift+IntlRo`、`:` は `Quote`、`@` は `BracketLeft`、`/` は `Slash`、`-` は `Minus`。チャットに `/scriptevent to3izo_sec:status` と入れるには `Slash s c r i p t e v e n t space t o 3 i z o shift+IntlRo s e c Quote s t a t u s Enter`。
+- キーボード配列が日本語（JIS）なので、`type` での文字入力は US 配列として解釈されて化ける。`key` で物理キーを送る。例: `_` は `shift+IntlRo`、`:` は `Quote`、`@` は `BracketLeft`、`/` は `Slash`、`-` は `Minus`。チャットに `/scriptevent to3izo_bo:query` と入れるには `Slash s c r i p t e v e n t space t o 3 i z o shift+IntlRo b o Quote q u e r y`（続けて JSON を打つ。長い文字列は、下の「チャットへの長い文字列の入力」のとおりクリップボードから貼り付ける）。
 - チャット画面を閉じるには、Esc を **2 回**押す（1 回目は入力欄のフォーカスが外れるだけ）。左上の「戻る」は、押しても閉じないことがあった。チャットを開いたまま `4` などを押すと、チャットの文字として入力されてしまう。
 - コマンドを実行するとチャット画面が閉じる。続けて打つ前に `t` で開き直し、2 秒ほど待つ。待たないと文字が落ちる。
 - ゲーム内のクリックは、`mouse_move` のあとに 0.5 秒待ってから `left_click` を送る。続けて送ると、1 回目が無視されることがあった。
@@ -42,9 +42,9 @@ macOS 上の VMPal の Windows 11 VM で、Minecraft Bedrock（Windows 版）を
 - 「マルチプレイヤー ゲーム」と「LAN プレイヤーに表示」は、新規ワールドで初めからオン。iPhone の「プレイ」→「フレンド」の LAN に出る。出なければ、「サーバー」でアドレスとポート 19132 を指定する。
 - 同じアカウントは、同じワールドに二重に入れない。iPhone は別の Microsoft アカウントでサインインする（iOS のゲームは Apple ID で購入したものが使える）。サインインなしでは、サーバーやフレンドの欄に入れない。
 - HUD（アクションバーなど）は、`F1` で表示される。非表示のままだと、使用中のメッセージが画面に映らない。
-- `/give` などのコマンドは、チートがオフだと使えない。`/setblock ~ ~ ~3 to3izo_sec:shared_ender_chest` のように、チェストを置ける（JIS 配列で `~` は `shift+Equal`、`=` は `shift+Minus`）。
+- `/give` などのコマンドは、チートがオフだと使えない。`/setblock ~ ~ ~3 minecraft:chest` のように、ブロックを置ける（JIS 配列で `~` は `shift+Equal`、`=` は `shift+Minus`）。
 
-## 強制終了と再起動（F-sec-14。2026-10-12）
+## 強制終了と再起動（2026-10-12）
 
 - ゲームの強制終了は、VM の `vmpal_exec` で `Get-Process | Where-Object ProcessName -like 'Minecraft*' | Stop-Process -Force`。操作の直後に止めたいときは、先に待機つきのジョブ（`Start-Sleep 13; …`、`waitSeconds: 0`）を起動してから、画面操作を始める。
 - 再起動は `explorer.exe shell:AppsFolder\Microsoft.MinecraftUWP_8wekyb3d8bbwe!Game`（`explorer.exe` は終了コード 1 を返すが、ゲームは起動する）。
@@ -60,7 +60,7 @@ macOS 上の VMPal の Windows 11 VM で、Minecraft Bedrock（Windows 版）を
 ## `.mcaddon` で入れる場合と、補助パックの置き方（Windows 26.52、2026-10-11。実機で確認済み）
 
 - **起動中のゲームに `.mcaddon` を開かせても、取り込まれなかった。** 設定画面を開いたままダブルクリックしても、何も起きない（エラーもない）。**ゲームを終了してから**デスクトップの `.mcaddon` をダブルクリックすると、ゲームが起動して取り込まれた。
-- 取り込み先は `%APPDATA%\Minecraft Bedrock\Users\Shared\games\com.mojang\behavior_packs\<フォルダ名>` と `resource_packs\…`（フォルダ名はパック名を縮めたもの。`Smooth Glass` は `SmoothGlas`）。`manifest.json` の `version` で、取り込まれたバージョンを確かめる。
+- 取り込み先は `%APPDATA%\Minecraft Bedrock\Users\Shared\games\com.mojang\behavior_packs\<フォルダ名>` と `resource_packs\…`（フォルダ名はパック名を縮めたもの。例: `Smooth Glass` は `SmoothGlas`）。`manifest.json` の `version` で、取り込まれたバージョンを確かめる。
 - ワールドに有効にしたパックは、**ワールドのフォルダ（`minecraftWorlds\<ID>\behavior_packs\`）にもコピーされる**。`world_behavior_packs.json` を手で書き換えても、ワールドを開くと元に戻っていた。パックは画面から有効にする（ワールドの編集 → ビヘイビアーパック → 利用可能 → 有効にする。「ワールドを更新しますか？」は「それでもパックを追加する」）。
 - ワールドのフォルダ名は `RsnnT2s0Np0=` のような ID。PowerShell の表形式（`Format-Table`）では、長いパスが `...` と省略されるので、`Name` や `FullName` を 1 行ずつ表示する。
 

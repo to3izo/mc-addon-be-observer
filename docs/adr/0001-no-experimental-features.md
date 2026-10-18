@@ -5,7 +5,7 @@
 - 決定者: 運営
 
 ## 背景
-Marketplace の協調型アドオンの要件では、実験的機能に頼らないことが求められる（`AGENTS.md` の Marketplace policy、`docs/knowledge/marketplace/`）。実験的機能を有効にしたワールドは、実績が解除されず、あとからオフにもできない。
+Marketplace の協調型アドオンの要件では、実験的機能に頼らないことが求められる（`AGENTS.md` の Marketplace policy）。実験的機能を有効にしたワールドは、実績が解除されず、あとからオフにもできない。
 
 ## 決定
 - 実験的機能のトグルが必要なコンポーネント、フィールド、フォーマットのバージョン、ベータ版の Script API は使わない。
@@ -18,7 +18,7 @@ Marketplace の協調型アドオンの要件では、実験的機能に頼ら�
 
 ## 影響
 - `pnpm validate` と、`behavior_pack/AGENTS.md` の規則（experimental を使わない）で確認する。
-- 実験的機能がないと実現できない機能は、設計の最大の制約になりうる。代替の実例は、`docs/knowledge/shared-container/`。
+- 実験的機能がないと実現できない機能は、設計の最大の制約になりうる。このリポジトリでの実例は、ベータ版の `@minecraft/server-net` が要るため通信アダプターを却下した ADR-0004。
 - 将来、実験的機能が正式になったときの見直し先は、各 ADR の「経過」に書く。
 
 ## 経過
