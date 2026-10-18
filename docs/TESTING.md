@@ -94,7 +94,7 @@ Copy the relevant block into the feature section below and fill it in.
 | --- | --- | --- |
 | F-startup-01 | Load a world with the packs | Exactly one `[<slug>] scripts loaded` line |
 
-### observer (scripts/features/observer) — Phase 1 implemented
+### observer (scripts/features/observer) — Phase 2 complete
 
 Plan for Phases 1–2 (`docs/ROADMAP.md`). The Add-On is **BDS-only** (ADR-0006): in-game cases run on BDS; cases
 marked "local world" are reference only. Automated cases U-PROTO-* and V-* run with `pnpm test`. Phase 1 results
@@ -189,6 +189,19 @@ Record each run: platform, game/BDS version, environment (local world / BDS), pa
 | OBS-EVT-07 | `events` with no params, with `since`/`limit`, with `kinds`, with an unknown kind | All held events; the next page with `more`; filtered; `INVALID_PARAMS` |
 | OBS-EVT-08 | `/reload` | New `session`; event `seq` starts at 1; `events` is empty until the next event |
 
+#### Operator command (in game, BDS; ADR-0010)
+
+Run after a BDS **restart** (a new or changed command is not registered by `/reload`), with `allow-cheats=false`.
+Back up `permissions.json` first and restore it after the test (`deop` leaves a `member` line behind).
+
+| ID | Steps | Expected |
+| --- | --- | --- |
+| OBS-CMD-01 | BDS console: `to3izo_bo:query "{\"requestId\":\"c\",\"method\":\"capabilities\"}"` | One response line; `transport.requestCommand` is `to3izo_bo:query` |
+| OBS-CMD-02 | A `member` player types `/to3izo_bo:query "{\"requestId\":\"m\",\"method\":\"player\"}"` | The game refuses it ("command permission level"); no response line |
+| OBS-CMD-03 | Console `op <name>`; the player types the same command with `requestId` `o` | A response with that player's data (the sender is the source player); nothing in the player's chat |
+| OBS-CMD-04 | Console `reload`, then OBS-CMD-01 again | Still answered (the command did not change) |
+| OBS-CMD-05 | `bo-verify.ps1` with `bo-verify-cases.json` | All cases pass (the script-event path is unchanged) |
+
 #### Phase 2 additions (in game, BDS, scripted)
 
 These cases are run by the reference script `docs/knowledge/bds-local-server/scripts/bo-verify.ps1` with
@@ -275,6 +288,7 @@ overworld at (0, -60, 0), using `bo-verify.ps1`.
 | --- | --- | --- |
 | U-PROTO-14, -15 | pass | 75 tests in total |
 | CAP-01, EFF-01–02, FLT-01–07, ENT-01–05, TOP-01–05, TOPS-01–03, SB-01–09, REG-01–02 | pass | 34/34 on the final build. Found on the way: 32 full `tops` entries would not fit in `maxResponseChars`, so entries were made compact (TOPS-03 added); `scoreboard` with `player` in a world without objectives wrongly answered `INVALID_PARAMS` (fixed, SB-09 added) |
+| OBS-CMD-01–05 | pass | Operator command, Add-On build with ADR-0010, BDS restarted, `allow-cheats=false`. Console → answered. `member` → "コマンドの権限レベルが正しくありません: to3izo_bo:query。", nothing reached the Add-On. After `op` → answered, sender as source player, no chat output. After `reload` → answered. Regression 34/34. `permissions.json` restored from its backup afterwards |
 | Bridge re-test | pass | After the fix to `bds-console-bridge.ps1` (shared read, complete lines only): 131 requests sent in four runs, 131 answered, none lost |
 
 ## Release checklist

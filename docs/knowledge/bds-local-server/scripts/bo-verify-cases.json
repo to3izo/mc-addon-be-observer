@@ -12,7 +12,7 @@
     { "console": "scoreboard players set PlayerA bo_test 7" },
     { "console": "scoreboard players set fake_p bo_test 3", "waitMs": 800 },
 
-    { "id": "CAP-01", "method": "capabilities", "expect": { "equals": { "data.methods.9": "entity", "data.methods.10": "top", "data.methods.11": "tops", "data.methods.12": "scoreboard", "data.sections.3": "effects", "data.limits.maxScoreEntries": 64 } } },
+    { "id": "CAP-01", "method": "capabilities", "expect": { "equals": { "data.methods.9": "entity", "data.methods.10": "top", "data.methods.11": "tops", "data.methods.12": "scoreboard", "data.sections.3": "effects", "data.limits.maxScoreEntries": 64, "data.transport.requestCommand": "to3izo_bo:query" } } },
 
     { "id": "EFF-01", "method": "player", "params": { "player": { "name": "PlayerA" }, "include": ["effects"] }, "expect": { "equals": { "data.effects.0.typeId": "minecraft:speed", "data.effects.0.amplifier": 1 }, "atLeast": { "data.effects.0.duration": 100 } } },
     { "id": "EFF-02", "method": "snapshot", "params": { "player": { "name": "PlayerA" }, "include": ["effects"] }, "expect": { "equals": { "data.effects.0.typeId": "minecraft:speed" } } },

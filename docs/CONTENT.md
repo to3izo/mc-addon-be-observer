@@ -96,6 +96,7 @@ Tests:
 
 Identifier:
 - script event id `to3izo_bo:query` (request, received through `/scriptevent` or `system.sendScriptEvent`)
+- custom command `to3izo_bo:query <json: string>` (request; operators, cheats not required; ADR-0010)
 - response log prefix `to3izo_bo.response` (one-line JSON, see `docs/PROTOCOL.md`)
 - event log prefix `to3izo_bo.event` and event kinds `player_join`, `player_leave`, `player_spawn`, `entity_die`,
   `dimension_change`, `game_mode_change`, `game_rule_change` (`docs/PROTOCOL.md` §10, ADR-0008)
@@ -104,8 +105,7 @@ Type:
 Feature (script only, read-only)
 
 Status:
-in progress (13 methods implemented and verified on BDS 1.26.52.3; protocol 1 not frozen yet, see
-`docs/ROADMAP.md`)
+done for Phase 2 (13 methods and both entry points verified on BDS 1.26.52.3; protocol 1 frozen)
 
 Behavior:
 - Reads players, blocks, ray hits, nearby entities (with filters and effects), entities by id, the topmost block of

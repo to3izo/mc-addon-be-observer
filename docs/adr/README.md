@@ -51,10 +51,11 @@
 |---|---|---|
 | [0001](0001-no-experimental-features.md) | 実験的機能を使わない | 採用 |
 | [0002](0002-versioning.md) | バージョン番号の付け方 | 採用 |
-| [0003](0003-read-only-scriptevent-protocol.md) | 読み取り専用の観測を、/scriptevent と 1 行 JSON ログで提供する | 採用（細部は Phase 2 で確定） |
-| [0004](0004-bds-network-adapter.md) | BDS 専用の通信アダプターは、観測コアから切り離し、初版には入れない | 保留（分け方は承認済み。採否は Phase 2 の後） |
+| [0003](0003-read-only-scriptevent-protocol.md) | 読み取り専用の観測を、/scriptevent と 1 行 JSON ログで提供する | 採用（protocol 1 を確定） |
+| [0004](0004-bds-network-adapter.md) | BDS 専用の通信アダプターは、観測コアから切り離し、初版には入れない | 保留（分け方は承認済み。採否は Phase 3 のセッションで） |
 | [0005](0005-keep-template-resource-pack.md) | 中身のないリソースパックを、テンプレートどおり残す | 採用 |
 | [0006](0006-bds-only-target.md) | 対象環境を BDS だけにする | 採用 |
 | [0007](0007-phased-delivery-and-approvals.md) | 段階に分けて作り、段階ごとに完了の条件と承認を置く | 採用 |
 | [0008](0008-game-event-notifications.md) | ゲーム内の出来事を、1 行の通知と `events` メソッドで知らせる | 採用 |
 | [0009](0009-phase2-additional-observations.md) | Phase 2 に観測を 6 つ足し、残りの候補は後回しにする | 採用 |
+| [0010](0010-operator-custom-command-entry.md) | チートなしの入口として、operator 用のカスタムコマンドを足す | 採用 |

@@ -1,6 +1,6 @@
 import { ADDON_SLUG, NAMESPACE } from "../constants/addon.ts";
 import { ADDON_VERSION, SCRIPT_API_MODULES } from "../constants/version.ts";
-import { PARAM_DEFAULTS, PARAM_LIMITS, PROTOCOL_VERSION, REQUEST_EVENT_ID, RESPONSE_PREFIX, SIZE_LIMITS, SUPPORTED_PROTOCOLS } from "./constants.ts";
+import { PARAM_DEFAULTS, PARAM_LIMITS, PROTOCOL_VERSION, REQUEST_COMMAND_NAME, REQUEST_EVENT_ID, RESPONSE_PREFIX, SIZE_LIMITS, SUPPORTED_PROTOCOLS } from "./constants.ts";
 import { EVENT_KINDS, EVENT_LIMITS, EVENT_PREFIX } from "./events.ts";
 import { METHODS, SECTIONS } from "./methods.ts";
 
@@ -10,7 +10,7 @@ export function buildCapabilities(): Record<string, unknown> {
     addon: { slug: ADDON_SLUG, namespace: NAMESPACE, version: ADDON_VERSION },
     protocol: { version: PROTOCOL_VERSION, supported: [...SUPPORTED_PROTOCOLS] },
     scriptApi: { ...SCRIPT_API_MODULES },
-    transport: { requestEventId: REQUEST_EVENT_ID, responsePrefix: RESPONSE_PREFIX, eventPrefix: EVENT_PREFIX },
+    transport: { requestEventId: REQUEST_EVENT_ID, requestCommand: REQUEST_COMMAND_NAME, responsePrefix: RESPONSE_PREFIX, eventPrefix: EVENT_PREFIX },
     methods: [...METHODS],
     sections: [...SECTIONS],
     events: [...EVENT_KINDS],

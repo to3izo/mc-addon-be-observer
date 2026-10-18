@@ -12,7 +12,7 @@ Bedrock Observer を最初の公開版（初回リリース）まで進めるた
   - 仕様: `docs/SPEC.md`・`docs/PROTOCOL.md`
   - ゲーム内の確認の手順と結果: `docs/TESTING.md`
   - 調べた事実: `docs/RESEARCH.md`・`docs/knowledge/`
-- 最終更新: 2026-10-18（ゲーム内テストの残り・README・カスタムコマンドの試作のあと）
+- 最終更新: 2026-10-18（Phase 2 の完了。カスタムコマンドの入口を足し、プロトコル v1 を確定したあと）
 
 ## 現在地
 
@@ -20,8 +20,8 @@ Bedrock Observer を最初の公開版（初回リリース）まで進めるた
 | --- | --- | --- |
 | Phase 0: 初期設定・調査・計画 | 8 / 8 | ✅ 完了 |
 | Phase 1: 最小の経路（scriptevent ＋ JSON ログ） | 10 / 11 | 🟡 ほぼ完了（残りは運用者の作業待ち） |
-| Phase 2: 主要な観測機能とプロトコル v1 の確定 | 18 / 21 | 🟡 残りは判断 2 件（カスタムコマンド・Phase 3）と v1 の確定 ← **次はここ** |
-| Phase 3: BDS からネットワークで送る仕組み（必要な場合だけ） | 0 / 5 | ⏸ Phase 2 のあとで要否を判断 |
+| Phase 2: 主要な観測機能とプロトコル v1 の確定 | 20 / 20 | ✅ 完了（2026-10-18） |
+| Phase 3: BDS からネットワークで送る仕組み（必要な場合だけ） | 0 / 5 | ⏸ 別のセッションで、採否の判断から始める ← **次はここ** |
 | 後回し・検討の候補 | 0 / 5 | ⏸ Phase 2 のあとで、採るかと時期を決める |
 | 初回リリース | 0 / 6 | ⬜ 未着手 |
 | 運用・外部（このリポジトリの外の作業） | 2 / 6 | 🟡 一部 |
@@ -64,7 +64,7 @@ Bedrock Observer を最初の公開版（初回リリース）まで進めるた
 - [x] 2 人のプレイヤーでの `players`（OBS-PLY-01。2026-10-18、`PlayerB` で確認）
 - [ ] VM の外から BDS に接続できないことの確認（OBS-ENV-06。運用者が公開範囲を絞ったあと）
 
-## Phase 2: 主要な観測機能とプロトコル v1 の確定 🟡
+## Phase 2: 主要な観測機能とプロトコル v1 の確定 ✅
 
 使う API と注意点は `docs/RESEARCH.md` §2.2、応答の形は `docs/PROTOCOL.md` §5 にあります。
 
@@ -83,14 +83,13 @@ Bedrock Observer を最初の公開版（初回リリース）まで進めるた
 - [x] BDS でのゲーム内のテスト（OBS-PLY・OBS-BLK・OBS-TGT・OBS-ENT・OBS-SNP・OBS-SIZE・OBS-RO・OBS-PERF）
   - 2026-10-18 にすべて成功（`docs/TESTING.md` の Phase 2 の結果）。OBS-RO-01 は前後の比較を独立して実施、OBS-PLY-05 はダッシュ・水泳も確認
   - OBS-PLY-02 は、日本語の名前のアカウントがないので実施不可（日本語の名前の受け渡しは OBS-IN-04 とカスタムコマンドの試作で確認）
-- [ ] 上限値を実測で確定し、プロトコル v1 を確定する
-  - `docs/PROTOCOL.md` から「draft」「provisional」を外す
-  - 初期値は ADR-0007 の 7。実測では変える必要がなかった（ADR-0007 の経過）
-  - カスタムコマンドを入口に足すなら、§1 の書き方が変わるので、その判断のあとに確定する
+- [x] 上限値を実測で確定し、プロトコル v1 を確定する — 2026-10-18 に確定（`docs/PROTOCOL.md` の冒頭、ADR-0003 の経過）
+  - `docs/PROTOCOL.md` から「draft」「provisional」を外した
+  - 上限値は ADR-0007 の 7 のまま。実測では変える必要がなかった（ADR-0007 の経過）
 - [x] README（英・日）を、テンプレートの説明から利用者向けの説明に書き換える（ADR-0007 の 8）
-- [ ] 判断: チートなしで使えるカスタムコマンドの入口を足すか
-  - 試作で確認済み（2026-10-18、ブランチ `proto/custom-command`、`docs/knowledge/bds-local-server/`）: 引用符で囲めば JSON を 1 つの引数で渡せる。チートなし・`member` でもチャットから使える。`/reload` では登録できず、BDS の再起動が要る
-  - 決めたら ADR に書く
+- [x] 判断: チートなしで使えるカスタムコマンドの入口を足すか → 足す。operator だけ、チートは不要（2026-10-18、ADR-0010）
+  - 試作で確認（ブランチ `proto/custom-command`、`docs/knowledge/bds-local-server/`）: 引用符で囲めば JSON を 1 つの引数で渡せる。`/reload` では新しいコマンドを登録できず、BDS の再起動が要る
+  - 実装と確認: `/to3izo_bo:query "…"`。BDS で OBS-CMD-01〜05（`member` は拒否、operator はチートなしで使える）
 - [x] エンティティの絞り込み: `entities`（と `snapshot.entities`）に、種類・ファミリー・名前・タグで絞る引数を足す（例: `families: ["monster"]` で敵対モブだけ）— `docs/PROTOCOL.md` §5.7、BDS で FLT-01〜07
 - [x] `entity`: id でエンティティを 1 体取る（`world.getEntity`）。見つからなければ新しいエラーコード `ENTITY_NOT_FOUND` — `scripts/core/observation/entity.ts`、BDS で ENT-01〜05
 - [x] 効果: プレイヤーの節 `effects`、`entity` の結果、`entities` の `includeEffects` で、かかっている効果（透明化・毒など）を返す（`getEffects`）— BDS で EFF-01・02、FLT-02、ENT-01・02
@@ -99,7 +98,6 @@ Bedrock Observer を最初の公開版（初回リリース）まで進めるた
 - [x] エラーの名前での対応表: Script API のエラーを名前で安定したコードに対応づけ、`INTERNAL_ERROR` を減らす（新しいコード `UNLOADED_CHUNK` を含む）— `scripts/shared/protocol/errors.ts`、U-PROTO-15
 - [x] スコアボードの読み取り: `scoreboard` で、目標の一覧・目標ごとの得点・プレイヤーごとの得点を返す — `scripts/core/observation/scoreboard.ts`、BDS で SB-01〜09
 - [x] 確認用スクリプト（薄いラッパー）: 決まった要求のまとまりを BDS に送り、応答を判定して結果を JSON で残す（`docs/knowledge/bds-local-server/scripts/`。ビルドの道具には入れない）— `bo-verify.ps1` と `bo-verify-cases.json`。BDS で 34/34 成功（`docs/TESTING.md`）
-- [ ] 判断: Phase 3 を採るか（ADR-0004 を「採用」か「却下」にする）
 - [x] 判断: 出来事（イベント）の通知を観測コアに足すか（`docs/RESEARCH.md` §2.2.1）→ 足す（2026-10-18、ADR-0008）
   - 安定版で取れるもの: 死亡、参加・退出・リスポーン、ディメンションの移動、ゲームモードの変更、ゲームルールの変更
   - 取れないもの: チャット（メンションを含む）とコマンドの使用。チャットは、操作ツールの画面読み取りか、ベータ版を使う別パックになる
@@ -108,7 +106,7 @@ Bedrock Observer を最初の公開版（初回リリース）まで進めるた
 
 ## Phase 3: BDS からネットワークで送る仕組み（必要な場合だけ）⏸
 
-Phase 2 の判断で「採用」になった場合だけ進めます。設計の条件（送信側の規則、Play Conductor の受信口の条件）は、ADR-0004 の「採用する場合の条件」にあります。「却下」なら、この段階は飛ばします。
+2026-10-18 に、利用者の指示で、Phase 3 は別のセッションで扱うことになりました。採否の判断（もとは Phase 2 の項目）も、そのセッションの最初の項目として行います。「採用」になった場合だけ、残りを進めます。設計の条件（送信側の規則、Play Conductor の受信口の条件）は、ADR-0004 の「採用する場合の条件」にあります。「却下」なら、この段階は飛ばします。
 
 - [ ] ADR-0004 の決定（採用 / 却下）
 - [ ] （採用時）別のリポジトリのアダプター

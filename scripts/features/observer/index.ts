@@ -1,10 +1,17 @@
-import { Player, system, type ScriptEventCommandMessageAfterEvent } from "@minecraft/server";
+import {
+  CommandPermissionLevel,
+  CustomCommandParamType,
+  CustomCommandStatus,
+  Player,
+  system,
+  type ScriptEventCommandMessageAfterEvent,
+} from "@minecraft/server";
 import type { RequestContext } from "../../core/observation/context.ts";
 import { watchGameEvents } from "../../core/observation/events.ts";
 import { OBSERVATION_METHODS } from "../../core/observation/methods.ts";
 import type { Feature } from "../../core/runtime/feature.ts";
 import { ADDON_SLUG, NAMESPACE } from "../../shared/constants/addon.ts";
-import { REQUEST_EVENT_ID, SIZE_LIMITS } from "../../shared/protocol/constants.ts";
+import { REQUEST_COMMAND_NAME, REQUEST_EVENT_ID, SIZE_LIMITS } from "../../shared/protocol/constants.ts";
 import { handleRequest } from "../../shared/protocol/dispatch.ts";
 import { formatEventLine } from "../../shared/protocol/events.ts";
 import { errorEnvelope, renderResponseLine, type ResponseMeta } from "../../shared/protocol/response.ts";
@@ -13,7 +20,8 @@ import { createSessionId } from "../../shared/protocol/session.ts";
 const LOG_TAG = `[${ADDON_SLUG}] observer:`;
 
 /**
- * Read-only observation over `/scriptevent to3izo_bo:query <json>` (docs/PROTOCOL.md, ADR-0003).
+ * Read-only observation over `/scriptevent to3izo_bo:query <json>` (docs/PROTOCOL.md, ADR-0003) and the operator
+ * command `/to3izo_bo:query "<json>"` (ADR-0010).
  * Each request is answered by exactly one `to3izo_bo.response {json}` log line, and selected game events are
  * pushed as `to3izo_bo.event {json}` lines (ADR-0008). Nothing runs per tick.
  */
@@ -32,10 +40,38 @@ export const observerFeature: Feature = {
         }
         seq += 1;
         const meta: ResponseMeta = { tick: system.currentTick, session, seq, time: Date.now() };
-        emitResponse(answer(event, meta));
+        emitResponse(answer(event.message, contextOf(event), meta));
       },
       { namespaces: [NAMESPACE] },
     );
+
+    // The same requests as a custom command, for operators without cheats (ADR-0010). Registration is only
+    // possible at startup; a command added by an update needs a server restart, not /reload.
+    system.beforeEvents.startup.subscribe(({ customCommandRegistry }) => {
+      customCommandRegistry.registerCommand(
+        {
+          name: REQUEST_COMMAND_NAME,
+          description: "Bedrock Observer: read-only observation request (one quoted JSON string)",
+          permissionLevel: CommandPermissionLevel.GameDirectors,
+          cheatsRequired: false,
+          mandatoryParameters: [{ name: "json", type: CustomCommandParamType.String }],
+        },
+        (origin, json: string) => {
+          const source = origin.sourceEntity;
+          // The callback runs in restricted execution: observe on the next tick, as for a script event.
+          system.run(() => {
+            seq += 1;
+            const meta: ResponseMeta = { tick: system.currentTick, session, seq, time: Date.now() };
+            const context: RequestContext = {
+              sourceType: `command:${origin.sourceType}`,
+              sourcePlayer: source instanceof Player && source.isValid ? source : undefined,
+            };
+            emitResponse(answer(json, context, meta));
+          });
+          return { status: CustomCommandStatus.Success };
+        },
+      );
+    });
 
     // Game events (ADR-0008): one `to3izo_bo.event {json}` line each, on the same channel as responses.
     watchGameEvents(
@@ -45,9 +81,9 @@ export const observerFeature: Feature = {
   },
 };
 
-function answer(event: ScriptEventCommandMessageAfterEvent, meta: ResponseMeta): string {
+function answer(message: string, context: RequestContext, meta: ResponseMeta): string {
   try {
-    const handled = handleRequest(event.message, contextOf(event), meta, OBSERVATION_METHODS);
+    const handled = handleRequest(message, context, meta, OBSERVATION_METHODS);
     if (handled.failure !== undefined) {
       console.warn(`${LOG_TAG} ${handled.envelope.method ?? "request"} failed: ${String(handled.failure)}`);
     }

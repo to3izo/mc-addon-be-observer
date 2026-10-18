@@ -1,16 +1,15 @@
-# PROTOCOL — Bedrock Observer public protocol (draft, protocol version 1)
+# PROTOCOL — Bedrock Observer public protocol (protocol version 1)
 
-> Status: **draft**. Phase 1 implements the transport, the envelopes, the error handling, the size limits,
-> `capabilities` and `players`, verified on BDS 1.26.52.3; the other methods are specified but not implemented
-> (`docs/ROADMAP.md`). The protocol is frozen as version 1 when Phase 2 ends; until then fields may change.
-> Limits marked *provisional* are starting values, not documented Minecraft limits.
+> Status: **frozen as protocol 1** (2026-10-18, end of Phase 2). Everything below is implemented and verified on
+> BDS 1.26.52.3 (`docs/TESTING.md`). From now on, incompatible changes need a new protocol version; compatible
+> additions do not (§8).
 > The Add-On targets **Bedrock Dedicated Server only** (ADR-0006).
 
 The protocol lets any external tool — an AI agent, a test script, a human at the chat — ask the Add-On for
 observations and read the answers. It is deliberately small:
 
 - **Read-only.** Every method only reads the game. There is no method that changes the world or runs a command.
-- **Tool-independent.** Requests are plain JSON in a `/scriptevent` command; responses are one-line JSON in the
+- **Tool-independent.** Requests are plain JSON in a `/scriptevent` command (or the operator command of §1); responses are one-line JSON in the
   script log. No AI model, MCP server, HTTP or WebSocket is assumed.
 - **Explicit about uncertainty.** Air, "no hit", unloaded chunks, unsupported methods and failures are different
   answers. When a result is limited or cut short, the response says so.
@@ -39,9 +38,32 @@ observations and read the answers. It is deliberately small:
   that player (NetherNet `ClientDisconnection-122`; a 448-character command worked), so tools that type into chat
   keep the whole command at or below 448 characters. The Add-On's own `maxRequestChars` (2048) only matters for
   requests that arrive by other routes (`system.sendScriptEvent`).
-- A cheat-free player entry point (a custom command) is a Phase 2 candidate, not part of this draft.
 - Other packs may send the same request with `system.sendScriptEvent("to3izo_bo:query", json)`; it is handled
   identically (there is no source player then; see §3).
+
+### Request by custom command (operators, no cheats needed)
+
+```
+/to3izo_bo:query "<request JSON with every \" escaped>"
+```
+
+The same request can be sent as a custom command (ADR-0010). It is answered exactly like the script event (same
+response line, errors and limits); `capabilities.transport.requestCommand` names it.
+
+- **Operators only, cheats not required.** Verified on BDS 1.26.52.3 with `allow-cheats=false`: a `member` gets
+  the game's "command permission level" error and nothing reaches the Add-On; an operator gets the answer; the
+  BDS console can run it too (`to3izo_bo:query "…"`, no leading `/`).
+- **The JSON is one quoted string.** Put it in double quotes and write every `"` inside as `\"`:
+  `/to3izo_bo:query "{\"requestId\":\"p1\",\"method\":\"player\"}"`. Unquoted JSON is a syntax error.
+  Spaces inside the quotes are kept. Non-ASCII text typed in chat arrives intact.
+- The sender becomes the source player (§3), as with `/scriptevent` from chat.
+- Nothing is printed to the sender's chat; the answer is the log line only.
+- Without another command of the same name, the game also accepts the short form `/query "…"`; tools should use
+  the full name.
+- The command is registered when the server starts. After updating to a build that adds or changes it, restart
+  BDS; `/reload` cannot register a new or changed command.
+- Keep the whole command within the chat length given above (escaped quotes count). That limit was measured with
+  `/scriptevent`; it was not measured separately for this command.
 
 ### Response
 
@@ -199,7 +221,7 @@ Every method is a pure read at one tick. All of them are implemented (Phase 2, `
   "addon": { "slug": "be-observer", "namespace": "to3izo_bo", "version": "0.1.0" },
   "protocol": { "version": 1, "supported": [1] },
   "scriptApi": { "@minecraft/server": "2.10.0" },
-  "transport": { "requestEventId": "to3izo_bo:query", "responsePrefix": "to3izo_bo.response ", "eventPrefix": "to3izo_bo.event " },
+  "transport": { "requestEventId": "to3izo_bo:query", "requestCommand": "to3izo_bo:query", "responsePrefix": "to3izo_bo.response ", "eventPrefix": "to3izo_bo.event " },
   "methods": ["capabilities", "players", "player", "block", "blocks", "target", "entities", "snapshot", "events", "entity", "top", "tops", "scoreboard"],
   "sections": ["health", "inventory", "equipment", "effects", "world"],
   "events": ["player_join", "player_leave", "player_spawn", "entity_die", "dimension_change", "game_mode_change", "game_rule_change"],
@@ -210,7 +232,8 @@ Every method is a pure read at one tick. All of them are implemented (Phase 2, `
 ```
 
 `capabilities` describes the running build exactly: `methods` and the handler table come from one list, and a
-test checks that every listed method answers. Limit values are *provisional* until protocol 1 is frozen.
+test checks that every listed method answers. Limit values may be raised or lowered by a later build without a
+protocol change; tools read them from here instead of hard-coding them.
 `capabilities` takes no parameters.
 
 ### 5.2 `players`
@@ -599,8 +622,9 @@ name, and `details.scriptError` holds that name: `InvalidEntityError` → `TARGE
 The Add-On only answers. A tool that uses it is responsible for:
 
 - **Sending** `scriptevent` on the BDS standard input (no leading `/`, ASCII only, at most 2048 characters of
-  message), or typing `/scriptevent` into an operator's chat (cheats on, whole command ≤ 448 characters), and
-  choosing who sends it (which affects `NO_SOURCE_PLAYER` and the game's permission checks).
+  message), or typing a command into an operator's chat — `/to3izo_bo:query "…"` (no cheats needed) or
+  `/scriptevent` (cheats on) — with the whole command ≤ 448 characters, and choosing who sends it (which affects
+  `NO_SOURCE_PLAYER` and the game's permission checks).
 - **Collecting** the BDS standard output, finding the prefix, and matching responses to requests by `requestId`,
   with its own timeout. A missing response means "unknown", not "failure of the game".
 - **Recording receive time** on its own clock next to `tick`/`time`, and not treating observations as current.

@@ -32,10 +32,12 @@ Internet, or other people's account names in the report.
   surrounding blocks. They are written to the script log: the content log of the device that hosts the world,
   or the standard output of a Bedrock Dedicated Server (BDS). Anyone who can read that log can read them.
   Treat logs as containing personal data (player names) and do not publish them without consent.
-- **Who may send requests is decided by Minecraft, not by this Add-On.** Requests arrive through
-  `/scriptevent`. On BDS (1.26.52.3) the server console can always send it; a player needs cheats on and operator
-  permission. Anyone with that access can query observations of every player in the world. Do not install the
-  Add-On on servers where that is unacceptable.
+- **Who may send requests is decided by Minecraft, not by this Add-On.** Requests arrive through `/scriptevent`
+  or the custom command `/to3izo_bo:query`. On BDS (1.26.52.3) the server console can always send them; a player
+  needs operator permission (`/to3izo_bo:query` works without cheats, `/scriptevent` needs cheats on too). Players
+  without operator permission cannot send requests. Anyone who can can query observations of every player in the
+  world. Do not install the Add-On on servers where that is unacceptable, and give operator permission only to
+  people who may see everyone's observations.
 - **Event lines tell who joined, left, died, moved between dimensions or changed game mode, and where.** They are
   written whenever these happen, without a request (ADR-0008).
 - **Script output goes to the server console.** The Add-On needs `content-log-console-output-enabled=true`, which

@@ -6,7 +6,7 @@ import assert from "node:assert/strict";
 import { test } from "node:test";
 import { NAMESPACE } from "../../scripts/shared/constants/addon.ts";
 import { buildCapabilities } from "../../scripts/shared/protocol/capabilities.ts";
-import { PARAM_DEFAULTS, PARAM_LIMITS, REQUEST_EVENT_ID, RESPONSE_PREFIX, SIZE_LIMITS } from "../../scripts/shared/protocol/constants.ts";
+import { PARAM_DEFAULTS, PARAM_LIMITS, REQUEST_COMMAND_NAME, REQUEST_EVENT_ID, RESPONSE_PREFIX, SIZE_LIMITS } from "../../scripts/shared/protocol/constants.ts";
 import { handleRequest, type MethodHandler, type MethodTable } from "../../scripts/shared/protocol/dispatch.ts";
 import { ObserverError, errorBodyOf } from "../../scripts/shared/protocol/errors.ts";
 import { EVENT_KINDS, EVENT_LIMITS, EVENT_PREFIX } from "../../scripts/shared/protocol/events.ts";
@@ -91,7 +91,12 @@ test("U-PROTO-10 capabilities describes this build: methods, transport, limits",
   assert.deepEqual(caps.methods, [...METHODS]);
   assert.deepEqual(caps.sections, [...SECTIONS]);
   assert.deepEqual(caps.protocol, { version: 1, supported: [1] });
-  assert.deepEqual(caps.transport, { requestEventId: REQUEST_EVENT_ID, responsePrefix: RESPONSE_PREFIX, eventPrefix: EVENT_PREFIX });
+  assert.deepEqual(caps.transport, {
+    requestEventId: REQUEST_EVENT_ID,
+    requestCommand: REQUEST_COMMAND_NAME,
+    responsePrefix: RESPONSE_PREFIX,
+    eventPrefix: EVENT_PREFIX,
+  });
   assert.deepEqual(caps.events, [...EVENT_KINDS]);
   assert.deepEqual(caps.limits, { ...SIZE_LIMITS, ...PARAM_LIMITS, ...EVENT_LIMITS });
   assert.deepEqual(caps.defaults, { ...PARAM_DEFAULTS });
@@ -114,6 +119,7 @@ test("U-PROTO-10 capabilities describes this build: methods, transport, limits",
   assert.equal(caps.readOnly, true);
   assert.equal(caps.addon.namespace, NAMESPACE);
   assert.equal(REQUEST_EVENT_ID, `${NAMESPACE}:query`);
+  assert.equal(REQUEST_COMMAND_NAME, `${NAMESPACE}:query`);
   assert.equal(RESPONSE_PREFIX, `${NAMESPACE}.response `);
 });
 

@@ -23,8 +23,7 @@ ground height, scoreboards, and game events as they happen.
 - **Stable APIs only.** `@minecraft/server` 2.10.0; no experimental toggles, no beta APIs.
 
 > **Status: pre-release (0.1.0).** All methods are implemented and verified on BDS for Windows 1.26.52.3.
-> Protocol 1 (`docs/PROTOCOL.md`) is still a draft and may change before the first release
-> (`docs/ROADMAP.md`).
+> Protocol 1 (`docs/PROTOCOL.md`) is frozen: later versions only add to it, or raise the protocol number.
 
 ## Requirements
 
@@ -65,8 +64,15 @@ to3izo_bo.response {"protocol":1,"requestId":"p1","ok":true,"method":"player","t
 Match responses to requests by `requestId`. Errors come back as `"ok":false` with a stable `error.code`.
 Game events are written without a request as `to3izo_bo.event {...}` lines.
 
-From a player's chat the same request works as `/scriptevent to3izo_bo:query {...}`, but only with cheats on and
-operator permission, and long commands disconnect the player (keep them under about 448 characters).
+From a player's chat, an **operator** can send the same request without cheats as a command whose argument is
+the JSON in double quotes, with every inner `"` written as `\"`:
+
+```text
+/to3izo_bo:query "{\"requestId\":\"p1\",\"method\":\"player\"}"
+```
+
+`/scriptevent to3izo_bo:query {...}` also works from chat, but needs cheats on as well. Long chat commands
+disconnect the player: keep the whole command under about 448 characters.
 
 ## What it can observe
 
@@ -92,7 +98,7 @@ would change the world is out of scope by design (`docs/SPEC.md` → Non-goals).
 ## Security
 
 Observations include player names, positions and inventories, and they are written to the server's standard
-output. Anyone who can run `/scriptevent` (the console, or operators with cheats on) can observe every player.
+output. The server console and every operator can observe every player; other players cannot send requests.
 Read **[SECURITY.md](SECURITY.md)** before installing it on a server other people join.
 
 ## Building

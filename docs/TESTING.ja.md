@@ -95,7 +95,7 @@ manifest.json* を開き、`"version"` で確認できます。
 | --- | --- | --- |
 | F-startup-01 | パックを有効にしたワールドを読み込む | `[<slug>] scripts loaded` がちょうど1行出る |
 
-### observer（scripts/features/observer）— Phase 1 実装済み
+### observer（scripts/features/observer）— Phase 2 完了
 
 Phase 1・2（`docs/ROADMAP.md`）のテスト計画です。アドオンは **BDS 専用**（ADR-0006）。ゲーム内のケースは BDS で行い、「ローカルワールド」のケースは参考とする。自動テスト U-PROTO-*・V-* は `pnpm test` で実行する。Phase 1 の結果は、下の「結果」にある。**単体テストはゲームを使いません。単体テストが通っても、ゲーム内で確認したとは報告しません。**
 
@@ -183,6 +183,19 @@ Phase 1・2（`docs/ROADMAP.md`）のテスト計画です。アドオンは **B
 | OBS-EVT-07 | `events` を、引数なし・`since` と `limit` 付き・`kinds` 付き・未知の種類付きで | 保持している全件、`more` 付きの次のページ、絞り込み、`INVALID_PARAMS` |
 | OBS-EVT-08 | `/reload` | `session` が新しくなり、通知の `seq` が 1 から。次の出来事まで `events` は空 |
 
+#### operator 用のコマンド（ゲーム内、BDS。ADR-0010）
+
+BDS を**再起動**してから行う（新しいコマンドや変えたコマンドは `/reload` では登録されない）。`allow-cheats=false` のまま。
+先に `permissions.json` のバックアップを取り、試験のあとで戻す（`deop` しても `member` の行が残る）。
+
+| ID | 手順 | 期待する結果 |
+| --- | --- | --- |
+| OBS-CMD-01 | BDS のコンソールで `to3izo_bo:query "{\"requestId\":\"c\",\"method\":\"capabilities\"}"` | 応答の行が 1 つ。`transport.requestCommand` は `to3izo_bo:query` |
+| OBS-CMD-02 | `member` のプレイヤーが `/to3izo_bo:query "{\"requestId\":\"m\",\"method\":\"player\"}"` と打つ | ゲームが拒否する（コマンドの権限レベル）。応答の行は出ない |
+| OBS-CMD-03 | コンソールで `op <名前>`。プレイヤーが同じコマンドを `requestId` `o` で打つ | そのプレイヤーのデータで応答がある（送った人が source player）。プレイヤーのチャットには何も出ない |
+| OBS-CMD-04 | コンソールで `reload` してから、OBS-CMD-01 をもう一度 | 応答がある（コマンドは変わっていない） |
+| OBS-CMD-05 | `bo-verify.ps1` を `bo-verify-cases.json` で実行 | すべて成功（script event の経路は変わらない） |
+
 #### Phase 2 の追加分（ゲーム内、BDS、スクリプトで実行）
 
 `bds-console-bridge.ps1` で BDS を動かした状態で、参考のスクリプト `docs/knowledge/bds-local-server/scripts/bo-verify.ps1`
@@ -261,6 +274,7 @@ Phase 2 の追加分 — 2026-10-18 に同じ BDS で実施（アドオン 0.1.0
 | --- | --- | --- |
 | U-PROTO-14、-15 | 成功 | テストは全部で 75 件 |
 | CAP-01、EFF-01〜02、FLT-01〜07、ENT-01〜05、TOP-01〜05、TOPS-01〜03、SB-01〜09、REG-01〜02 | 成功 | 最終のビルドで 34/34。途中で見つけたこと: `tops` の 1 件が大きく 32 列では `maxResponseChars` に収まらないため、簡潔な形にした（TOPS-03 を追加）。objective のないワールドで `player` 付きの `scoreboard` が誤って `INVALID_PARAMS` を返していた（直して SB-09 を追加） |
+| OBS-CMD-01〜05 | 成功 | operator 用のコマンド（ADR-0010 の版、BDS を再起動、`allow-cheats=false`）。コンソール → 応答あり。`member` → 「コマンドの権限レベルが正しくありません: to3izo_bo:query。」で、アドオンには届かない。`op` のあと → 応答あり、送った人が source player、チャットには何も出ない。`reload` のあと → 応答あり。回帰 34/34。試験のあと `permissions.json` をバックアップから戻した |
 | ブリッジの再試験 | 成功 | `bds-console-bridge.ps1` の修正（共有モードで読む、改行で終わった行だけ送る）のあと、4 回の実行で 131 件を送り、131 件とも応答があった。取りこぼしなし |
 
 ## リリース前チェックリスト

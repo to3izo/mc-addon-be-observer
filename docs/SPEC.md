@@ -15,8 +15,8 @@ It is published as open source in its own repository.
 
 ## Main features
 
-Status: all rows are implemented and verified on BDS 1.26.52.3 (`docs/TESTING.md`); protocol 1 is not frozen yet
-(`docs/ROADMAP.md`).
+Status: all rows are implemented and verified on BDS 1.26.52.3 (`docs/TESTING.md`); protocol 1 is frozen
+(`docs/PROTOCOL.md`).
 
 | # | Feature | Summary | Phase | Status |
 | --- | --- | --- | --- | --- |
@@ -34,11 +34,12 @@ Status: all rows are implemented and verified on BDS 1.26.52.3 (`docs/TESTING.md
 | 12 | `top` / `tops` | Topmost block of a column (ground height); `tops` as a compact height map of up to 32 columns | 2 | done (BDS) |
 | 13 | `scoreboard` | Objectives, scores of one objective, or one player's scores; read only | 2 | done (BDS) |
 | 14 | Error mapping | Known Script API errors answered with stable codes (`TARGET_INVALID`, `UNLOADED_CHUNK`, `INVALID_PARAMS`) instead of `INTERNAL_ERROR` | 2 | done (unit) |
+| 15 | Operator command | `/to3izo_bo:query "<json>"`: the same requests from an operator's chat without cheats (ADR-0010) | 2 | done (BDS) |
 
 Not available: chat messages and command use (no stable API; handled by the control tool). Deferred (stable API
 exists but not in the first version): weather (stable read API does not exist), light
-level, biome, rays from an arbitrary origin, small block regions (`getBlocks`), client/input info, join/leave
-a cheat-free custom command entry point, the BDS network adapter (ADR-0004). Candidates for later (ADR-0009):
+level, biome, rays from an arbitrary origin, small block regions (`getBlocks`), client/input info, the BDS network
+adapter (ADR-0004). Candidates for later (ADR-0009):
 an on/off switch for event notifications, container contents (off by default), paged region reads, a build id in
 `capabilities`, and an optional reply through chat `tell` (off by default; an exception to read-only).
 
@@ -57,15 +58,16 @@ The Add-On is developed for **BDS only** (ADR-0006).
 
 | Environment | Status | Notes |
 | --- | --- | --- |
-| BDS (Windows; verified on 1.26.52.3) | **supported** | Needs `content-log-console-output-enabled=true` so script `console.*` lines reach standard output. Requests from the BDS console work without cheats; requests from a player's chat need cheats on and operator permission. |
+| BDS (Windows; verified on 1.26.52.3) | **supported** | Needs `content-log-console-output-enabled=true` so script `console.*` lines reach standard output. Requests from the BDS console work without cheats. From a player's chat, operators can use `/to3izo_bo:query "…"` without cheats (ADR-0010); `/scriptevent` needs cheats on and operator permission. |
 | BDS on Linux | expected, untested | Same script API; not verified. |
 | BDS with the network adapter | proposal only | ADR-0004, Phase 3. |
 | Local world hosted by a game client, Realms, other platforms | **not supported** | The script itself may run, but responses only reach the client content log (written in ~4 KB blocks, so they can be delayed); not tested or maintained. |
 
 ## Namespace
 
-`to3izo_bo:` — see `addon.config.json`. Public identifiers: script event id `to3izo_bo:query` (and, if Phase 3 is
-adopted, `to3izo_bo:response`), log prefix `to3izo_bo.response`. The Add-On creates no blocks, items, entities,
+`to3izo_bo:` — see `addon.config.json`. Public identifiers: script event id `to3izo_bo:query`, custom command
+`to3izo_bo:query` (ADR-0010; and, if Phase 3 is adopted, `to3izo_bo:response`), log prefixes `to3izo_bo.response` and
+`to3izo_bo.event`. The Add-On creates no blocks, items, entities,
 dynamic properties, scoreboard objectives or tags.
 
 ## Constraints
@@ -81,8 +83,8 @@ dynamic properties, scoreboard objectives or tags.
 - **No consistency guarantees** beyond "taken in one script call at `tick`". Not synchronised with screenshots.
 - Marketplace cooperative rules still apply (additive, namespaced, no experiments). The resource pack stays empty
   (ADR-0005).
-- Multiplayer: any operator (or the server console) that can run `/scriptevent` can observe every player
-  (`SECURITY.md`).
+- Multiplayer: any operator (or the server console) can observe every player, with `/to3izo_bo:query` or
+  `/scriptevent`; players without operator permission cannot (`SECURITY.md`).
 - Request size in practice: the BDS console refuses messages over 2048 characters, and a player's chat command of
   about 511 characters or more disconnects that player (448 worked). Keep commands short (`docs/PROTOCOL.md` §1).
 - Localisation: no player-facing strings; diagnostics are English.

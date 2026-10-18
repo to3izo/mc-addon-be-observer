@@ -144,6 +144,8 @@ Phase 3 を採る場合の手順案（ADR-0004。人が承認してから）:
 - 成功の結果に `message` を付けなければ、プレイヤーのチャットには何も出なかった。
 - **`/reload` では、新しいカスタムコマンドを登録できない。** `CustomCommandError: Custom Command reload failed, cannot change parameters for 'to3izo_bo:query' during reload.` になり、コマンドは「Unknown command」のままだった。BDS を再起動すると使えた。
 - コールバックは restricted-execution で動くので、観測は `system.run` で次の tick に回した。
+- **採用後の確認（operator だけ、ADR-0010）:** 権限を `GameDirectors` にした版では、`member` は「コマンドの権限レベルが正しくありません: to3izo_bo:query。」で拒否され、アドオンには何も届かなかった。`op PlayerA` のあとは、`allow-cheats=false` のまま応答があった。コマンドを変えていない版で `/reload` したあとも、そのまま使えた（登録できないのは、新しいコマンドや引数を変えたときだけ）。
+- 試験で `op`・`deop` したあと、`permissions.json` には `member` の行が残った（`deop` しても空には戻らない）。BDS を止めてからバックアップで元に戻した。
 
 ## 確認した組み合わせ
 

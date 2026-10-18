@@ -139,9 +139,9 @@ arrive or where answers go (`docs/adr/0003-read-only-scriptevent-protocol.md`):
 
 ```mermaid
 flowchart LR
-  T[External tool<br/>chat / BDS console] -- "/scriptevent to3izo_bo:query {json}" --> IO
+  T[External tool<br/>chat / BDS console] -- "/scriptevent to3izo_bo:query {json}<br/>/to3izo_bo:query &quot;json&quot; (operators)" --> IO
   subgraph BP["be-observer BP (@minecraft/server only)"]
-    IO[features/observer<br/>scriptEventReceive · console line]
+    IO[features/observer<br/>scriptEventReceive · custom command · console line]
     P[shared/protocol<br/>validate · dispatch · envelope · limits<br/>pure, unit-tested]
     C[core/observation<br/>read-only reads → DTOs]
     IO --> P --> C
@@ -155,5 +155,6 @@ flowchart LR
 - `shared/protocol` imports nothing from `@minecraft/*` (unit-testable with `node --test`). It holds the generic
   dispatcher; `core/observation/methods.ts` supplies the handler table, typed to match `shared/protocol/methods.ts`.
 - `core/observation` calls only read APIs; `tests/validation/read-only.test.ts` guards that.
-- `features/observer` is the only place that knows about `/scriptevent` and the log prefix.
+- `features/observer` is the only place that knows about `/scriptevent`, the operator command (ADR-0010) and the
+  log prefixes. Both entry points hand the same JSON text to the same dispatcher.
 - The network adapter, if ever built, is a different pack and talks to the core only through script events.

@@ -21,7 +21,7 @@ export type EventKind = (typeof EVENT_KINDS)[number];
 /** Marks a machine-readable event line. Exactly one JSON object follows it on the same line. */
 export const EVENT_PREFIX = `${NAMESPACE}.event `;
 
-/** Provisional limits of the event stream (ADR-0008). */
+/** Limits of the event stream (ADR-0008), published in `capabilities.limits`. */
 export const EVENT_LIMITS = {
   /** Event lines per second (20 ticks); more are dropped and counted in the next line's `dropped`. */
   maxEventsPerSecond: 20,
