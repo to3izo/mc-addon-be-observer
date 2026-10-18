@@ -1,5 +1,7 @@
 # Bedrock Observer
 
+![Bedrock Observer のイメージイラスト。ブロックの世界のブタ・ヒツジ・ウシ・光るブロックが、それぞれ JSON のパネルにつながっている](media/exports/bedrock_observer_2x1_with_text.png)
+
 <!-- addon:start -->
 | | |
 | --- | --- |
@@ -16,6 +18,8 @@ Minecraft 統合版の Bedrock Dedicated Server（BDS）向けの、**読み取�
 遊ぶ AI エージェント、試験のスクリプト、アドオンを調べる人など）が JSON の要求を送ると、アドオンはサーバーの標準出力に
 1 行の JSON で答えます。プレイヤーの位置と見ているもの、ブロック、周りのエンティティ、効果、地面の高さ、スコアボード、
 そしてゲーム内の出来事を知らせます。
+
+![ブタ・ヒツジ・ウシ・ダイヤモンドブロックが映るゲーム画面と、同じ瞬間の snapshot の応答。それぞれのモブと、見ているブロックが JSON の typeId に対応している](media/social/x/be-observer_x_main_20261018.png)
 
 - **読み取り専用。** ワールドを変えません。コマンドも、値の書き込みも、チャンクの読み込みもしません（`SECURITY.md`）。
 - **ツールに依存しない。** 入力は `/scriptevent`、出力はログの行だけです。AI のモデル、MCP、HTTP を前提にしません。
@@ -63,6 +67,8 @@ to3izo_bo.response {"protocol":1,"requestId":"p1","ok":true,"method":"player","t
 
 応答と要求は `requestId` で突き合わせます。エラーは `"ok":false` と、決まった `error.code` で返ります。
 ゲーム内の出来事は、要求がなくても `to3izo_bo.event {...}` の行で出ます。
+
+![ゾンビに倒されたあとのゲームオーバー画面と、その瞬間に出た entity_die イベントの行。cause は entityAttack、killer は minecraft:zombie](media/social/x/be-observer_x_death-event_20261018.png)
 
 プレイヤーのチャットからは、**operator** なら、チートを有効にしなくても、次のコマンドで同じ要求を送れます。引数は
 JSON を `"` で囲んだもので、中の `"` はすべて `\"` と書きます。

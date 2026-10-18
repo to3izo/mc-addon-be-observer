@@ -1,5 +1,7 @@
 # Bedrock Observer
 
+![Illustration of Bedrock Observer: a pig, a sheep, a cow and a glowing block in a blocky world, each linked to a panel of JSON](media/exports/bedrock_observer_2x1_with_text.png)
+
 <!-- addon:start -->
 | | |
 | --- | --- |
@@ -16,6 +18,8 @@ A **read-only observation Add-On** for Minecraft Bedrock Dedicated Server (BDS).
 play Bedrock, test scripts, people debugging Add-Ons — send a JSON request, and the Add-On answers with one line
 of JSON on the server's standard output: where players are and what they see, blocks, nearby entities, effects,
 ground height, scoreboards, and game events as they happen.
+
+![A game screen with a pig, a sheep, a cow and a diamond block, next to the snapshot response from the same moment: each mob and the block the player looks at appear as a typeId in the JSON](media/exports/be-observer_readme_main-en_20261018.png)
 
 - **Read-only.** It never changes the world: no commands, no setters, no chunk loading (`SECURITY.md`).
 - **Tool-independent.** Plain `/scriptevent` in, plain log lines out. No AI model, MCP server or HTTP is assumed.
@@ -63,6 +67,8 @@ to3izo_bo.response {"protocol":1,"requestId":"p1","ok":true,"method":"player","t
 
 Match responses to requests by `requestId`. Errors come back as `"ok":false` with a stable `error.code`.
 Game events are written without a request as `to3izo_bo.event {...}` lines.
+
+![The death screen after a zombie killed the player, next to the entity_die event line printed at that moment: cause entityAttack, killer minecraft:zombie](media/exports/be-observer_readme_death-event-en_20261018.png)
 
 From a player's chat, an **operator** can send the same request without cheats as a command whose argument is
 the JSON in double quotes, with every inner `"` written as `\"`:

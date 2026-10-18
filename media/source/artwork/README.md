@@ -1,9 +1,21 @@
-# X announcement images for v1.0.0 (2026-10-18)
+# Announcement and README images for v1.0.0 (2026-10-18)
 
-| Export (`media/social/x/`) | Source (this folder) | Materials (`media/source/screenshots/`) |
+| Export | Source (this folder) | Materials (`media/source/screenshots/`) |
 | --- | --- | --- |
-| `be-observer_x_main_20261018.png` (1600×900) | `be-observer_x_main_20261018.html` | `be-observer_snapshot_20261018.jpeg`, response `promo-3` in `be-observer_bds-stdout_20261018.txt` |
-| `be-observer_x_death-event_20261018.png` (1600×900) | `be-observer_x_death-event_20261018.html` | `be-observer_entity-die_20261018.png`, the `entity_die` line in `be-observer_bds-stdout_20261018.txt` |
+| `social/x/be-observer_x_main_20261018.png` (1600×900, Japanese; also for `README.ja.md`) | `be-observer_x_main_20261018.html` | `be-observer_snapshot_20261018.jpeg`, response `promo-3` in `be-observer_bds-stdout_20261018.txt` |
+| `social/x/be-observer_x_death-event_20261018.png` (1600×900, Japanese; also for `README.ja.md`) | `be-observer_x_death-event_20261018.html` | `be-observer_entity-die_20261018.png`, the `entity_die` line in `be-observer_bds-stdout_20261018.txt` |
+| `exports/be-observer_readme_main-en_20261018.png` (1600×900, English, for `README.md`) | `be-observer_readme_main-en_20261018.html` | same as the Japanese main image |
+| `exports/be-observer_readme_death-event-en_20261018.png` (1600×900, English, for `README.md`) | `be-observer_readme_death-event-en_20261018.html` | same as the Japanese death image (the game UI in the capture is Japanese) |
+
+## Key visual (README header)
+
+| Export | Source | Notes |
+| --- | --- | --- |
+| `exports/bedrock_observer_2x1_with_text.png` (1774×887, with title) | none in this repository | Supplied by the author on 2026-10-18; used at the top of `README.md` and `README.ja.md` |
+| `exports/bedrock_observer_2x1.png` (1774×887, no text) | none in this repository | Same artwork without the title, kept for other uses |
+
+The editable source, the tool it was made with and its licence are not recorded yet; add them here (or put the
+source next to this file) before reusing the artwork elsewhere.
 
 ## How the materials were made
 
@@ -29,6 +41,7 @@ The HTML files are 1600×900 pages that load the materials by relative path. Fro
 
 ```bash
 for n in main death-event; do "/Applications/Google Chrome.app/Contents/MacOS/Google Chrome" --headless=new --disable-gpu --hide-scrollbars --force-device-scale-factor=1 --window-size=1600,900 --virtual-time-budget=3000 --screenshot="$PWD/social/x/be-observer_x_${n}_20261018.png" "file://$PWD/source/artwork/be-observer_x_${n}_20261018.html"; done
+for n in main death-event; do "/Applications/Google Chrome.app/Contents/MacOS/Google Chrome" --headless=new --disable-gpu --hide-scrollbars --force-device-scale-factor=1 --window-size=1600,900 --virtual-time-budget=3000 --screenshot="$PWD/exports/be-observer_readme_${n}-en_20261018.png" "file://$PWD/source/artwork/be-observer_readme_${n}-en_20261018.html"; done
 ```
 
 ## Licences

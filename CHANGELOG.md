@@ -6,6 +6,10 @@ and must match `package.json` and both pack manifests (`pnpm version:set <x.y.z>
 
 ## [Unreleased]
 
+### Changed
+- README (English and Japanese): key visual at the top and screenshots of a `snapshot` response and an
+  `entity_die` event next to the matching game screens (English images for `README.md`).
+
 ## [1.0.1] - 2026-10-18
 
 Pack icon and documentation only; the protocol and behaviour are unchanged from 1.0.0.

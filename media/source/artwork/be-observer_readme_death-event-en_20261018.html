@@ -1,0 +1,113 @@
+<!doctype html>
+<!--
+  Source of media/exports/be-observer_readme_death-event-en_20261018.png (1600x900), the English version of
+  be-observer_x_death-event_20261018.html for README.md. The game UI in the capture is Japanese.
+  Render: see media/source/artwork/README.md.
+  Left: window capture ../screenshots/be-observer_entity-die_20261018.png (1920x1080; gamertag mosaicked).
+  Right: excerpt of the entity_die event line in ../screenshots/be-observer_bds-stdout_20261018.txt.
+-->
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Bedrock Observer death event (en)</title>
+<style>
+  :root {
+    --bg: #0b0f14; --panel: #111821; --line: #273244; --text: #e6edf3; --muted: #8b98a8;
+    --key: #9cdcfe; --str: #ce9178; --num: #b5cea8; --punc: #8b98a8;
+    --player: #39e5ff; --cause: #ffd84d; --zombie: #8ce35c; --target: #39e5ff;
+  }
+  html, body { margin: 0; background: var(--bg); }
+  body { width: 1600px; height: 900px; position: relative; overflow: hidden; color: var(--text);
+    font-family: "Hiragino Sans", "Hiragino Kaku Gothic ProN", sans-serif; }
+  .header { position: absolute; left: 28px; right: 28px; top: 22px; height: 76px;
+    display: flex; align-items: center; justify-content: space-between; }
+  .title { display: flex; align-items: baseline; gap: 16px; }
+  .title h1 { margin: 0; font-size: 50px; font-weight: 800; letter-spacing: 0.5px; }
+  .chip { font: 700 22px Menlo, monospace; color: var(--bg); background: var(--target);
+    padding: 4px 10px; border-radius: 8px; position: relative; top: -6px; }
+  .tagline { font-size: 34px; font-weight: 700; }
+  .tagline b { color: var(--target); }
+
+  .shot { position: absolute; left: 24px; top: 116px; width: 700px; height: 740px;
+    border-radius: 16px; overflow: hidden; border: 2px solid var(--line); }
+  /* Crop of the 1920x1080 capture: x 620..1300, y 196..915, scaled by 1.03. */
+  .scene { position: absolute; left: 0; top: 0; width: 1920px; height: 1080px;
+    transform-origin: 0 0; transform: scale(1.03) translate(-620px, -196px); }
+  .scene img { position: absolute; left: 0; top: 0; width: 1920px; height: 1080px; }
+  .box { position: absolute; border: 6px solid; border-radius: 14px; box-sizing: border-box; }
+  .tag { position: absolute; font: 800 28px Menlo, monospace; color: #0b0f14; padding: 2px 12px;
+    border-radius: 8px; white-space: nowrap; }
+  .shot .caption { position: absolute; left: 0; right: 0; bottom: 0; padding: 14px 20px;
+    font-size: 26px; font-weight: 700; background: linear-gradient(transparent, rgba(0,0,0,0.75)); }
+
+  .code { position: absolute; left: 748px; top: 116px; width: 828px; height: 740px; box-sizing: border-box;
+    background: var(--panel); border: 2px solid var(--line); border-radius: 16px; padding: 18px 26px; }
+  .bar { display: flex; align-items: center; gap: 10px; color: var(--muted); font: 20px Menlo, monospace; margin-bottom: 14px; }
+  .dot { width: 14px; height: 14px; border-radius: 50%; }
+  .req { font: 22px/1.45 Menlo, monospace; color: #7ee787; white-space: pre; }
+  .req .cmd { color: var(--text); }
+  .resp { font: 22px/1.45 Menlo, monospace; color: #d2a8ff; margin: 10px 0 4px; white-space: pre; }
+  .resp span { color: var(--muted); font-family: "Hiragino Sans", sans-serif; font-size: 20px; }
+  pre { margin: 0; font: 26px/1.62 Menlo, monospace; color: var(--punc); }
+  .k { color: var(--key); } .s { color: var(--str); } .n { color: var(--num); }
+  .hl { border-radius: 6px; padding: 0 3px; margin: 0 -3px; outline: 3px solid; outline-offset: 1px; }
+  .hl.player { outline-color: var(--player); background: rgba(57,229,255,0.14); }
+  .hl.cause { outline-color: var(--cause); background: rgba(255,216,77,0.14); }
+  .hl.zombie { outline-color: var(--zombie); background: rgba(140,227,92,0.16); }
+  .comment { font: 21px/1.45 "Hiragino Sans", sans-serif; color: var(--muted); }
+  .note { position: absolute; left: 28px; right: 28px; bottom: 12px; font-size: 17px; color: var(--muted); }
+  .gutter { position: absolute; left: 8px; width: 8px; border-radius: 4px; }
+</style>
+</head>
+<body>
+  <div class="header">
+    <div class="title"><h1>Bedrock Observer</h1><span class="chip">v1.0.0</span></div>
+    <div class="tagline">Events arrive as <b>one line of JSON</b>, too.</div>
+  </div>
+
+  <div class="shot">
+    <div class="scene">
+      <img src="../screenshots/be-observer_entity-die_20261018.png" alt="">
+      <!-- Boxes in screenshot pixels. -->
+      <div class="box" style="left:718px; top:224px; width:490px; height:74px; border-color:var(--player)"></div>
+      <div class="box" style="left:1006px; top:300px; width:186px; height:50px; border-color:var(--cause); border-width:5px; border-radius:10px"></div>
+      <div class="box" style="left:914px; top:380px; width:96px; height:158px; border-color:var(--zombie)"></div>
+      <div class="tag" style="left:912px; top:548px; background:var(--zombie)">zombie</div>
+    </div>
+    <div class="caption" style="top:430px; bottom:auto; background:none; text-align:center; text-shadow:0 2px 6px #000">Game screen: killed by a zombie</div>
+  </div>
+
+  <div class="code">
+    <div class="bar"><span class="dot" style="background:#ff5f57"></span><span class="dot" style="background:#febc2e"></span><span class="dot" style="background:#28c840"></span>&nbsp;BDS console</div>
+    <div class="comment">Game events are printed one line each, with no request needed</div>
+    <div class="resp">to3izo_bo.event <span>printed at that moment, excerpt</span></div>
+<pre>{ <span class="k">"protocol"</span>: <span class="n">1</span>,
+  <span class="k">"kind"</span>: <span class="s">"entity_die"</span>,
+  <span class="k">"seq"</span>: <span class="n">4</span>, <span class="k">"tick"</span>: <span class="n">170455</span>, …
+  <span class="k">"data"</span>: {
+    <span class="k">"entity"</span>: { <span class="k">"typeId"</span>: <span class="s hl player">"minecraft:player"</span>,
+                <span class="k">"name"</span>: <span class="s hl player">"Steve"</span>, … },
+    <span class="k">"cause"</span>: <span class="s hl cause">"entityAttack"</span>,
+    <span class="k">"dimension"</span>: <span class="s">"minecraft:overworld"</span>,
+    <span class="k">"location"</span>: {<span class="k">"x"</span>:<span class="n">300.5</span>,<span class="k">"y"</span>:<span class="n">-60</span>,<span class="k">"z"</span>:<span class="n">298.5</span>},
+    <span class="k">"killer"</span>: { <span class="k">"typeId"</span>: <span class="s hl zombie">"minecraft:zombie"</span>, … }
+  }
+}</pre>
+  </div>
+
+  <div class="note">BDS 1.26.52.3 + Bedrock Observer v1.0.0. Right: the entity_die event line from that moment, excerpt (ids omitted). Player renamed to Steve, mosaicked on screen.</div>
+
+<script>
+  // A colour bar in the code panel's gutter beside each highlighted JSON value.
+  const code = document.querySelector(".code"), box = code.getBoundingClientRect();
+  for (const el of document.querySelectorAll(".hl")) {
+    const r = el.getBoundingClientRect(), g = document.createElement("div");
+    g.className = "gutter";
+    g.style.top = (r.top - box.top - 2) + "px";
+    g.style.height = (r.height + 4) + "px";
+    g.style.background = getComputedStyle(el).outlineColor;
+    code.appendChild(g);
+  }
+</script>
+</body>
+</html>
