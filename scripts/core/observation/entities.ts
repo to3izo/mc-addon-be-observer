@@ -1,7 +1,7 @@
 import type { Dimension, EntityQueryOptions, Vector3 } from "@minecraft/server";
 import type { MethodHandler } from "../../shared/protocol/dispatch.ts";
 import { ObserverError } from "../../shared/protocol/errors.ts";
-import { parseEntityOptions, type EntityOptions } from "../../shared/protocol/options.ts";
+import { ENTITY_OPTION_KEYS, parseEntityOptions, type EntityOptions } from "../../shared/protocol/options.ts";
 import { expectOnlyKeys, parsePlayerSelector } from "../../shared/protocol/params.ts";
 import type { RequestContext } from "./context.ts";
 import { entitySummary, readEntity, vec } from "./read.ts";
@@ -14,16 +14,17 @@ import { resolveDimension, resolvePlayer } from "./resolve.ts";
 export function nearbyEntities(
   dimension: Dimension,
   center: Vector3,
-  options: Pick<EntityOptions, "radius" | "limit" | "excludePlayers">,
+  options: Pick<EntityOptions, "radius" | "limit" | "excludePlayers" | "includeEffects" | "filter">,
   excludeId?: string,
 ): Record<string, unknown> {
   // Ask for a few more than needed: one may be the excluded player, one more shows that the list was cut.
-  const query: EntityQueryOptions = { location: center, maxDistance: options.radius, closest: options.limit + 2 };
-  if (options.excludePlayers) query.excludeTypes = ["minecraft:player"];
+  const query: EntityQueryOptions = { ...options.filter, location: center, maxDistance: options.radius, closest: options.limit + 2 };
+  const excludeTypes = [...(options.filter.excludeTypes ?? []), ...(options.excludePlayers ? ["minecraft:player"] : [])];
+  if (excludeTypes.length > 0) query.excludeTypes = excludeTypes;
   const found = dimension
     .getEntities(query)
     .filter((e) => e.isValid && e.id !== excludeId)
-    .map((e) => entitySummary(e, center))
+    .map((e) => entitySummary(e, center, options.includeEffects))
     .sort((a, b) => Number(a.distance) - Number(b.distance));
   const entities = found.slice(0, options.limit);
   return {
@@ -39,7 +40,7 @@ export function nearbyEntities(
 
 /** `entities`: around the selected player, or around `center` in `dimension`. */
 export const entities: MethodHandler<RequestContext> = (params, context) => {
-  expectOnlyKeys(params, ["player", "center", "dimension", "radius", "limit", "excludePlayers"]);
+  expectOnlyKeys(params, ["player", "center", "dimension", ...ENTITY_OPTION_KEYS]);
   const options = parseEntityOptions(params);
 
   if (options.center) {

@@ -1,0 +1,60 @@
+{
+  "about": "Cases for bo-verify.ps1: entity filters, entity, effects, top/tops, scoreboard (2026-10-18). Needs the player PlayerA online in a flat overworld whose scoreboard has no other objectives (SB-09); the console steps set up and clean up the test state.",
+  "steps": [
+    { "console": "kill @e[type=pig,name=BoPig]" },
+    { "console": "scoreboard objectives remove bo_test" },
+    { "console": "execute in overworld run tp PlayerA 0 -60 0", "waitMs": 1500 },
+    { "console": "effect PlayerA speed 600 1 true" },
+    { "console": "execute as PlayerA at @s run summon pig BoPig ~2 ~ ~2", "waitMs": 800 },
+    { "console": "tag @e[type=pig,name=BoPig] add bo_tag" },
+    { "console": "effect @e[type=pig,name=BoPig] slowness 600 0 true" },
+    { "console": "scoreboard objectives add bo_test dummy BoTest" },
+    { "console": "scoreboard players set PlayerA bo_test 7" },
+    { "console": "scoreboard players set fake_p bo_test 3", "waitMs": 800 },
+
+    { "id": "CAP-01", "method": "capabilities", "expect": { "equals": { "data.methods.9": "entity", "data.methods.10": "top", "data.methods.11": "tops", "data.methods.12": "scoreboard", "data.sections.3": "effects", "data.limits.maxScoreEntries": 64 } } },
+
+    { "id": "EFF-01", "method": "player", "params": { "player": { "name": "PlayerA" }, "include": ["effects"] }, "expect": { "equals": { "data.effects.0.typeId": "minecraft:speed", "data.effects.0.amplifier": 1 }, "atLeast": { "data.effects.0.duration": 100 } } },
+    { "id": "EFF-02", "method": "snapshot", "params": { "player": { "name": "PlayerA" }, "include": ["effects"] }, "expect": { "equals": { "data.effects.0.typeId": "minecraft:speed" } } },
+
+    { "id": "FLT-01", "method": "entities", "params": { "player": { "name": "PlayerA" }, "type": "minecraft:pig" }, "expect": { "equals": { "data.entities.0.typeId": "minecraft:pig", "data.entities.0.nameTag": "BoPig" }, "atLeast": { "data.returned": 1 } } },
+    { "id": "FLT-02", "method": "entities", "params": { "player": { "name": "PlayerA" }, "tags": ["bo_tag"], "includeEffects": true }, "expect": { "equals": { "data.returned": 1, "data.entities.0.effects.0.typeId": "minecraft:slowness" } } },
+    { "id": "FLT-03", "method": "entities", "params": { "player": { "name": "PlayerA" }, "name": "BoPig", "excludeTypes": ["minecraft:pig"] }, "expect": { "equals": { "data.returned": 0 } } },
+    { "id": "FLT-04", "method": "entities", "params": { "player": { "name": "PlayerA" }, "families": ["pig"], "excludeFamilies": ["monster"] }, "expect": { "atLeast": { "data.returned": 1 } } },
+    { "id": "FLT-05", "method": "entities", "params": { "center": { "x": 0, "y": -60, "z": 0 }, "dimension": "minecraft:overworld", "type": "minecraft:player" }, "expect": { "equals": { "data.entities.0.name": "PlayerA" } } },
+    { "id": "FLT-06", "method": "entities", "params": { "player": { "name": "PlayerA" }, "type": "" }, "expect": { "ok": false, "code": "INVALID_PARAMS" } },
+    { "id": "FLT-07", "method": "snapshot", "params": { "player": { "name": "PlayerA" }, "include": ["entities"], "entities": { "tags": ["bo_tag"], "includeEffects": true } }, "expect": { "equals": { "data.entities.returned": 1, "data.entities.entities.0.nameTag": "BoPig" } } },
+
+    { "id": "ENT-01", "method": "entity", "params": { "id": "$ref:FLT-01:data.entities.0.id" }, "expect": { "equals": { "data.typeId": "minecraft:pig", "data.nameTag": "BoPig", "data.dimension": "minecraft:overworld", "data.effects.0.typeId": "minecraft:slowness" }, "has": ["data.location.x", "data.rotation.yaw", "data.velocity.y", "data.health.current", "data.health.max"] } },
+    { "id": "ENT-02", "method": "entity", "params": { "id": "$ref:EFF-01:data.id" }, "expect": { "equals": { "data.typeId": "minecraft:player", "data.name": "PlayerA", "data.effects.0.typeId": "minecraft:speed" } } },
+    { "id": "ENT-03", "method": "entity", "params": { "id": "123456789" }, "expect": { "ok": false, "code": "ENTITY_NOT_FOUND" } },
+    { "id": "ENT-04", "method": "entity", "expect": { "ok": false, "code": "INVALID_PARAMS" } },
+    { "id": "ENT-05", "method": "entity", "params": { "id": "1", "extra": true }, "expect": { "ok": false, "code": "INVALID_PARAMS" } },
+
+    { "id": "TOP-01", "method": "top", "params": { "dimension": "minecraft:overworld", "x": 5, "z": 5 }, "expect": { "equals": { "data.status": "ok", "data.column.x": 5, "data.dimension": "minecraft:overworld" }, "has": ["data.position.y", "data.block.typeId"] } },
+    { "id": "TOP-02", "method": "top", "params": { "dimension": "minecraft:overworld", "x": 200000, "z": 200000 }, "expect": { "equals": { "data.status": "unloaded" } } },
+    { "id": "TOP-03", "method": "top", "params": { "dimension": "minecraft:nether", "x": 0, "z": 0 }, "expect": { "equals": { "data.status": "unloaded" } } },
+    { "id": "TOP-04", "method": "top", "params": { "x": 0, "z": 0 }, "expect": { "ok": false, "code": "INVALID_PARAMS" } },
+    { "id": "TOP-05", "method": "top", "params": { "dimension": "minecraft:overworld", "x": 0.5, "z": 0 }, "expect": { "ok": false, "code": "INVALID_PARAMS" } },
+    { "id": "TOPS-01", "method": "tops", "params": { "dimension": "minecraft:overworld", "columns": [{ "x": 0, "z": 0 }, { "x": -3, "z": 7 }, { "x": 200000, "z": 200000 }] }, "expect": { "equals": { "data.results.0.status": "ok", "data.results.0.y": -61, "data.results.0.typeId": "minecraft:grass_block", "data.results.1.z": 7, "data.results.2.status": "unloaded" } } },
+    { "id": "TOPS-03", "method": "tops", "params": { "dimension": "minecraft:overworld", "columns": [{"x":0,"z":0},{"x":0,"z":1},{"x":0,"z":2},{"x":0,"z":3},{"x":0,"z":4},{"x":0,"z":5},{"x":0,"z":6},{"x":0,"z":7},{"x":0,"z":8},{"x":0,"z":9},{"x":1,"z":0},{"x":1,"z":1},{"x":1,"z":2},{"x":1,"z":3},{"x":1,"z":4},{"x":1,"z":5},{"x":1,"z":6},{"x":1,"z":7},{"x":1,"z":8},{"x":1,"z":9},{"x":2,"z":0},{"x":2,"z":1},{"x":2,"z":2},{"x":2,"z":3},{"x":2,"z":4},{"x":2,"z":5},{"x":2,"z":6},{"x":2,"z":7},{"x":2,"z":8},{"x":2,"z":9},{"x":3,"z":0},{"x":3,"z":1}] }, "expect": { "equals": { "data.results.31.status": "ok", "data.results.31.z": 1 } } },
+    { "id": "TOPS-02", "method": "tops", "params": { "dimension": "minecraft:overworld", "columns": [{"x":0,"z":0},{"x":0,"z":1},{"x":0,"z":2},{"x":0,"z":3},{"x":0,"z":4},{"x":0,"z":5},{"x":0,"z":6},{"x":0,"z":7},{"x":0,"z":8},{"x":0,"z":9},{"x":1,"z":0},{"x":1,"z":1},{"x":1,"z":2},{"x":1,"z":3},{"x":1,"z":4},{"x":1,"z":5},{"x":1,"z":6},{"x":1,"z":7},{"x":1,"z":8},{"x":1,"z":9},{"x":2,"z":0},{"x":2,"z":1},{"x":2,"z":2},{"x":2,"z":3},{"x":2,"z":4},{"x":2,"z":5},{"x":2,"z":6},{"x":2,"z":7},{"x":2,"z":8},{"x":2,"z":9},{"x":3,"z":0},{"x":3,"z":1},{"x":3,"z":2}] }, "expect": { "ok": false, "code": "LIMIT_EXCEEDED" } },
+
+    { "id": "SB-01", "method": "scoreboard", "expect": { "has": ["data.objectives.0.id", "data.total"], "atLeast": { "data.returned": 1 } } },
+    { "id": "SB-02", "method": "scoreboard", "params": { "objective": "bo_test" }, "expect": { "equals": { "data.objective.id": "bo_test", "data.objective.displayName": "BoTest", "data.total": 2, "data.truncated": false } } },
+    { "id": "SB-03", "method": "scoreboard", "params": { "objective": "bo_test", "limit": 1 }, "expect": { "equals": { "data.returned": 1, "data.total": 2, "data.truncated": true } } },
+    { "id": "SB-04", "method": "scoreboard", "params": { "player": { "name": "PlayerA" }, "objective": "bo_test" }, "expect": { "equals": { "data.player.name": "PlayerA", "data.scores.0.objective": "bo_test", "data.scores.0.score": 7 } } },
+    { "id": "SB-05", "method": "scoreboard", "params": { "player": { "name": "PlayerA" } }, "expect": { "atLeast": { "data.returned": 1 } } },
+    { "id": "SB-06", "method": "scoreboard", "params": { "objective": "no_such_objective" }, "expect": { "ok": false, "code": "INVALID_PARAMS" } },
+    { "id": "SB-07", "method": "scoreboard", "params": { "limit": 65 }, "expect": { "ok": false, "code": "LIMIT_EXCEEDED" } },
+    { "id": "SB-08", "method": "scoreboard", "params": { "player": { "name": "nobody_here" } }, "expect": { "ok": false, "code": "PLAYER_NOT_FOUND" } },
+
+    { "id": "REG-01", "method": "players", "expect": { "atLeast": { "data.count": 1 } } },
+    { "id": "REG-02", "method": "snapshot", "params": { "player": { "name": "PlayerA" } }, "expect": { "has": ["data.player.location.x", "data.target"] } },
+
+    { "console": "kill @e[type=pig,name=BoPig]" },
+    { "console": "effect PlayerA clear" },
+    { "console": "scoreboard objectives remove bo_test", "waitMs": 500 },
+    { "id": "SB-09", "method": "scoreboard", "params": { "player": { "name": "PlayerA" } }, "expect": { "equals": { "data.returned": 0, "data.truncated": false } } }
+  ]
+}

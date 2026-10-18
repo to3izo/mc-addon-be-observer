@@ -1,7 +1,6 @@
-import { InvalidEntityError } from "@minecraft/server";
 import { PARAM_LIMITS } from "../../shared/protocol/constants.ts";
 import type { MethodHandler } from "../../shared/protocol/dispatch.ts";
-import { ObserverError } from "../../shared/protocol/errors.ts";
+import { errorBodyOf } from "../../shared/protocol/errors.ts";
 import {
   ENTITY_OPTION_KEYS,
   SNAPSHOT_DEFAULT_SECTIONS,
@@ -14,7 +13,7 @@ import {
 import { expectOnlyKeys, parsePlayerSelector, readNameList, readOptions } from "../../shared/protocol/params.ts";
 import type { RequestContext } from "./context.ts";
 import { nearbyEntities } from "./entities.ts";
-import { equipmentOf, healthOf, inventoryOf, playerState, readEntity, worldTime } from "./read.ts";
+import { effectsOf, equipmentOf, healthOf, inventoryOf, playerState, readEntity, worldTime } from "./read.ts";
 import { resolvePlayer } from "./resolve.ts";
 import { lookAt } from "./target.ts";
 
@@ -38,17 +37,14 @@ export const snapshot: MethodHandler<RequestContext> = (params, context) => {
       else if (section === "health") data.health = healthOf(player);
       else if (section === "inventory") data.inventory = inventoryOf(player, PARAM_LIMITS.maxInventorySlots);
       else if (section === "equipment") data.equipment = equipmentOf(player);
+      else if (section === "effects") data.effects = readEntity("the player", () => effectsOf(player));
       else if (section === "target") data.target = lookAt(player, targetOptions);
       else if (section === "entities") {
         data.entities = readEntity("the player", () => nearbyEntities(player.dimension, player.location, entityOptions, player.id));
       } else data.world = worldTime();
     } catch (error) {
-      errors[section] =
-        error instanceof ObserverError
-          ? { code: error.code, message: error.message }
-          : error instanceof InvalidEntityError
-            ? { code: "TARGET_INVALID", message: "the player is no longer valid" }
-            : { code: "INTERNAL_ERROR", message: "this section failed unexpectedly" };
+      const known = errorBodyOf(error);
+      errors[section] = known ? { code: known.code, message: known.message } : { code: "INTERNAL_ERROR", message: "this section failed unexpectedly" };
     }
   }
   data.errors = errors;

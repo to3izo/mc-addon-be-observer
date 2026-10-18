@@ -57,3 +57,4 @@
 | [0006](0006-bds-only-target.md) | 対象環境を BDS だけにする | 採用 |
 | [0007](0007-phased-delivery-and-approvals.md) | 段階に分けて作り、段階ごとに完了の条件と承認を置く | 採用 |
 | [0008](0008-game-event-notifications.md) | ゲーム内の出来事を、1 行の通知と `events` メソッドで知らせる | 採用 |
+| [0009](0009-phase2-additional-observations.md) | Phase 2 に観測を 6 つ足し、残りの候補は後回しにする | 採用 |

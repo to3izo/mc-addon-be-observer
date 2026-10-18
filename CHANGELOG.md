@@ -28,7 +28,14 @@ and must match `package.json` and both pack manifests (`pnpm version:set <x.y.z>
   players, dimension, game mode and game rule changes, rate-limited, plus the `events` method to read recent
   events again.
 - Reference script `docs/knowledge/bds-local-server/scripts/bds-console-bridge.ps1` to run BDS with its console
-  redirected to files.
+  redirected to files (lines appended to `stdin.txt` while it reads are no longer lost).
+- More observations (ADR-0009): entity filters (`type`, `excludeTypes`, `families`, `excludeFamilies`, `name`,
+  `tags`) for `entities` and `snapshot.entities`; status effects (`effects` section, `includeEffects`); methods
+  `entity` (one entity by id, `ENTITY_NOT_FOUND`), `top`/`tops` (topmost block of columns) and `scoreboard`
+  (read-only); known Script API errors mapped by name to stable codes (new code `UNLOADED_CHUNK`). Verified on
+  BDS 1.26.52.3.
+- Reference script `docs/knowledge/bds-local-server/scripts/bo-verify.ps1` with `bo-verify-cases.json`: sends a
+  set of requests through the bridge, judges the responses and writes the verdicts as JSON.
 - `docs/ROADMAP.md`: checklist of every phase up to the first release, with the current progress, task details
   and open questions. It replaces `docs/PLAN.md`, whose decisions moved to ADR-0007 and ADR-0004.
 

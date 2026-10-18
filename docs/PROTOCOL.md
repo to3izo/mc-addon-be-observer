@@ -161,6 +161,9 @@ Methods that observe a player take `params.player`:
 - **Directions** are unit vectors `{x,y,z}`.
 - Requests use JSON numbers and booleans as such; strings are never converted (`"8"` is not 8, `"true"` is not
   true).
+- **Columns** (`top`, `tops`) are `{ "x": integer, "z": integer }` with the same range as block coordinates.
+- **Names in filters** (entity type ids, families, tags, entity names, objective ids) are strings of 1–64
+  characters; lists of them hold 1–16 items. They are passed to the game as they are (no `minecraft:` is added).
 - Distances (`radius`, `maxDistance`) accept decimals; counts (`limit`) are integers. A value above its
   `capabilities.limits` entry is `LIMIT_EXCEEDED`; below the minimum (1) is `INVALID_PARAMS`. Omitted values use
   `capabilities.defaults`.
@@ -180,6 +183,10 @@ Every method is a pure read at one tick. All of them are implemented (Phase 2, `
 | `entities` | Entities near a player or a point, limited |
 | `snapshot` | Several of the above for one player in one response |
 | `events` | Recent game events after a sequence number (§5.9, §10) |
+| `entity` | One entity by id (§5.10) |
+| `top` | The topmost block of one column: where the ground is (§5.11) |
+| `tops` | The topmost blocks of a few columns, compact (§5.12) |
+| `scoreboard` | Objectives, the scores of one objective, or one player's scores (§5.13) |
 
 ### 5.1 `capabilities`
 
@@ -193,11 +200,11 @@ Every method is a pure read at one tick. All of them are implemented (Phase 2, `
   "protocol": { "version": 1, "supported": [1] },
   "scriptApi": { "@minecraft/server": "2.10.0" },
   "transport": { "requestEventId": "to3izo_bo:query", "responsePrefix": "to3izo_bo.response ", "eventPrefix": "to3izo_bo.event " },
-  "methods": ["capabilities", "players", "player", "block", "blocks", "target", "entities", "snapshot", "events"],
-  "sections": ["health", "inventory", "equipment", "world"],
+  "methods": ["capabilities", "players", "player", "block", "blocks", "target", "entities", "snapshot", "events", "entity", "top", "tops", "scoreboard"],
+  "sections": ["health", "inventory", "equipment", "effects", "world"],
   "events": ["player_join", "player_leave", "player_spawn", "entity_die", "dimension_change", "game_mode_change", "game_rule_change"],
-  "limits": { "maxRequestChars": 2048, "maxResponseChars": 4000, "maxBlocksPerRequest": 32, "maxRayDistance": 64, "maxEntityRadius": 32, "maxEntities": 32, "maxInventorySlots": 54, "maxEventsPerSecond": 20, "eventBufferSize": 64, "maxEventsPerRequest": 64 },
-  "defaults": { "rayDistance": 8, "entityRadius": 16, "entityLimit": 16 },
+  "limits": { "maxRequestChars": 2048, "maxResponseChars": 4000, "maxBlocksPerRequest": 32, "maxRayDistance": 64, "maxEntityRadius": 32, "maxEntities": 32, "maxInventorySlots": 54, "maxScoreEntries": 64, "maxEventsPerSecond": 20, "eventBufferSize": 64, "maxEventsPerRequest": 64 },
+  "defaults": { "rayDistance": 8, "entityRadius": 16, "entityLimit": 16, "scoreLimit": 32 },
   "readOnly": true
 }
 ```
@@ -233,7 +240,7 @@ and a server restart, but the same account had a different id in another world.
 Parameters: `player` (selector, §3), `include` (array of section names from `capabilities.sections`).
 
 ```json
-{ "requestId": "p2", "method": "player", "params": { "player": { "name": "Steve" }, "include": ["health", "inventory", "equipment", "world"] } }
+{ "requestId": "p2", "method": "player", "params": { "player": { "name": "Steve" }, "include": ["health", "inventory", "equipment", "effects", "world"] } }
 ```
 
 ```json
@@ -252,12 +259,15 @@ Parameters: `player` (selector, §3), `include` (array of section names from `ca
   "health": { "current": 20, "max": 20 },
   "inventory": { "size": 36, "emptySlots": 34, "items": [ { "slot": 0, "typeId": "minecraft:stone", "amount": 64 }, { "slot": 1, "typeId": "minecraft:diamond_sword", "amount": 1, "nameTag": "Blade" } ] },
   "equipment": { "Head": null, "Chest": null, "Legs": null, "Feet": null, "Mainhand": { "typeId": "minecraft:stone", "amount": 64 }, "Offhand": null },
+  "effects": [ { "typeId": "minecraft:speed", "amplifier": 1, "duration": 11928 } ],
   "world": { "timeOfDay": 17014, "day": 3, "absoluteTime": 89014 }
 }
 ```
 
 - `movement` contains only flags the stable API exposes directly; nothing is guessed.
 - `health`, `inventory`, `equipment` are `null` when the entity has no such component.
+- `effects` lists the active status effects: `amplifier` 0 is level I, `duration` is the remaining time in ticks as
+  the API reports it.
 - `inventory.items` lists occupied slots only, in slot order; `nameTag` appears only when the item has a custom
   name. It may be truncated (§7).
 
@@ -339,10 +349,21 @@ Parameters: `player` (§3), `maxDistance` (default `rayDistance`, at most `maxRa
 
 Parameters: either `player` (§3; the centre is that player's location, and the player itself is left out) or
 `center` (`{x,y,z}`, decimals allowed) with an optional `dimension` (§4), not both; `radius` (default
-`entityRadius`), `limit` (default `entityLimit`), `excludePlayers` (boolean).
+`entityRadius`), `limit` (default `entityLimit`), `excludePlayers` (boolean), `includeEffects` (boolean; adds
+`effects` as in §5.3 to each entity), and these filters, applied by the game before `limit`:
+
+| Filter | Keeps entities that |
+| --- | --- |
+| `type` | have this type id (e.g. `minecraft:zombie`) |
+| `excludeTypes` | have none of these type ids |
+| `families` | belong to all of these families (e.g. `["monster"]`) |
+| `excludeFamilies` | belong to none of these families |
+| `name` | have this name (a player's name, or an entity's name tag) |
+| `tags` | have all of these tags |
 
 ```json
 { "requestId": "e1", "method": "entities", "params": { "player": { "name": "Steve" }, "radius": 32, "limit": 5 } }
+{ "requestId": "e2", "method": "entities", "params": { "player": { "name": "Steve" }, "families": ["monster"], "includeEffects": true } }
 ```
 
 ```json
@@ -366,9 +387,9 @@ The basic information for one decision, in one response. Each section is taken i
 tick), but the protocol does not promise transactional consistency, and it is not synchronised with
 screenshots or input.
 
-Parameters: `player` (§3); `include` (any of `player`, `health`, `inventory`, `equipment`, `target`, `entities`,
-`world`; default `["player", "target"]`); `target` (options of §5.6 except `player`); `entities` (`radius`,
-`limit`, `excludePlayers`; the centre is always the snapshot's player). Option groups are validated before
+Parameters: `player` (§3); `include` (any of `player`, `health`, `inventory`, `equipment`, `effects`, `target`,
+`entities`, `world`; default `["player", "target"]`); `target` (options of §5.6 except `player`); `entities` (the
+options and filters of §5.7 except `player`, `center` and `dimension`; the centre is always the snapshot's player). Option groups are validated before
 anything is read, so a typo fails the whole request.
 
 ```json
@@ -421,6 +442,109 @@ Recent game events (§10) kept in memory, for a tool that missed event lines or 
 - The buffer lives in memory only: `/reload` or a server restart empties it and starts a new `session`, whose
   event `seq` starts again at 1.
 
+### 5.10 `entity`
+
+One entity by its `id` (from `players`, `entities`, `target` or an event), e.g. to follow a mob or a player.
+Parameter: `id` (string, required).
+
+```json
+{ "requestId": "n1", "method": "entity", "params": { "id": "-25769803765" } }
+```
+
+```json
+"data": {
+  "id": "-25769803765",
+  "typeId": "minecraft:pig",
+  "nameTag": "BoPig",
+  "dimension": "minecraft:overworld",
+  "location": { "x": -5.08, "y": -60, "z": 0.79 },
+  "rotation": { "pitch": 0, "yaw": 124.7 },
+  "velocity": { "x": 0, "y": 0, "z": 0 },
+  "health": { "current": 10, "max": 10 },
+  "effects": [ { "typeId": "minecraft:slowness", "amplifier": 0, "duration": 11889 } ]
+}
+```
+
+- A player has `name` instead of `nameTag`. `health` is `null` for entities without a health component.
+- An entity that is not loaded (unloaded chunk, dead, despawned, or an id that never existed) is
+  `ENTITY_NOT_FOUND`. Entity ids stay the same while the entity exists; a player's id stayed the same across
+  rejoins and server restarts in the same world (`docs/knowledge/bds-local-server/`).
+
+### 5.11 `top`
+
+The topmost non-air block of one column: the ground, a tree top or a roof. Parameters: `x`, `z` (§4), `dimension`
+(§4).
+
+```json
+{ "requestId": "h1", "method": "top", "params": { "dimension": "minecraft:overworld", "x": 5, "z": 5 } }
+```
+
+```json
+"data": {
+  "dimension": "minecraft:overworld",
+  "column": { "x": 5, "z": 5 },
+  "status": "ok",
+  "position": { "x": 5, "y": -61, "z": 5 },
+  "block": { "typeId": "minecraft:grass_block", "states": {}, "isAir": false, "isLiquid": false, "isWaterlogged": false }
+}
+```
+
+`status` is `ok`, `unloaded` (the chunk is not loaded; nothing is loaded to answer), `empty` (only air), or
+`error` (with `reason`). Like `block`, these are not errors (§6).
+
+### 5.12 `tops`
+
+Up to `maxBlocksPerRequest` columns in one request, answered in request order, as a compact height map. Parameters:
+`columns` (array of `{x, z}`), `dimension` (§4). More columns than the limit is `LIMIT_EXCEEDED`.
+
+```json
+{ "requestId": "h2", "method": "tops", "params": { "dimension": "minecraft:overworld", "columns": [ { "x": 0, "z": 0 }, { "x": -3, "z": 7 }, { "x": 200000, "z": 200000 } ] } }
+```
+
+```json
+"data": {
+  "dimension": "minecraft:overworld",
+  "results": [
+    { "x": 0, "z": 0, "status": "ok", "y": -61, "typeId": "minecraft:grass_block" },
+    { "x": -3, "z": 7, "status": "ok", "y": -61, "typeId": "minecraft:grass_block" },
+    { "x": 200000, "z": 200000, "status": "unloaded" }
+  ]
+}
+```
+
+Entries leave out block states so that a full request always fits in one response; ask `top` or `block` for
+the details of one column.
+
+### 5.13 `scoreboard`
+
+Read-only access to the world's scoreboard. Parameters: `objective` (objective id), `player` (§3), `limit`
+(1…`maxScoreEntries`, default `scoreLimit`). What is answered depends on which are given:
+
+| Parameters | Answer |
+| --- | --- |
+| none | `objectives`: `{ id, displayName, participants }` for each objective |
+| `objective` | `objective` and its `scores`: `{ name, type, score }` per participant (`type` is `Player`, `Entity` or `FakePlayer`) |
+| `player` | that player's `scores` in every objective: `{ objective, displayName, score }` (objectives without a score are left out) |
+| `player` + `objective` | the same, for that objective only |
+
+```json
+{ "requestId": "b1", "method": "scoreboard", "params": { "objective": "kills" } }
+```
+
+```json
+"data": {
+  "objective": { "id": "kills", "displayName": "Kills" },
+  "scores": [ { "name": "Steve", "type": "Player", "score": 7 }, { "name": "fake_p", "type": "FakePlayer", "score": 3 } ],
+  "returned": 2,
+  "total": 2,
+  "truncated": false
+}
+```
+
+- Lists are in the order the game gives them; `truncated: true` means more entries than `limit`.
+- An objective that does not exist is `INVALID_PARAMS` (`details.param` = `objective`).
+- The Add-On never creates or changes objectives or scores.
+
 ## 6. Error codes
 
 | Code | When |
@@ -436,10 +560,18 @@ Recent game events (§10) kept in memory, for a tool that missed event lines or 
 | `PLAYER_NOT_FOUND` | No player matches the selector. |
 | `DIMENSION_NOT_FOUND` | Unknown dimension id. |
 | `TARGET_INVALID` | The player or entity became invalid while it was being read. |
+| `ENTITY_NOT_FOUND` | `entity`: no loaded entity has this id. |
+| `UNLOADED_CHUNK` | A read needed a chunk that is not loaded (methods that answer per item use `status: "unloaded"` instead). |
 | `RESPONSE_TOO_LARGE` | Even after the documented truncation the response would exceed `maxResponseChars`. |
 | `INTERNAL_ERROR` | An unexpected exception. The message is a short summary; the details go to a diagnostic line. |
 
-Per-item conditions inside a successful response (`unloaded`, `out_of_bounds`, `hit: false`) are **not** errors.
+Per-item conditions inside a successful response (`unloaded`, `out_of_bounds`, `empty`, `hit: false`) are **not** errors.
+
+Known Script API errors are answered with a protocol code instead of `INTERNAL_ERROR`, matched by the error's
+name, and `details.scriptError` holds that name: `InvalidEntityError` → `TARGET_INVALID`;
+`LocationInUnloadedChunkError`, `UnloadedChunksError` → `UNLOADED_CHUNK`; `LocationOutOfWorldBoundariesError`,
+`ArgumentOutOfBoundsError`, `InvalidArgumentError`, `PropertyOutOfBoundsError`, `EntityQueryError`,
+`NamespaceNameError` → `INVALID_PARAMS`. The same mapping is used for `snapshot` section errors.
 
 ## 7. Size limits and truncation
 
@@ -448,7 +580,7 @@ Per-item conditions inside a successful response (`unloaded`, `out_of_bounds`, `
 - A request longer than `maxRequestChars` characters is refused before parsing.
 - `maxResponseChars` limits the whole line, prefix included.
 - A response is built, serialised and measured. If it exceeds `maxResponseChars`, list fields that allow it
-  are shortened from the end, in this order: `players`; `entities`; `inventory.items`; `events`. The object holding the
+  are shortened from the end, in this order: `players`; `entities`; `inventory.items`; `events`; `scores`; `objectives`. The object holding the
   list gets `"truncated": true` and `"omitted": { "<field>": <count> }`. Single values are never cut.
 - If the response is still too long, the answer is `RESPONSE_TOO_LARGE`; ask for less (lower `limit`, fewer
   sections).

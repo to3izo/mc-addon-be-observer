@@ -104,18 +104,19 @@ Type:
 Feature (script only, read-only)
 
 Status:
-in progress (all eight methods implemented and verified on BDS 1.26.52.3; protocol 1 not frozen yet, see
+in progress (13 methods implemented and verified on BDS 1.26.52.3; protocol 1 not frozen yet, see
 `docs/ROADMAP.md`)
 
 Behavior:
-- Reads players, blocks, ray hits and nearby entities with the stable `@minecraft/server` API and writes a
+- Reads players, blocks, ray hits, nearby entities (with filters and effects), entities by id, the topmost block of
+  columns and the scoreboard with the stable `@minecraft/server` API and writes a
   JSON response to the script log. Never changes the world (no commands, no setters, no dynamic properties,
   no scoreboards, no tags).
 
 Scripts:
 - scripts/features/observer: script-event input and log output
 - scripts/core/observation: game reads → DTOs (`capabilities`, `players`, `player`, `block`/`blocks`, `target`,
-  `entities`, `snapshot`, `events`; shared readers in `read.ts`, player/dimension resolution in `resolve.ts`, game
+  `entities`, `snapshot`, `events`, `entity`, `top`/`tops`, `scoreboard`; shared readers in `read.ts`, player/dimension resolution in `resolve.ts`, game
   event subscriptions and the in-memory event buffer in `events.ts`)
 - scripts/shared/protocol: pure request validation, option parsing, dispatch, envelopes, size limits
 - scripts/shared/constants/version.ts: versions reported by `capabilities`

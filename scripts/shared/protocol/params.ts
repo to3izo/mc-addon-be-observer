@@ -166,3 +166,64 @@ export function readBlockPositions(params: Record<string, unknown>, key: string,
   if (value.length > max) throw new ObserverError("LIMIT_EXCEEDED", `${key} may hold at most ${max} positions`, { param: key, limit: max });
   return value.map((item, i) => parseBlockPosition(item, `${key}[${i}]`));
 }
+
+const MAX_NAME_CHARS = 64;
+const MAX_LIST_ITEMS = 16;
+
+/** Reads an optional non-empty string of at most 64 characters (ids, names, tags). */
+export function readOptionalString(params: Record<string, unknown>, key: string): string | undefined {
+  const value = params[key];
+  if (value === undefined) return undefined;
+  if (typeof value !== "string" || value.length === 0 || value.length > MAX_NAME_CHARS) {
+    throw new ObserverError("INVALID_PARAMS", `${key} must be a string of 1-${MAX_NAME_CHARS} characters`, { param: key });
+  }
+  return value;
+}
+
+/** Reads an optional list of 1-16 strings (each 1-64 characters), e.g. type ids or families. */
+export function readStringList(params: Record<string, unknown>, key: string): string[] | undefined {
+  const value = params[key];
+  if (value === undefined) return undefined;
+  if (!Array.isArray(value) || value.length === 0 || value.length > MAX_LIST_ITEMS) {
+    throw new ObserverError("INVALID_PARAMS", `${key} must be an array of 1-${MAX_LIST_ITEMS} strings`, { param: key });
+  }
+  return value.map((item, i) => {
+    if (typeof item !== "string" || item.length === 0 || item.length > MAX_NAME_CHARS) {
+      throw new ObserverError("INVALID_PARAMS", `${key}[${i}] must be a string of 1-${MAX_NAME_CHARS} characters`, { param: `${key}[${i}]` });
+    }
+    return item;
+  });
+}
+
+export interface Column {
+  x: number;
+  z: number;
+}
+
+/** Parses `{x, z}` integer column coordinates. With `param` "" the axes are named `x`/`z`. */
+export function parseColumn(value: unknown, param: string): Column {
+  if (!isRecord(value)) throw new ObserverError("INVALID_PARAMS", `${param} must be an object {x, z}`, { param });
+  const keys = Object.keys(value);
+  if (keys.length !== 2 || !("x" in value) || !("z" in value)) {
+    throw new ObserverError("INVALID_PARAMS", `${param || "params"} must have exactly x and z`, { param });
+  }
+  const read = (axis: "x" | "z"): number => {
+    const name = param ? `${param}.${axis}` : axis;
+    const n = value[axis];
+    if (typeof n !== "number" || !Number.isInteger(n) || Math.abs(n) > MAX_HORIZONTAL_COORDINATE) {
+      throw new ObserverError("INVALID_PARAMS", `${name} must be an integer within ±${MAX_HORIZONTAL_COORDINATE}`, { param: name });
+    }
+    return n;
+  };
+  return { x: read("x"), z: read("z") };
+}
+
+/** Reads `columns`: a non-empty array of `{x, z}`, at most `max` long (LIMIT_EXCEEDED above). */
+export function readColumns(params: Record<string, unknown>, key: string, max: number): Column[] {
+  const value = params[key];
+  if (!Array.isArray(value) || value.length === 0) {
+    throw new ObserverError("INVALID_PARAMS", `${key} must be a non-empty array of {x, z}`, { param: key });
+  }
+  if (value.length > max) throw new ObserverError("LIMIT_EXCEEDED", `${key} may hold at most ${max} columns`, { param: key, limit: max });
+  return value.map((item, i) => parseColumn(item, `${key}[${i}]`));
+}

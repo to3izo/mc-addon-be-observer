@@ -8,7 +8,7 @@ import { NAMESPACE } from "../../scripts/shared/constants/addon.ts";
 import { buildCapabilities } from "../../scripts/shared/protocol/capabilities.ts";
 import { PARAM_DEFAULTS, PARAM_LIMITS, REQUEST_EVENT_ID, RESPONSE_PREFIX, SIZE_LIMITS } from "../../scripts/shared/protocol/constants.ts";
 import { handleRequest, type MethodHandler, type MethodTable } from "../../scripts/shared/protocol/dispatch.ts";
-import { ObserverError } from "../../scripts/shared/protocol/errors.ts";
+import { ObserverError, errorBodyOf } from "../../scripts/shared/protocol/errors.ts";
 import { EVENT_KINDS, EVENT_LIMITS, EVENT_PREFIX } from "../../scripts/shared/protocol/events.ts";
 import { METHODS, SECTIONS, type MethodName } from "../../scripts/shared/protocol/methods.ts";
 import { createSessionId } from "../../scripts/shared/protocol/session.ts";
@@ -95,8 +95,22 @@ test("U-PROTO-10 capabilities describes this build: methods, transport, limits",
   assert.deepEqual(caps.events, [...EVENT_KINDS]);
   assert.deepEqual(caps.limits, { ...SIZE_LIMITS, ...PARAM_LIMITS, ...EVENT_LIMITS });
   assert.deepEqual(caps.defaults, { ...PARAM_DEFAULTS });
-  assert.deepEqual(caps.methods, ["capabilities", "players", "player", "block", "blocks", "target", "entities", "snapshot", "events"]);
-  assert.deepEqual(caps.sections, ["health", "inventory", "equipment", "world"]);
+  assert.deepEqual(caps.methods, [
+    "capabilities",
+    "players",
+    "player",
+    "block",
+    "blocks",
+    "target",
+    "entities",
+    "snapshot",
+    "events",
+    "entity",
+    "top",
+    "tops",
+    "scoreboard",
+  ]);
+  assert.deepEqual(caps.sections, ["health", "inventory", "equipment", "effects", "world"]);
   assert.equal(caps.readOnly, true);
   assert.equal(caps.addon.namespace, NAMESPACE);
   assert.equal(REQUEST_EVENT_ID, `${NAMESPACE}:query`);
@@ -114,4 +128,29 @@ test("session ids are 8 lowercase alphanumerics and depend on the random source"
   assert.match(createSessionId(), /^[0-9a-z]{8}$/);
   assert.equal(createSessionId(() => 0), "00000000");
   assert.equal(createSessionId(() => 0.999999), "zzzzzzzz");
+});
+
+/** A stand-in for a Script API error class: only `name` matters to the mapping. */
+function scriptError(name: string, message = ""): Error {
+  const error = new Error(message);
+  error.name = name;
+  return error;
+}
+
+test("U-PROTO-15 known Script API errors map to protocol codes by name; others stay INTERNAL_ERROR", () => {
+  assert.deepEqual(errorBodyOf(scriptError("InvalidEntityError", "gone")), { code: "TARGET_INVALID", message: "gone", details: { scriptError: "InvalidEntityError" } });
+  assert.equal(errorBodyOf(scriptError("LocationInUnloadedChunkError"))?.code, "UNLOADED_CHUNK");
+  assert.equal(errorBodyOf(scriptError("LocationInUnloadedChunkError"))?.message, "LocationInUnloadedChunkError");
+  assert.equal(errorBodyOf(scriptError("EntityQueryError"))?.code, "INVALID_PARAMS");
+  assert.equal(errorBodyOf(scriptError("TypeError")), undefined);
+  assert.equal(errorBodyOf("not an error"), undefined);
+  assert.deepEqual(errorBodyOf(new ObserverError("ENTITY_NOT_FOUND", "no")), { code: "ENTITY_NOT_FOUND", message: "no" });
+
+  const failing: MethodHandler<string> = () => {
+    throw scriptError("LocationInUnloadedChunkError", "chunk not loaded");
+  };
+  const handled = handleRequest(JSON.stringify({ requestId: "u", method: "top" }), "", meta, { ...table(), top: failing });
+  assert.equal(handled.envelope.ok, false);
+  if (!handled.envelope.ok) assert.equal(handled.envelope.error.code, "UNLOADED_CHUNK");
+  assert.equal(handled.failure, undefined);
 });

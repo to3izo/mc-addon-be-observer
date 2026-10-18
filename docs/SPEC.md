@@ -26,15 +26,21 @@ Status: all rows are implemented and verified on BDS 1.26.52.3 (`docs/TESTING.md
 | 4 | `player` | Position, head position, rotation, view direction, velocity, movement flags, game mode, selected slot | 2 | done (BDS) |
 | 5 | `block` / `blocks` | Block id and states at integer coordinates; `unloaded` / `out_of_bounds` distinguished from air | 2 | done (BDS) |
 | 6 | `target` | Block the player looks at (face, hit position); optionally the entity | 2 | done (BDS) |
-| 7 | `entities` | Entities near a point, radius- and count-limited, sorted by distance | 2 | done (BDS) |
+| 7 | `entities` | Entities near a point, radius- and count-limited, sorted by distance; filters by type, family, name, tag; optional effects | 2 | done (BDS) |
 | 8 | `snapshot` | `player` + `target` (+ `entities`, `world`) in one response, per-section errors | 2 | done (BDS) |
-| 9 | Sections | `health`, `inventory`, `equipment`, `world` (time of day, day, absolute time) | 2 | done (BDS) |
+| 9 | Sections | `health`, `inventory`, `equipment`, `effects`, `world` (time of day, day, absolute time) | 2 | done (BDS) |
 | 10 | Event notifications | `to3izo_bo.event` lines for player join/leave/spawn, deaths involving players, dimension, game mode and game rule changes; `events` method to catch up (ADR-0008) | 2 | done (BDS) |
+| 11 | `entity` | One entity by id: location, rotation, velocity, health, effects (ADR-0009) | 2 | done (BDS) |
+| 12 | `top` / `tops` | Topmost block of a column (ground height); `tops` as a compact height map of up to 32 columns | 2 | done (BDS) |
+| 13 | `scoreboard` | Objectives, scores of one objective, or one player's scores; read only | 2 | done (BDS) |
+| 14 | Error mapping | Known Script API errors answered with stable codes (`TARGET_INVALID`, `UNLOADED_CHUNK`, `INVALID_PARAMS`) instead of `INTERNAL_ERROR` | 2 | done (unit) |
 
 Not available: chat messages and command use (no stable API; handled by the control tool). Deferred (stable API
 exists but not in the first version): weather (stable read API does not exist), light
 level, biome, rays from an arbitrary origin, small block regions (`getBlocks`), client/input info, join/leave
-a cheat-free custom command entry point, the BDS network adapter (ADR-0004).
+a cheat-free custom command entry point, the BDS network adapter (ADR-0004). Candidates for later (ADR-0009):
+an on/off switch for event notifications, container contents (off by default), paged region reads, a build id in
+`capabilities`, and an optional reply through chat `tell` (off by default; an exception to read-only).
 
 ## Target Minecraft version
 

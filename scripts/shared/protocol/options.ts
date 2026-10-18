@@ -7,6 +7,8 @@ import {
   readBoolean,
   readLimitedNumber,
   readNameList,
+  readOptionalString,
+  readStringList,
   type DimensionId,
   type Location,
 } from "./params.ts";
@@ -30,18 +32,49 @@ export function parseTargetOptions(params: Record<string, unknown>): TargetOptio
   };
 }
 
+/** Entity filters passed to the Script API entity query (all optional; absent means "any"). */
+export interface EntityFilter {
+  type?: string;
+  excludeTypes?: string[];
+  families?: string[];
+  excludeFamilies?: string[];
+  name?: string;
+  tags?: string[];
+}
+
 /** Options of a nearby-entity search (`entities`, and `snapshot.entities`). */
 export interface EntityOptions {
   radius: number;
   limit: number;
   excludePlayers: boolean;
+  includeEffects: boolean;
+  filter: EntityFilter;
   /** Search centre; absent means "the selected player's location". */
   center: Location | undefined;
   dimension: DimensionId | undefined;
 }
 
+export const ENTITY_FILTER_KEYS = ["type", "excludeTypes", "families", "excludeFamilies", "name", "tags"] as const;
+
 /** Keys accepted inside `snapshot.entities` (the centre is always the snapshot's player there). */
-export const ENTITY_OPTION_KEYS = ["radius", "limit", "excludePlayers"] as const;
+export const ENTITY_OPTION_KEYS = ["radius", "limit", "excludePlayers", "includeEffects", ...ENTITY_FILTER_KEYS] as const;
+
+export function parseEntityFilter(params: Record<string, unknown>): EntityFilter {
+  const filter: EntityFilter = {};
+  const type = readOptionalString(params, "type");
+  const excludeTypes = readStringList(params, "excludeTypes");
+  const families = readStringList(params, "families");
+  const excludeFamilies = readStringList(params, "excludeFamilies");
+  const name = readOptionalString(params, "name");
+  const tags = readStringList(params, "tags");
+  if (type) filter.type = type;
+  if (excludeTypes) filter.excludeTypes = excludeTypes;
+  if (families) filter.families = families;
+  if (excludeFamilies) filter.excludeFamilies = excludeFamilies;
+  if (name) filter.name = name;
+  if (tags) filter.tags = tags;
+  return filter;
+}
 
 export function parseEntityOptions(params: Record<string, unknown>): EntityOptions {
   const center = params.center === undefined ? undefined : parseLocation(params.center, "center");
@@ -49,13 +82,15 @@ export function parseEntityOptions(params: Record<string, unknown>): EntityOptio
     radius: readLimitedNumber(params, "radius", { min: 1, max: PARAM_LIMITS.maxEntityRadius }, PARAM_DEFAULTS.entityRadius),
     limit: readLimitedNumber(params, "limit", { min: 1, max: PARAM_LIMITS.maxEntities, integer: true }, PARAM_DEFAULTS.entityLimit),
     excludePlayers: readBoolean(params, "excludePlayers", false),
+    includeEffects: readBoolean(params, "includeEffects", false),
+    filter: parseEntityFilter(params),
     center,
     dimension: parseDimension(params.dimension),
   };
 }
 
 /** Sections `snapshot` can return (docs/PROTOCOL.md §5.8). */
-export const SNAPSHOT_SECTIONS = ["player", "health", "inventory", "equipment", "target", "entities", "world"] as const;
+export const SNAPSHOT_SECTIONS = ["player", "health", "inventory", "equipment", "effects", "target", "entities", "world"] as const;
 export type SnapshotSection = (typeof SNAPSHOT_SECTIONS)[number];
 export const SNAPSHOT_DEFAULT_SECTIONS: readonly SnapshotSection[] = ["player", "target"];
 
@@ -85,5 +120,18 @@ export function parseEventQuery(params: Record<string, unknown>): EventQuery {
     since: readLimitedNumber(params, "since", { min: 0, max: Number.MAX_SAFE_INTEGER, integer: true }, 0),
     limit: readLimitedNumber(params, "limit", { min: 1, max: EVENT_LIMITS.maxEventsPerRequest, integer: true }, 32),
     kinds: params.kinds === undefined ? undefined : readNameList(params, "kinds", EVENT_KINDS, []),
+  };
+}
+
+/** Parameters of the `scoreboard` method (docs/PROTOCOL.md §5.13). */
+export interface ScoreboardQuery {
+  objective: string | undefined;
+  limit: number;
+}
+
+export function parseScoreboardQuery(params: Record<string, unknown>): ScoreboardQuery {
+  return {
+    objective: readOptionalString(params, "objective"),
+    limit: readLimitedNumber(params, "limit", { min: 1, max: PARAM_LIMITS.maxScoreEntries, integer: true }, PARAM_DEFAULTS.scoreLimit),
   };
 }

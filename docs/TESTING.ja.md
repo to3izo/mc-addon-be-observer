@@ -118,6 +118,8 @@ Phase 1・2（`docs/ROADMAP.md`）のテスト計画です。アドオンは **B
 | U-PROTO-11 | Phase 2 の引数: ディメンションの ID（`DIMENSION_NOT_FOUND`）、小数の座標、真偽値、名前のリスト（`include`） | tests/unit/protocol-options.test.ts |
 | U-PROTO-12 | `blocks` の座標: 空でなく、`maxBlocksPerRequest` 以下（`LIMIT_EXCEEDED`）。項目ごとのエラーに番号が付く | 同上 |
 | U-PROTO-13 | オプションのまとまり: `target`・`entities` の既定値と上限。`snapshot` のまとまりは、ほかのまとまりのキーを拒否する | 同上 |
+| U-PROTO-14 | エンティティの絞り込み（`type`・`excludeTypes`・`families`・`excludeFamilies`・`name`・`tags`）と `includeEffects`。`top`・`tops` の列（整数の `x`・`z`、`LIMIT_EXCEEDED`）。`scoreboard` の `objective`・`limit` | tests/unit/protocol-options.test.ts |
+| U-PROTO-15 | 既知の Script API のエラーを、名前でプロトコルのコードに変える（`details.scriptError`）。未知のエラーは `INTERNAL_ERROR` のまま | tests/unit/protocol-dispatch.test.ts |
 | U-EVT-01 | 通知の行: 接頭辞、封筒の項目、`dropped` は 0 でないときだけ、ASCII だけ | tests/unit/protocol-events.test.ts |
 | U-EVT-02 | 保持: 新しい N 件を残す。`since`・`limit`・`more`・`kinds`。押し出しや破棄があれば `missed` | 同上 |
 | U-EVT-03 | 頻度の上限: 20 tick ごとの上限、捨てた数を数える | 同上 |
@@ -181,6 +183,25 @@ Phase 1・2（`docs/ROADMAP.md`）のテスト計画です。アドオンは **B
 | OBS-EVT-07 | `events` を、引数なし・`since` と `limit` 付き・`kinds` 付き・未知の種類付きで | 保持している全件、`more` 付きの次のページ、絞り込み、`INVALID_PARAMS` |
 | OBS-EVT-08 | `/reload` | `session` が新しくなり、通知の `seq` が 1 から。次の出来事まで `events` は空 |
 
+#### Phase 2 の追加分（ゲーム内、BDS、スクリプトで実行）
+
+`bds-console-bridge.ps1` で BDS を動かした状態で、参考のスクリプト `docs/knowledge/bds-local-server/scripts/bo-verify.ps1`
+に、同じフォルダーの `bo-verify-cases.json` を渡して実行する。ケースのファイルは、コンソールのコマンドで状態を用意し
+（タグ `bo_tag` と移動速度低下の付いた、名前 `BoPig` のブタ、プレイヤーの移動速度上昇 II、`PlayerA` = 7・`fake_p` = 3
+のスコアボード `bo_test`）、要求を 1 件ずつ送り、`ok`・`code`・項目を判定して、最後に片付ける。判定（すべての応答を含む）は
+JSON のファイルに書かれる。下の ID は、ケースのファイルの ID。
+
+| ID | 内容 | 期待する結果 |
+| --- | --- | --- |
+| CAP-01 | `capabilities` | `entity`・`top`・`tops`・`scoreboard`、セクション `effects`、`maxScoreEntries` がある |
+| EFF-01、-02 | `effects` 付きの `player`・`snapshot` | `minecraft:speed`、amplifier 1、残りの tick |
+| FLT-01〜07 | `entities` に `type`、`tags` ＋ `includeEffects`、`name` ＋ `excludeTypes`、`families` ＋ `excludeFamilies`、`center` ＋ `type: minecraft:player`、空の `type`。`snapshot.entities` に `tags` | 条件に合うものだけ（ブタと移動速度低下、0 件、プレイヤー）。`INVALID_PARAMS` |
+| ENT-01〜05 | `entity` をブタの id、プレイヤーの id、未知の id、`id` なし、未知のキーで | 位置・向き・速度・体力・効果付きのブタ。プレイヤー。`ENTITY_NOT_FOUND`。`INVALID_PARAMS` が 2 回 |
+| TOP-01〜05 | `top` を読み込まれた列、遠い列、誰もいないネザー、コンソールから `dimension` なし、`x` = 0.5 で | y = -61 の `minecraft:grass_block` で `ok`。`unloaded`。`unloaded`。`INVALID_PARAMS` が 2 回 |
+| TOPS-01〜03 | `tops` を 3 列（1 つは遠い）、33 列、32 列で | 順番どおりの簡潔な結果（`ok`・`ok`・`unloaded`）。`LIMIT_EXCEEDED`。32 列が 1 つの応答に収まる |
+| SB-01〜09 | `scoreboard` を引数なし、`objective`、`objective` ＋ `limit` 1、`player` ＋ `objective`、`player`、未知の objective、`limit` 65、未知のプレイヤーで。objective を消したあとに `player` で | objective の一覧。`type` が `Player`・`FakePlayer` の 2 件。`truncated: true`。スコア 7。1 件以上。`INVALID_PARAMS`。`LIMIT_EXCEEDED`。`PLAYER_NOT_FOUND`。得点なし（エラーではない） |
+| REG-01、-02 | `players`、既定の `snapshot` | Phase 2 から変わらない |
+
 #### 結果
 
 2026-10-18 に実施。BDS for Windows 1.26.52.3（Windows 11 VM）、クライアント Minecraft for Windows 1.26.52.3、アドオン 0.1.0（Phase 1）。BDS のコンソールからの要求は `bds-console-bridge.ps1` 経由、チャットからの要求はクリップボードから貼り付けた。アドオンは BDS 専用（ADR-0006）。ローカルワールドの行は参考として残す。
@@ -232,6 +253,15 @@ Phase 2 — 2026-10-18 に同じ BDS で実施（アドオン 0.1.0、8 つの m
 | OBS-PERF-01 | 成功 | 1 秒に 1 回 × 5 分で 300 件（`snapshot` と `entities` を交互）: BDS に届いた 297 件すべてに、`ok: true` の応答が 1 つずつ返った。警告・ウォッチドッグなし。3 件は、参考のブリッジのファイル経由の入力で失われ、BDS に届いていない（試験の道具の問題。`docs/knowledge/bds-local-server/` §8） |
 
 出来事の通知 — 2026-10-18 に同じ BDS で実施。すべて成功: OBS-EVT-01（下の修正のあと）、-02（`cause` は `selfDestruct`、リスポーンは `initialSpawn: false`）、-03（クモ、`killer` は PlayerA、`cause` は `entityAttack`）、-04（ネザーへの移動は、クライアントの読み込みが終わった tp の約 19 秒後に通知された）、-05、-06、-07、-08（`reload` で新しい session、`seq` は 1 から）。見つけて直したこと: 参加のときに BDS が `Creative → Creative` を 2 回報告していた（`force-gamemode`）。変化のないものは送らないようにした。メモ: クリエイティブのプレイヤーは `/kill` で倒せない（先にサバイバルにする）。
+
+Phase 2 の追加分 — 2026-10-18 に同じ BDS で実施（アドオン 0.1.0、メソッド 13 個）。PlayerA はフラットなオーバーワールドの
+(0, -60, 0)。`bo-verify.ps1` で実行。
+
+| ID | 結果 | メモ |
+| --- | --- | --- |
+| U-PROTO-14、-15 | 成功 | テストは全部で 75 件 |
+| CAP-01、EFF-01〜02、FLT-01〜07、ENT-01〜05、TOP-01〜05、TOPS-01〜03、SB-01〜09、REG-01〜02 | 成功 | 最終のビルドで 34/34。途中で見つけたこと: `tops` の 1 件が大きく 32 列では `maxResponseChars` に収まらないため、簡潔な形にした（TOPS-03 を追加）。objective のないワールドで `player` 付きの `scoreboard` が誤って `INVALID_PARAMS` を返していた（直して SB-09 を追加） |
+| ブリッジの再試験 | 成功 | `bds-console-bridge.ps1` の修正（共有モードで読む、改行で終わった行だけ送る）のあと、4 回の実行で 131 件を送り、131 件とも応答があった。取りこぼしなし |
 
 ## リリース前チェックリスト
 

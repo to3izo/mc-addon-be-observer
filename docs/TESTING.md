@@ -124,6 +124,8 @@ Record each run: platform, game/BDS version, environment (local world / BDS), pa
 | U-PROTO-11 | Phase 2 parameters: dimension ids (`DIMENSION_NOT_FOUND`), decimal locations, booleans, name lists (`include`) | tests/unit/protocol-options.test.ts |
 | U-PROTO-12 | `blocks` positions: non-empty, at most `maxBlocksPerRequest` (`LIMIT_EXCEEDED`), per-item errors name the index | same |
 | U-PROTO-13 | Option groups: `target` / `entities` defaults and limits; `snapshot` groups reject keys of other groups | same |
+| U-PROTO-14 | Entity filters (`type`, `excludeTypes`, `families`, `excludeFamilies`, `name`, `tags`) and `includeEffects`; `top`/`tops` columns (integer `x`/`z`, `LIMIT_EXCEEDED`); `scoreboard` `objective`/`limit` | tests/unit/protocol-options.test.ts |
+| U-PROTO-15 | Known Script API errors map to protocol codes by name (`details.scriptError`); unknown errors stay `INTERNAL_ERROR` | tests/unit/protocol-dispatch.test.ts |
 | U-EVT-01 | Event line: prefix, envelope fields, `dropped` only when non-zero, pure ASCII | tests/unit/protocol-events.test.ts |
 | U-EVT-02 | Event buffer keeps the newest N, `since`/`limit`/`more`/`kinds`, `missed` when pushed out or dropped | same |
 | U-EVT-03 | Rate limit: max per 20-tick window, dropped events counted | same |
@@ -187,6 +189,25 @@ Record each run: platform, game/BDS version, environment (local world / BDS), pa
 | OBS-EVT-07 | `events` with no params, with `since`/`limit`, with `kinds`, with an unknown kind | All held events; the next page with `more`; filtered; `INVALID_PARAMS` |
 | OBS-EVT-08 | `/reload` | New `session`; event `seq` starts at 1; `events` is empty until the next event |
 
+#### Phase 2 additions (in game, BDS, scripted)
+
+These cases are run by the reference script `docs/knowledge/bds-local-server/scripts/bo-verify.ps1` with
+`bo-verify-cases.json` (same folder), while `bds-console-bridge.ps1` runs BDS. The cases file sets up the state with
+console commands (a pig named `BoPig` with the tag `bo_tag` and Slowness, Speed II on the player, the objective
+`bo_test` with `PlayerA` = 7 and `fake_p` = 3), runs each request, judges `ok`/`code`/fields, and cleans up. The
+verdicts (with every response) go to a JSON file. Case ids below are the ids in the cases file.
+
+| IDs | What | Expected |
+| --- | --- | --- |
+| CAP-01 | `capabilities` | Lists `entity`, `top`, `tops`, `scoreboard`, the `effects` section, `maxScoreEntries` |
+| EFF-01, -02 | `player` / `snapshot` with `effects` | `minecraft:speed`, amplifier 1, remaining ticks |
+| FLT-01…07 | `entities` with `type`, `tags` + `includeEffects`, `name` + `excludeTypes`, `families` + `excludeFamilies`, `center` + `type: minecraft:player`, an empty `type`; `snapshot.entities` with `tags` | Only the matching entities (the pig, with Slowness; none; the player); `INVALID_PARAMS` |
+| ENT-01…05 | `entity` by the pig's id, by the player's id, by an unknown id, without `id`, with an unknown key | Pig with location, rotation, velocity, health, effects; the player; `ENTITY_NOT_FOUND`; `INVALID_PARAMS` twice |
+| TOP-01…05 | `top` at a loaded column, a far column, the Nether with nobody there, without `dimension` from the console, with `x` = 0.5 | `ok` + `minecraft:grass_block` at y = -61; `unloaded`; `unloaded`; `INVALID_PARAMS` twice |
+| TOPS-01…03 | `tops` with 3 columns (one far), 33 columns, 32 columns | Compact results in order (`ok`, `ok`, `unloaded`); `LIMIT_EXCEEDED`; all 32 fit in one response |
+| SB-01…09 | `scoreboard` with no params, `objective`, `objective` + `limit` 1, `player` + `objective`, `player`, an unknown objective, `limit` 65, an unknown player; `player` after the objective was removed | Objectives; both scores with `type` `Player`/`FakePlayer`; `truncated: true`; score 7; at least one score; `INVALID_PARAMS`; `LIMIT_EXCEEDED`; `PLAYER_NOT_FOUND`; no scores (not an error) |
+| REG-01, -02 | `players`, `snapshot` defaults | Unchanged from Phase 2 |
+
 #### Results
 
 Run 2026-10-18 — BDS for Windows 1.26.52.3 (Windows 11 VM), client Minecraft for Windows 1.26.52.3, Add-On
@@ -246,6 +267,15 @@ Nether move was reported ~19 s after the teleport, when the client had loaded it
 session after `reload`, `seq` from 1). Found and fixed: on join BDS reported `Creative → Creative` twice
 (`force-gamemode`); such no-op changes are no longer sent. Note: Creative players cannot be killed with `/kill`
 (switch to Survival first).
+
+Phase 2 additions — run 2026-10-18 on the same BDS (Add-On 0.1.0 with 13 methods), with PlayerA in the flat
+overworld at (0, -60, 0), using `bo-verify.ps1`.
+
+| ID | Result | Notes |
+| --- | --- | --- |
+| U-PROTO-14, -15 | pass | 75 tests in total |
+| CAP-01, EFF-01–02, FLT-01–07, ENT-01–05, TOP-01–05, TOPS-01–03, SB-01–09, REG-01–02 | pass | 34/34 on the final build. Found on the way: 32 full `tops` entries would not fit in `maxResponseChars`, so entries were made compact (TOPS-03 added); `scoreboard` with `player` in a world without objectives wrongly answered `INVALID_PARAMS` (fixed, SB-09 added) |
+| Bridge re-test | pass | After the fix to `bds-console-bridge.ps1` (shared read, complete lines only): 131 requests sent in four runs, 131 answered, none lost |
 
 ## Release checklist
 

@@ -1,5 +1,5 @@
 import { SIZE_LIMITS } from "./constants.ts";
-import { ObserverError } from "./errors.ts";
+import { errorBodyOf } from "./errors.ts";
 import { isMethodName, type MethodName } from "./methods.ts";
 import { parseRequest } from "./request.ts";
 import { errorEnvelope, successEnvelope, type ResponseEnvelope, type ResponseMeta, type TruncatablePath } from "./response.ts";
@@ -23,8 +23,8 @@ export interface HandledRequest {
 }
 
 /**
- * Turns one request message into exactly one response envelope. Never throws: validation problems and
- * ObserverErrors become protocol errors, anything else becomes INTERNAL_ERROR.
+ * Turns one request message into exactly one response envelope. Never throws: validation problems,
+ * ObserverErrors and known Script API errors become protocol errors, anything else becomes INTERNAL_ERROR.
  */
 export function handleRequest<Context>(
   message: string,
@@ -48,7 +48,8 @@ export function handleRequest<Context>(
     const result = methods[method](params, context);
     return { envelope: successEnvelope(requestId, method, meta, result.data), truncatable: result.truncatable ?? [] };
   } catch (error) {
-    if (error instanceof ObserverError) return { envelope: errorEnvelope(requestId, method, meta, error.toBody()), truncatable: [] };
+    const known = errorBodyOf(error);
+    if (known) return { envelope: errorEnvelope(requestId, method, meta, known), truncatable: [] };
     return {
       envelope: errorEnvelope(requestId, method, meta, { code: "INTERNAL_ERROR", message: "the observation failed unexpectedly" }),
       truncatable: [],

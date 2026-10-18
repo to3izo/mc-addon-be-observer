@@ -12,15 +12,19 @@ import {
   SNAPSHOT_SECTIONS,
   TARGET_OPTION_KEYS,
   optionGroup,
+  parseEntityFilter,
   parseEntityOptions,
+  parseScoreboardQuery,
   parseTargetOptions,
 } from "../../scripts/shared/protocol/options.ts";
 import {
   parseBlockPosition,
+  parseColumn,
   parseDimension,
   parseLocation,
   readBlockPositions,
   readBoolean,
+  readColumns,
   readNameList,
   readOptions,
 } from "../../scripts/shared/protocol/params.ts";
@@ -80,7 +84,7 @@ test("U-PROTO-13 target options: defaults and limits", () => {
 
 test("U-PROTO-13 entity options: defaults, integer limit, centre and dimension", () => {
   const defaults = parseEntityOptions({});
-  assert.deepEqual(defaults, { radius: PARAM_DEFAULTS.entityRadius, limit: PARAM_DEFAULTS.entityLimit, excludePlayers: false, center: undefined, dimension: undefined });
+  assert.deepEqual(defaults, { radius: PARAM_DEFAULTS.entityRadius, limit: PARAM_DEFAULTS.entityLimit, excludePlayers: false, includeEffects: false, filter: {}, center: undefined, dimension: undefined });
   throwsCode(() => parseEntityOptions({ limit: 2.5 }), "INVALID_PARAMS", "limit");
   throwsCode(() => parseEntityOptions({ limit: PARAM_LIMITS.maxEntities + 1 }), "LIMIT_EXCEEDED", "limit");
   throwsCode(() => parseEntityOptions({ radius: PARAM_LIMITS.maxEntityRadius + 0.5 }), "LIMIT_EXCEEDED", "radius");
@@ -95,4 +99,54 @@ test("U-PROTO-13 snapshot option groups reject keys that belong elsewhere", () =
     () => optionGroup({ center: { x: 0, y: 0, z: 0 } }, ENTITY_OPTION_KEYS, "entities"),
     (error: unknown) => error instanceof ObserverError && error.code === "INVALID_PARAMS" && error.message.startsWith("entities: "),
   );
+});
+
+test("U-PROTO-14 entity filters: only given keys are kept; wrong shapes are INVALID_PARAMS", () => {
+  assert.deepEqual(parseEntityFilter({}), {});
+  assert.deepEqual(parseEntityFilter({ type: "minecraft:zombie", families: ["monster"], tags: ["boss"], name: "\u30dc\u30b9" }), {
+    type: "minecraft:zombie",
+    families: ["monster"],
+    tags: ["boss"],
+    name: "\u30dc\u30b9",
+  });
+  assert.deepEqual(parseEntityFilter({ excludeTypes: ["minecraft:item"], excludeFamilies: ["inanimate"] }), {
+    excludeTypes: ["minecraft:item"],
+    excludeFamilies: ["inanimate"],
+  });
+  throwsCode(() => parseEntityFilter({ type: "" }), "INVALID_PARAMS", "type");
+  throwsCode(() => parseEntityFilter({ type: ["minecraft:zombie"] }), "INVALID_PARAMS", "type");
+  throwsCode(() => parseEntityFilter({ families: [] }), "INVALID_PARAMS", "families");
+  throwsCode(() => parseEntityFilter({ tags: ["ok", 3] }), "INVALID_PARAMS", "tags[1]");
+  throwsCode(() => parseEntityFilter({ excludeTypes: Array.from({ length: 17 }, (_, i) => `t${i}`) }), "INVALID_PARAMS", "excludeTypes");
+  const options = parseEntityOptions({ includeEffects: true, type: "minecraft:villager_v2" });
+  assert.equal(options.includeEffects, true);
+  assert.deepEqual(options.filter, { type: "minecraft:villager_v2" });
+  for (const key of ["type", "excludeTypes", "families", "excludeFamilies", "name", "tags", "includeEffects"]) {
+    assert.ok((ENTITY_OPTION_KEYS as readonly string[]).includes(key), key);
+  }
+  assert.ok(SNAPSHOT_SECTIONS.includes("effects"));
+});
+
+test("U-PROTO-14 columns: integer x/z only; list length is limited", () => {
+  assert.deepEqual(parseColumn({ x: -5, z: 12 }, ""), { x: -5, z: 12 });
+  throwsCode(() => parseColumn({ x: 1 }, ""), "INVALID_PARAMS");
+  throwsCode(() => parseColumn({ x: 1, z: 2, y: 3 }, "c"), "INVALID_PARAMS", "c");
+  throwsCode(() => parseColumn({ x: 1.5, z: 2 }, ""), "INVALID_PARAMS", "x");
+  throwsCode(() => parseColumn({ x: 1, z: "2" }, "columns[0]"), "INVALID_PARAMS", "columns[0].z");
+  assert.deepEqual(readColumns({ columns: [{ x: 0, z: 0 }, { x: 1, z: -1 }] }, "columns", 32), [
+    { x: 0, z: 0 },
+    { x: 1, z: -1 },
+  ]);
+  throwsCode(() => readColumns({}, "columns", 32), "INVALID_PARAMS", "columns");
+  throwsCode(() => readColumns({ columns: [] }, "columns", 32), "INVALID_PARAMS", "columns");
+  const tooMany = Array.from({ length: PARAM_LIMITS.maxBlocksPerRequest + 1 }, (_, i) => ({ x: i, z: 0 }));
+  throwsCode(() => readColumns({ columns: tooMany }, "columns", PARAM_LIMITS.maxBlocksPerRequest), "LIMIT_EXCEEDED", "columns");
+});
+
+test("U-PROTO-14 scoreboard query: objective is optional, limit has a default and a ceiling", () => {
+  assert.deepEqual(parseScoreboardQuery({}), { objective: undefined, limit: PARAM_DEFAULTS.scoreLimit });
+  assert.deepEqual(parseScoreboardQuery({ objective: "kills", limit: 5 }), { objective: "kills", limit: 5 });
+  throwsCode(() => parseScoreboardQuery({ objective: 3 }), "INVALID_PARAMS", "objective");
+  throwsCode(() => parseScoreboardQuery({ limit: 0 }), "INVALID_PARAMS", "limit");
+  throwsCode(() => parseScoreboardQuery({ limit: PARAM_LIMITS.maxScoreEntries + 1 }), "LIMIT_EXCEEDED", "limit");
 });

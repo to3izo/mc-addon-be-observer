@@ -31,6 +31,7 @@ export const PARAM_LIMITS = {
   maxEntityRadius: 32,
   maxEntities: 32,
   maxInventorySlots: 54,
+  maxScoreEntries: 64,
 } as const;
 
 /** Values used when a request leaves a parameter out. */
@@ -38,4 +39,5 @@ export const PARAM_DEFAULTS = {
   rayDistance: 8,
   entityRadius: 16,
   entityLimit: 16,
+  scoreLimit: 32,
 } as const;

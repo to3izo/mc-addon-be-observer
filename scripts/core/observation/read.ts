@@ -164,8 +164,43 @@ export function distance(a: Vector3, b: Vector3): number {
   return Math.hypot(a.x - b.x, a.y - b.y, a.z - b.z);
 }
 
+/** `{name}` for players, `{nameTag}` for entities with a custom name, `{}` otherwise. */
+function labelOf(entity: Entity): Record<string, string> {
+  return entity instanceof Player ? { name: entity.name } : entity.nameTag ? { nameTag: entity.nameTag } : {};
+}
+
+/** Active status effects (`effects` section): type id, amplifier (0 = level I) and remaining ticks. */
+export function effectsOf(entity: Entity): Array<{ typeId: string; amplifier: number; duration: number }> {
+  return entity.getEffects().map((effect) => ({ typeId: effect.typeId, amplifier: effect.amplifier, duration: effect.duration }));
+}
+
 /** One entity in `entities` / `target.entity`. Players also get their name; a custom name tag is added when set. */
-export function entitySummary(entity: Entity, from: Vector3): Record<string, unknown> {
-  const label = entity instanceof Player ? { name: entity.name } : entity.nameTag ? { nameTag: entity.nameTag } : {};
-  return { id: entity.id, typeId: entity.typeId, ...label, location: vec(entity.location), distance: distance(entity.location, from) };
+export function entitySummary(entity: Entity, from: Vector3, withEffects = false): Record<string, unknown> {
+  const summary: Record<string, unknown> = {
+    id: entity.id,
+    typeId: entity.typeId,
+    ...labelOf(entity),
+    location: vec(entity.location),
+    distance: distance(entity.location, from),
+  };
+  return withEffects ? { ...summary, effects: effectsOf(entity) } : summary;
+}
+
+/** One entity as `entity` answers it (docs/PROTOCOL.md §5.10). */
+export function entityDetail(entity: Entity): Record<string, unknown> {
+  return readEntity("the entity", () => {
+    const rotation = entity.getRotation();
+    const health = entity.getComponent("minecraft:health");
+    return {
+      id: entity.id,
+      typeId: entity.typeId,
+      ...labelOf(entity),
+      dimension: entity.dimension.id,
+      location: vec(entity.location),
+      rotation: { pitch: rotation.x, yaw: rotation.y },
+      velocity: vec(entity.getVelocity()),
+      health: health ? { current: health.currentValue, max: health.effectiveMax } : null,
+      effects: effectsOf(entity),
+    };
+  });
 }
