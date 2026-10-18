@@ -3,7 +3,7 @@ import { capabilities } from "./capabilities.ts";
 import type { ObservationMethods } from "./context.ts";
 import { entities } from "./entities.ts";
 import { entity } from "./entity.ts";
-import { events } from "./events.ts";
+import { events, subscribe } from "./events.ts";
 import { player } from "./player.ts";
 import { players } from "./players.ts";
 import { scoreboard } from "./scoreboard.ts";
@@ -29,4 +29,5 @@ export const OBSERVATION_METHODS: ObservationMethods = {
   top,
   tops,
   scoreboard,
+  subscribe,
 };

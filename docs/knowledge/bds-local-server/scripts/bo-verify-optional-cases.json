@@ -1,0 +1,58 @@
+{
+  "about": "Cases for bo-verify.ps1: opt-in events and subscribe (ADR-0014). Only the kinds the console can cause (weather, effects, damage, spawns, an explosion in the air); block_break, block_place and item_use need a player's client (docs/TESTING.md OBS-OPT-03, -06). Needs the player PlayerA online in a flat overworld, standing at 0 -60 0. PlayerA stands for the name of the player who runs the test: replace it before running. Each check reads the events after a mark ($ref to latestSeq), so earlier events in the session do not matter. Natural mob spawning is off during the run (a slime spawning near the player would be a correct, but unexpected, entity_spawn), and is turned back on at the end; skip that last step if the world had it off. Effects are cleared before each effect step: the game fires no effect event when a stronger effect of the same type is already active (for example Speed II for 600 s left by bo-verify-cases.json).",
+  "steps": [
+    { "console": "kill @e[type=pig,name=BoOpt]" },
+    { "console": "kill @e[type=pig,name=BoOptFar]" },
+    { "console": "weather clear" },
+    { "console": "effect PlayerA clear" },
+    { "console": "gamerule domobspawning false" },
+    { "console": "execute in overworld run tp PlayerA 0 -60 0", "waitMs": 1500 },
+
+    { "id": "OPT-00", "method": "subscribe", "params": { "disable": ["block_break", "block_place", "entity_hurt", "effect_add", "item_use", "explosion", "weather_change", "entity_spawn"] }, "expect": { "equals": { "data.optional.0": "block_break", "data.optional.7": "entity_spawn" } } },
+    { "id": "OPT-01", "method": "capabilities", "expect": { "has": ["data.build.id", "data.build.time"], "equals": { "data.methods.13": "subscribe", "data.optionalEvents.kinds.2": "entity_hurt", "data.optionalEvents.kinds.7": "entity_spawn", "data.limits.eventPlayerRadius": 32, "data.events.6": "game_rule_change", "data.readOnly": true } } },
+    { "id": "OPT-13a", "method": "subscribe", "params": { "enable": ["player_join"] }, "expect": { "ok": false, "code": "INVALID_PARAMS" } },
+    { "id": "OPT-13b", "method": "subscribe", "params": { "enable": ["chat"] }, "expect": { "ok": false, "code": "INVALID_PARAMS" } },
+    { "id": "OPT-13c", "method": "subscribe", "params": { "enable": ["item_use"], "disable": ["item_use"] }, "expect": { "ok": false, "code": "INVALID_PARAMS" } },
+    { "id": "OPT-13d", "method": "subscribe", "params": { "enable": "item_use" }, "expect": { "ok": false, "code": "INVALID_PARAMS" } },
+    { "id": "OPT-13e", "method": "subscribe", "params": { "on": true }, "expect": { "ok": false, "code": "INVALID_PARAMS" } },
+    { "id": "OPT-13f", "method": "events", "params": { "kinds": ["chat"] }, "expect": { "ok": false, "code": "INVALID_PARAMS" } },
+
+    { "id": "MARK0", "method": "events", "params": { "limit": 1 } },
+    { "console": "effect PlayerA speed 5 0 true" },
+    { "console": "weather rain" },
+    { "console": "weather clear", "waitMs": 800 },
+    { "id": "OPT-10a", "method": "events", "params": { "since": "$ref:MARK0:data.latestSeq", "kinds": ["effect_add", "weather_change"] }, "expect": { "equals": { "data.returned": 0 } } },
+
+    { "id": "OPT-02", "method": "subscribe", "params": { "enable": ["entity_spawn", "weather_change", "explosion", "effect_add", "entity_hurt"] }, "expect": { "equals": { "data.enabled.0": "entity_hurt", "data.enabled.1": "effect_add", "data.enabled.2": "explosion", "data.enabled.3": "weather_change", "data.enabled.4": "entity_spawn", "data.changed.4": "entity_spawn" } } },
+    { "id": "OPT-02b", "method": "capabilities", "expect": { "equals": { "data.optionalEvents.enabled.0": "entity_hurt", "data.optionalEvents.enabled.4": "entity_spawn" } } },
+    { "id": "MARK1", "method": "events", "params": { "limit": 1 } },
+    { "console": "weather rain" },
+    { "console": "weather clear" },
+    { "console": "effect PlayerA clear" },
+    { "console": "effect PlayerA speed 10 1 true" },
+    { "console": "effect @e[type=cow] slowness 10 0 true" },
+    { "console": "summon pig BoOpt 3 -60 0", "waitMs": 800 },
+    { "console": "damage @e[type=pig,name=BoOpt] 1 entity_attack entity PlayerA", "waitMs": 1000 },
+    { "console": "damage @e[type=pig,name=BoOpt] 1 fall", "waitMs": 600 },
+    { "console": "summon pig BoOptFar 60 -60 0" },
+    { "console": "summon ender_crystal 0 -20 0", "waitMs": 600 },
+    { "console": "damage @e[type=ender_crystal] 1", "waitMs": 1500 },
+    { "id": "OPT-08", "method": "events", "params": { "since": "$ref:MARK1:data.latestSeq", "kinds": ["weather_change"] }, "expect": { "equals": { "data.returned": 2, "data.events.0.data.dimension": "minecraft:overworld", "data.events.0.data.from": "Clear", "data.events.0.data.to": "Rain", "data.events.1.data.to": "Clear" } } },
+    { "id": "OPT-05", "method": "events", "params": { "since": "$ref:MARK1:data.latestSeq", "kinds": ["effect_add"] }, "expect": { "equals": { "data.returned": 1, "data.events.0.data.effect.typeId": "minecraft:speed", "data.events.0.data.effect.amplifier": 1, "data.events.0.data.player.name": "PlayerA" } } },
+    { "id": "OPT-09", "method": "events", "params": { "since": "$ref:MARK1:data.latestSeq", "kinds": ["entity_spawn"] }, "expect": { "equals": { "data.returned": 1, "data.events.0.data.entity.nameTag": "BoOpt", "data.events.0.data.cause": "Spawned", "data.events.0.data.dimension": "minecraft:overworld" } } },
+    { "id": "OPT-04", "method": "events", "params": { "since": "$ref:MARK1:data.latestSeq", "kinds": ["entity_hurt"] }, "expect": { "has": ["data.events.0.data.health.current"], "equals": { "data.returned": 1, "data.events.0.data.entity.nameTag": "BoOpt", "data.events.0.data.cause": "entityAttack", "data.events.0.data.attacker.name": "PlayerA" } } },
+    { "id": "OPT-07", "method": "events", "params": { "since": "$ref:MARK1:data.latestSeq", "kinds": ["explosion"] }, "expect": { "equals": { "data.returned": 1, "data.events.0.data.impactedBlocks": 0, "data.events.0.data.source.typeId": "minecraft:ender_crystal" } } },
+
+    { "id": "OPT-10b", "method": "subscribe", "params": { "disable": ["entity_hurt", "effect_add", "explosion", "weather_change", "entity_spawn"] }, "expect": { "equals": { "data.changed.0": "entity_hurt", "data.changed.4": "entity_spawn" } } },
+    { "id": "MARK2", "method": "events", "params": { "limit": 1 } },
+    { "console": "effect PlayerA speed 5 0 true" },
+    { "console": "weather rain" },
+    { "console": "weather clear", "waitMs": 800 },
+    { "id": "OPT-10c", "method": "events", "params": { "since": "$ref:MARK2:data.latestSeq", "kinds": ["effect_add", "weather_change"] }, "expect": { "equals": { "data.returned": 0 } } },
+
+    { "console": "kill @e[type=pig,name=BoOpt]" },
+    { "console": "kill @e[type=pig,name=BoOptFar]" },
+    { "console": "effect PlayerA clear" },
+    { "console": "gamerule domobspawning true" }
+  ]
+}

@@ -1,10 +1,12 @@
 import { NAMESPACE } from "../constants/addon.ts";
 import { PROTOCOL_VERSION } from "./constants.ts";
+import type { BlockPosition, Location } from "./params.ts";
 import { toAsciiJson } from "./response.ts";
 
 /**
  * Game events pushed as `to3izo_bo.event {json}` lines (docs/PROTOCOL.md §10, ADR-0008).
  * Kinds are a stable contract: add new ones, never rename or remove one.
+ * These kinds are always on; `capabilities.events` lists them.
  */
 export const EVENT_KINDS = [
   "player_join",
@@ -16,7 +18,37 @@ export const EVENT_KINDS = [
   "game_rule_change",
 ] as const;
 
-export type EventKind = (typeof EVENT_KINDS)[number];
+export type CoreEventKind = (typeof EVENT_KINDS)[number];
+
+/**
+ * Opt-in kinds (ADR-0014): off until a tool enables them with the `subscribe` method. The switch is kept in
+ * memory only, so /reload and a server restart turn them all off again. `capabilities.optionalEvents` lists them.
+ */
+export const OPTIONAL_EVENT_KINDS = [
+  "block_break",
+  "block_place",
+  "entity_hurt",
+  "effect_add",
+  "item_use",
+  "explosion",
+  "weather_change",
+  "entity_spawn",
+] as const;
+
+export type OptionalEventKind = (typeof OPTIONAL_EVENT_KINDS)[number];
+
+export type EventKind = CoreEventKind | OptionalEventKind;
+
+/** Every kind this build can send, always-on kinds first. */
+export const ALL_EVENT_KINDS: readonly EventKind[] = [...EVENT_KINDS, ...OPTIONAL_EVENT_KINDS];
+
+export function isOptionalEventKind(kind: unknown): kind is OptionalEventKind {
+  return (OPTIONAL_EVENT_KINDS as readonly unknown[]).includes(kind);
+}
+
+export function isCoreEventKind(kind: unknown): kind is CoreEventKind {
+  return (EVENT_KINDS as readonly unknown[]).includes(kind);
+}
 
 /** Marks a machine-readable event line. Exactly one JSON object follows it on the same line. */
 export const EVENT_PREFIX = `${NAMESPACE}.event `;
@@ -29,7 +61,72 @@ export const EVENT_LIMITS = {
   eventBufferSize: 64,
   /** Most events one `events` request returns. */
   maxEventsPerRequest: 64,
+  /** `entity_spawn` is sent only for entities this close (blocks) to a player in the same dimension. */
+  eventPlayerRadius: 32,
 } as const;
+
+/** `entity_spawn` causes that are not reported: `Loaded` is an existing entity coming back with its chunk. */
+export const IGNORED_SPAWN_CAUSES: readonly string[] = ["Loaded"];
+
+/** Which opt-in kinds are on. Memory only (ADR-0014): never stored in the world. */
+export class EventSwitch {
+  private readonly on = new Set<OptionalEventKind>();
+
+  isOn(kind: OptionalEventKind): boolean {
+    return this.on.has(kind);
+  }
+
+  /** The kinds that are on, in `OPTIONAL_EVENT_KINDS` order. */
+  enabled(): OptionalEventKind[] {
+    return OPTIONAL_EVENT_KINDS.filter((kind) => this.on.has(kind));
+  }
+
+  /** Turns kinds on and off and returns the kinds whose state changed, in `OPTIONAL_EVENT_KINDS` order. */
+  apply(enable: readonly OptionalEventKind[], disable: readonly OptionalEventKind[]): OptionalEventKind[] {
+    const changed = new Set<OptionalEventKind>();
+    for (const kind of enable) {
+      if (!this.on.has(kind)) {
+        this.on.add(kind);
+        changed.add(kind);
+      }
+    }
+    for (const kind of disable) {
+      if (this.on.delete(kind)) changed.add(kind);
+    }
+    return OPTIONAL_EVENT_KINDS.filter((kind) => changed.has(kind));
+  }
+}
+
+/**
+ * Dimension ids in events are full ids (`minecraft:overworld`), as everywhere in the protocol. `weatherChange`
+ * gives a short one (`overworld`, seen on BDS 1.26.52.3).
+ */
+export function fullDimensionId(id: string): string {
+  return id.includes(":") ? id : `minecraft:${id}`;
+}
+
+/** True when `point` is within `radius` blocks of any of `others` (straight-line distance). */
+export function isNearAny(point: Location, others: readonly Location[], radius: number): boolean {
+  const r2 = radius * radius;
+  return others.some((o) => (o.x - point.x) ** 2 + (o.y - point.y) ** 2 + (o.z - point.z) ** 2 <= r2);
+}
+
+/** The smallest box holding all `positions`, or undefined when there are none (`explosion.bounds`). */
+export function blockBounds(positions: readonly BlockPosition[]): { min: BlockPosition; max: BlockPosition } | undefined {
+  const first = positions[0];
+  if (!first) return undefined;
+  const min = { ...first };
+  const max = { ...first };
+  for (const p of positions) {
+    min.x = Math.min(min.x, p.x);
+    min.y = Math.min(min.y, p.y);
+    min.z = Math.min(min.z, p.z);
+    max.x = Math.max(max.x, p.x);
+    max.y = Math.max(max.y, p.y);
+    max.z = Math.max(max.z, p.z);
+  }
+  return { min, max };
+}
 
 export interface EventRecord {
   kind: EventKind;

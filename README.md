@@ -99,7 +99,7 @@ network, forward them with a program outside Minecraft and follow `SECURITY.md`.
 
 | Method | Answers |
 | --- | --- |
-| `capabilities` | Versions, methods, sections, limits and defaults — call this first |
+| `capabilities` | Versions, the build identifier, methods, sections, limits and defaults — call this first |
 | `players` | Players in the world |
 | `player` | Position, head, rotation, view direction, velocity, movement flags, game mode; optional `health`, `inventory`, `equipment`, `effects`, `world` (time) |
 | `block` / `blocks` | Blocks by coordinates (`unloaded` / `out_of_bounds` are told apart from air) |
@@ -110,6 +110,7 @@ network, forward them with a program outside Minecraft and follow `SECURITY.md`.
 | `scoreboard` | Objectives, the scores of one objective, or one player's scores |
 | `snapshot` | Several of the above for one player, in one response |
 | `events` | Recent game events again: joins, leaves, spawns, deaths involving players, dimension, game mode and game rule changes |
+| `subscribe` | Turn on opt-in events: blocks broken and placed, damage, effects, item use, explosions, weather, nearby spawns (memory only; off after a restart) |
 
 The full wire format, limits and error codes are in **[docs/PROTOCOL.md](docs/PROTOCOL.md)**.
 

@@ -153,6 +153,21 @@ Phase 3（server-net のアダプター）は 2026-10-18 に却下した（ADR-0
 - **採用後の確認（operator だけ、ADR-0010）:** 権限を `GameDirectors` にした版では、`member` は「コマンドの権限レベルが正しくありません: to3izo_bo:query。」で拒否され、アドオンには何も届かなかった。`op PlayerA` のあとは、`allow-cheats=false` のまま応答があった。コマンドを変えていない版で `/reload` したあとも、そのまま使えた（登録できないのは、新しいコマンドや引数を変えたときだけ）。
 - 試験で `op`・`deop` したあと、`permissions.json` には `member` の行が残った（`deop` しても空には戻らない）。BDS を止めてからバックアップで元に戻した。
 
+### 追加のイベント（実機で確認、2026-10-18、BDS 1.26.52.3、ADR-0014）
+
+ゲームの `world.afterEvents` の動きで、公式資料に書かれていないもの。プロトコルとしての注意は `docs/PROTOCOL.md` §10 にある。
+
+- **`weatherChange` の `dimension` は、`overworld` のような短い ID だった**（ほかの API は `minecraft:overworld`）。アドオンは、完全な ID に直して書く。
+- **`effectAdd` は、その種類の効果がないときだけ出た。** 移動速度上昇 II（600 秒）がかかっている間に、`effect … speed 10 1`（弱い）も `speed 900 2`（強い）も、イベントにならなかった（コマンドは「Gave Speed」と答える）。`effect … clear` のあとは出た。試験では、先に効果を消す。
+- **ブロックを置くと、`playerPlaceBlock` と一緒に `itemUse` も出た**（置いたブロックのアイテム）。
+- **`entityHurt` は、ダメージがあったときだけ出た。** 叩かれた 1 tick 後の `damage` は、無敵時間でダメージにならず、出なかった。クリエイティブのプレイヤーは `damage` を受けない（サバイバルに切り替えて試す）。
+- **`explosion` の `source` は、イベントの時点でいつも無効だった**（TNT、エンドクリスタル）。位置は読めない。`getImpactedBlocks()` の範囲で場所が分かる。
+- **ワールドを壊さずに爆発を試す方法:** 空中にエンドクリスタルを出して壊す（`summon ender_crystal 0 -20 0`、`damage @e[type=ender_crystal] 1`）。壊れるブロックは 0。TNT を地面で試したときは、穴を `fill <範囲> dirt replace air` と `fill <範囲> grass_block replace air` で埋め戻し、`tops` で平らに戻ったことを確かめた。
+- **`entitySpawn` の `cause`:** `summon`・雪玉・TNT・爆発で落ちたアイテムは `Spawned`。プレイヤーの参加でチャンクと一緒に読み込まれたモブは `Loaded`（アドオンは知らせない）。フラットのワールドでも、自然にスライムが出る。出現の試験では `gamerule domobspawning false` にし、終わったら戻す。
+- **動いている BDS に、開発用パックを上書きして `reload` すると、新しいスクリプトになった。** `capabilities.build.id` が新しいビルドの id に変わったことで確かめた（BDS を止めなくてよい。カスタムコマンドを変えたときだけは再起動が要る）。
+- **確認用のケース:** `scripts/bo-verify-optional-cases.json`（コンソールで起こせる種類だけ）。前提: PlayerA が (0,-60,0) のフラットなオーバーワールドにいる。最後に `gamerule domobspawning true` に戻す（もとから OFF のワールドでは、その手順を外す）。
+- **VM の外から JSON を送るときの引用符:** VMPal の `exec` の引数で `"` を含む JSON を PowerShell に渡すと、コマンドラインの解釈で崩れた。送る行を base64 にして渡し、VM の中で戻して `stdin.txt` に追記すると確実だった（試験用の小さなスクリプト。リポジトリには入れていない）。
+
 ## 確認した組み合わせ
 
 | 日付 | クライアント | BDS | `@minecraft/server` | 接続 | アドオンの読み込み | 観測の経路 |

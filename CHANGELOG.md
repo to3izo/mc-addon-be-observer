@@ -6,6 +6,18 @@ and must match `package.json` and both pack manifests (`pnpm version:set <x.y.z>
 
 ## [Unreleased]
 
+### Added
+- Opt-in events (ADR-0014): the new method `subscribe` turns on `block_break`, `block_place`, `entity_hurt`,
+  `effect_add`, `item_use`, `explosion`, `weather_change` and `entity_spawn` event lines (`docs/PROTOCOL.md` §5.14,
+  §10). They are off when the script starts; the switch lives in memory only and is never written to the world, so
+  `/reload` and a restart turn them off again. Damage is reported only when a player takes or deals it, effects only
+  for players, spawns only within `eventPlayerRadius` (32) blocks of a player; they share the existing rate limit
+  and buffer. `events` accepts the new kinds in `kinds`.
+- `capabilities.build`: the commit, a dirty flag and the bundle time embedded by `pnpm build`, joined into one
+  `id`, so a tool can tell whether the server runs the build it deployed.
+- `capabilities.optionalEvents` (`kinds`, `enabled`) and `capabilities.limits.eventPlayerRadius`.
+- Reference cases `docs/knowledge/bds-local-server/scripts/bo-verify-optional-cases.json` for the opt-in events.
+
 ### Changed
 - README (English and Japanese): key visual at the top and screenshots of a `snapshot` response and an
   `entity_die` event next to the matching game screens (English images for `README.md`).

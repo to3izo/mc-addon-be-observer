@@ -4,13 +4,15 @@
  *  1. clean dist/
  *  2. copy behavior_pack/ -> dist/<slug>_BP/
  *  3. copy resource_pack/ -> dist/<slug>_RP/
- *  4. bundle scripts/main.ts -> dist/<slug>_BP/scripts/main.js (esbuild, ESM, @minecraft/* external)
+ *  4. bundle scripts/main.ts -> dist/<slug>_BP/scripts/main.js (esbuild, ESM, @minecraft/* external), with the
+ *     build identifier (commit, dirty flag, time) embedded for `capabilities.build`
  *  5. validate the built packs (manifests, JSON, identifiers, resource references)
  *
  * The source tree is never modified. dist/ is disposable.
  */
 import * as esbuild from "esbuild";
 import path from "node:path";
+import { makeBuildInfo, readGitState } from "./lib/build-info.ts";
 import { loadConfig, packDirNames } from "./lib/config.ts";
 import { copyPack, removeDir } from "./lib/fs.ts";
 import { log } from "./lib/log.ts";
@@ -42,7 +44,9 @@ export async function build(options: BuildOptions = {}): Promise<BuildResult> {
   log.info(`${copyPack(PATHS.resourcePack, rpDir)} file(s)`);
 
   const outfile = path.join(bpDir, "scripts", "main.js");
+  const buildInfo = makeBuildInfo(new Date(), readGitState(PATHS.root));
   log.step(`Bundling scripts/main.ts -> ${rel(outfile)}`);
+  log.info(`build id ${buildInfo.id}`);
   await esbuild.build({
     entryPoints: [PATHS.scriptEntry],
     outfile,
@@ -52,6 +56,8 @@ export async function build(options: BuildOptions = {}): Promise<BuildResult> {
     target: "es2022",
     // Script API modules are provided by the game at runtime, never bundled.
     external: ["@minecraft/*"],
+    // scripts/shared/constants/build.ts reads this; unbundled code (unit tests) sees it undefined.
+    define: { __BUILD_INFO__: JSON.stringify(buildInfo) },
     sourcemap: options.sourcemap ? "inline" : false,
     legalComments: "none",
     logLevel: "warning",

@@ -100,12 +100,15 @@ Identifier:
 - response log prefix `to3izo_bo.response` (one-line JSON, see `docs/PROTOCOL.md`)
 - event log prefix `to3izo_bo.event` and event kinds `player_join`, `player_leave`, `player_spawn`, `entity_die`,
   `dimension_change`, `game_mode_change`, `game_rule_change` (`docs/PROTOCOL.md` §10, ADR-0008)
+- opt-in event kinds `block_break`, `block_place`, `entity_hurt`, `effect_add`, `item_use`, `explosion`,
+  `weather_change`, `entity_spawn`, switched by the `subscribe` method (in memory only; ADR-0014)
 
 Type:
 Feature (script only, read-only)
 
 Status:
-done for Phase 2 (13 methods and both entry points verified on BDS 1.26.52.3; protocol 1 frozen)
+done for Phase 2 (13 methods and both entry points verified on BDS 1.26.52.3; protocol 1 frozen); 1.1.0 adds
+`subscribe`, the opt-in event kinds and `capabilities.build` (verified on BDS 1.26.52.3)
 
 Behavior:
 - Reads players, blocks, ray hits, nearby entities (with filters and effects), entities by id, the topmost block of
@@ -116,14 +119,16 @@ Behavior:
 Scripts:
 - scripts/features/observer: script-event input and log output
 - scripts/core/observation: game reads → DTOs (`capabilities`, `players`, `player`, `block`/`blocks`, `target`,
-  `entities`, `snapshot`, `events`, `entity`, `top`/`tops`, `scoreboard`; shared readers in `read.ts`, player/dimension resolution in `resolve.ts`, game
-  event subscriptions and the in-memory event buffer in `events.ts`)
+  `entities`, `snapshot`, `events`, `entity`, `top`/`tops`, `scoreboard`, `subscribe`; shared readers in `read.ts`, player/dimension resolution in `resolve.ts`, game
+  event subscriptions, the in-memory event buffer and the opt-in switch in `events.ts`)
+- scripts/shared/constants/build.ts: the build identifier, embedded by tools/build.ts (esbuild `define`)
 - scripts/shared/protocol: pure request validation, option parsing, dispatch, envelopes, size limits
 - scripts/shared/constants/version.ts: versions reported by `capabilities`
 
 Tests:
 - docs/TESTING.md → "observer"
-- tests/unit/protocol-*.test.ts, tests/validation/read-only.test.ts, tests/validation/version-constants.test.ts
+- tests/unit/protocol-*.test.ts, tests/unit/build-info.test.ts, tests/validation/read-only.test.ts,
+  tests/validation/version-constants.test.ts
 
 ## Vanilla overrides
 

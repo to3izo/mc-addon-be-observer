@@ -1,15 +1,16 @@
 /**
- * U-PROTO-05 and U-PROTO-10 (docs/TESTING.md): dispatching and `capabilities`. Uses a fake method table, so
+ * U-PROTO-05, U-PROTO-10 and U-PROTO-17 (docs/TESTING.md): dispatching and `capabilities`. Uses a fake method table, so
  * no Minecraft runtime is involved; the real handlers are verified in game (OBS-IN-*).
  */
 import assert from "node:assert/strict";
 import { test } from "node:test";
 import { NAMESPACE } from "../../scripts/shared/constants/addon.ts";
+import { UNBUNDLED_BUILD } from "../../scripts/shared/constants/build.ts";
 import { buildCapabilities } from "../../scripts/shared/protocol/capabilities.ts";
 import { PARAM_DEFAULTS, PARAM_LIMITS, REQUEST_COMMAND_NAME, REQUEST_EVENT_ID, RESPONSE_PREFIX, SIZE_LIMITS } from "../../scripts/shared/protocol/constants.ts";
 import { handleRequest, type MethodHandler, type MethodTable } from "../../scripts/shared/protocol/dispatch.ts";
 import { ObserverError, errorBodyOf } from "../../scripts/shared/protocol/errors.ts";
-import { EVENT_KINDS, EVENT_LIMITS, EVENT_PREFIX } from "../../scripts/shared/protocol/events.ts";
+import { EVENT_KINDS, EVENT_LIMITS, EVENT_PREFIX, OPTIONAL_EVENT_KINDS } from "../../scripts/shared/protocol/events.ts";
 import { METHODS, SECTIONS, type MethodName } from "../../scripts/shared/protocol/methods.ts";
 import { createSessionId } from "../../scripts/shared/protocol/session.ts";
 
@@ -114,6 +115,7 @@ test("U-PROTO-10 capabilities describes this build: methods, transport, limits",
     "top",
     "tops",
     "scoreboard",
+    "subscribe",
   ]);
   assert.deepEqual(caps.sections, ["health", "inventory", "equipment", "effects", "world"]);
   assert.equal(caps.readOnly, true);
@@ -121,6 +123,19 @@ test("U-PROTO-10 capabilities describes this build: methods, transport, limits",
   assert.equal(REQUEST_EVENT_ID, `${NAMESPACE}:query`);
   assert.equal(REQUEST_COMMAND_NAME, `${NAMESPACE}:query`);
   assert.equal(RESPONSE_PREFIX, `${NAMESPACE}.response `);
+});
+
+test("U-PROTO-17 capabilities reports the build and the opt-in event kinds that are on", () => {
+  const caps = buildCapabilities() as any;
+  // Outside a bundle there is no embedded build identifier.
+  assert.deepEqual(caps.build, UNBUNDLED_BUILD);
+  assert.deepEqual(caps.optionalEvents, { kinds: [...OPTIONAL_EVENT_KINDS], enabled: [] });
+  // The always-on list is unchanged by the opt-in kinds (a compatible addition).
+  assert.deepEqual(caps.events, [...EVENT_KINDS]);
+  assert.equal(caps.limits.eventPlayerRadius, 32);
+  const on = buildCapabilities(["entity_hurt", "block_break"]) as any;
+  assert.deepEqual(on.optionalEvents.enabled, ["entity_hurt", "block_break"]);
+  assert.deepEqual(Object.keys(caps).slice(0, 2), ["addon", "build"]);
 });
 
 test("U-PROTO-10 every listed method answers (no UNKNOWN_METHOD) through the table", () => {

@@ -9,6 +9,7 @@ The protocol lets any external tool — an AI agent, a test script, a human at t
 observations and read the answers. It is deliberately small:
 
 - **Read-only.** Every method only reads the game. There is no method that changes the world or runs a command.
+  The one setting, which opt-in event kinds are on (`subscribe`, §5.14), lives in the Add-On's memory only.
 - **Tool-independent.** Requests are plain JSON in a `/scriptevent` command (or the operator command of §1); responses are one-line JSON in the
   script log. No AI model, MCP server, HTTP or WebSocket is assumed.
 - **Explicit about uncertainty.** Air, "no hit", unloaded chunks, unsupported methods and failures are different
@@ -209,6 +210,7 @@ Every method is a pure read at one tick. All of them are implemented (Phase 2, `
 | `top` | The topmost block of one column: where the ground is (§5.11) |
 | `tops` | The topmost blocks of a few columns, compact (§5.12) |
 | `scoreboard` | Objectives, the scores of one objective, or one player's scores (§5.13) |
+| `subscribe` | Turn opt-in event kinds on or off, or read which are on (§5.14) |
 
 ### 5.1 `capabilities`
 
@@ -218,14 +220,16 @@ Every method is a pure read at one tick. All of them are implemented (Phase 2, `
 
 ```json
 "data": {
-  "addon": { "slug": "be-observer", "namespace": "to3izo_bo", "version": "1.0.1" },
+  "addon": { "slug": "be-observer", "namespace": "to3izo_bo", "version": "1.1.0" },
+  "build": { "id": "23aec2ab6a45@20261018T142622Z", "time": "2026-10-18T14:26:22.068Z", "commit": "23aec2ab6a45", "dirty": false },
   "protocol": { "version": 1, "supported": [1] },
   "scriptApi": { "@minecraft/server": "2.10.0" },
   "transport": { "requestEventId": "to3izo_bo:query", "requestCommand": "to3izo_bo:query", "responsePrefix": "to3izo_bo.response ", "eventPrefix": "to3izo_bo.event " },
-  "methods": ["capabilities", "players", "player", "block", "blocks", "target", "entities", "snapshot", "events", "entity", "top", "tops", "scoreboard"],
+  "methods": ["capabilities", "players", "player", "block", "blocks", "target", "entities", "snapshot", "events", "entity", "top", "tops", "scoreboard", "subscribe"],
   "sections": ["health", "inventory", "equipment", "effects", "world"],
   "events": ["player_join", "player_leave", "player_spawn", "entity_die", "dimension_change", "game_mode_change", "game_rule_change"],
-  "limits": { "maxRequestChars": 2048, "maxResponseChars": 4000, "maxBlocksPerRequest": 32, "maxRayDistance": 64, "maxEntityRadius": 32, "maxEntities": 32, "maxInventorySlots": 54, "maxScoreEntries": 64, "maxEventsPerSecond": 20, "eventBufferSize": 64, "maxEventsPerRequest": 64 },
+  "optionalEvents": { "kinds": ["block_break", "block_place", "entity_hurt", "effect_add", "item_use", "explosion", "weather_change", "entity_spawn"], "enabled": ["entity_hurt"] },
+  "limits": { "maxRequestChars": 2048, "maxResponseChars": 4000, "maxBlocksPerRequest": 32, "maxRayDistance": 64, "maxEntityRadius": 32, "maxEntities": 32, "maxInventorySlots": 54, "maxScoreEntries": 64, "maxEventsPerSecond": 20, "eventBufferSize": 64, "maxEventsPerRequest": 64, "eventPlayerRadius": 32 },
   "defaults": { "rayDistance": 8, "entityRadius": 16, "entityLimit": 16, "scoreLimit": 32 },
   "readOnly": true
 }
@@ -235,6 +239,14 @@ Every method is a pure read at one tick. All of them are implemented (Phase 2, `
 test checks that every listed method answers. Limit values may be raised or lowered by a later build without a
 protocol change; tools read them from here instead of hard-coding them.
 `capabilities` takes no parameters.
+
+- `build` identifies the bundle the server runs (ADR-0014): `commit` is the short hash of the source commit, `dirty`
+  is true when the source had uncommitted changes, `time` is when it was bundled (UTC), and `id` joins them as
+  `<commit>[+dirty]@<YYYYMMDDTHHMMSSZ>`. After deploying a build, a tool compares `build.id` with the id the build
+  printed (`pnpm build` logs it) to know that the server runs it; a rebuild always gets a new `id`. Without git,
+  `commit` and `dirty` are `null` and `id` starts with `nogit`. Compare `id` as a whole; do not parse it.
+- `events` lists the event kinds that are always on (§10). `optionalEvents.kinds` lists the opt-in kinds and
+  `optionalEvents.enabled` the ones that are on right now (§5.14).
 
 ### 5.2 `players`
 
@@ -437,7 +449,7 @@ cannot be found fails the whole request (`NO_SOURCE_PLAYER`, `PLAYER_NOT_FOUND`)
 
 Recent game events (§10) kept in memory, for a tool that missed event lines or started late. Parameters:
 `since` (event `seq`; default 0 = everything held), `limit` (1…`maxEventsPerRequest`, default 32), `kinds`
-(array of event kinds from `capabilities.events`).
+(array of event kinds from `capabilities.events` or `capabilities.optionalEvents.kinds`).
 
 ```json
 { "requestId": "ev2", "method": "events", "params": { "since": 12, "limit": 2 } }
@@ -568,6 +580,33 @@ Read-only access to the world's scoreboard. Parameters: `objective` (objective i
 - An objective that does not exist is `INVALID_PARAMS` (`details.param` = `objective`).
 - The Add-On never creates or changes objectives or scores.
 
+### 5.14 `subscribe`
+
+Turns opt-in event kinds (§10) on and off (ADR-0014). Parameters: `enable`, `disable` (arrays of kinds from
+`capabilities.optionalEvents.kinds`; both optional). Without parameters it only reports the state.
+
+```json
+{ "requestId": "o1", "method": "subscribe", "params": { "enable": ["block_break", "block_place", "entity_hurt"] } }
+```
+
+```json
+"data": {
+  "optional": ["block_break", "block_place", "entity_hurt", "effect_add", "item_use", "explosion", "weather_change", "entity_spawn"],
+  "enabled": ["block_break", "block_place", "entity_hurt"],
+  "changed": ["block_break", "block_place", "entity_hurt"]
+}
+```
+
+- `enabled` is the state after the request; `changed` lists the kinds whose state the request changed (enabling a
+  kind that is already on changes nothing). Both are in the order of `optional`.
+- **Every opt-in kind is off when the script starts.** The state lives in memory only and is never written to the
+  world: `/reload` and a server restart turn every kind off again. A tool that sees a new `session` (in a response
+  or an event line) calls `subscribe` again.
+- The state is one per server, shared by every tool and operator that sends requests: a kind stays on until
+  someone turns it off. Tools that share a server agree on who switches what.
+- The always-on kinds cannot be switched: naming one is `INVALID_PARAMS` (`details.param` names the list), as is an
+  unknown kind, a kind in both lists, or a list that is not an array.
+
 ## 6. Error codes
 
 | Code | When |
@@ -653,7 +692,10 @@ Besides answering requests, the Add-On writes one line for each of these game ev
   before this one.
 - Rate limit: at most `maxEventsPerSecond` lines per second (20 ticks). Dropped events get no `seq`; the next line
   carries their count in `dropped`, and `events` reports `missed`.
-- Event lines are always on; there is no switch.
+- The kinds in the first table below are always on. The opt-in kinds in the second table are off until a tool turns
+  them on with `subscribe` (§5.14); while a kind is off, nothing of it is written or kept.
+- Opt-in events share the rate limit, the buffer and the `seq` counter with the always-on kinds. A burst of
+  opt-in events can therefore push other events out of the buffer or get them dropped; `dropped` and `missed` say so.
 
 | `kind` | When | `data` |
 | --- | --- | --- |
@@ -665,7 +707,31 @@ Besides answering requests, the Add-On writes one line for each of these game ev
 | `game_mode_change` | A player's game mode changed (no-op changes are not reported) | `player`, `from`, `to` (e.g. `Creative`, `Survival`) |
 | `game_rule_change` | A game rule changed | `rule` (e.g. `doDayLightCycle`), `value` |
 
+Opt-in kinds (ADR-0014). Positions are `{x, y, z}`; `block` is `{typeId, states}` as in §5.4.
+
+| `kind` | When | `data` |
+| --- | --- | --- |
+| `block_break` | A player broke a block | `player`, `dimension`, `position`, `block` (the block before it broke), `item` (type id of the item in hand, when there was one) |
+| `block_place` | A player placed a block | `player`, `dimension`, `position`, `block` (the placed block) |
+| `entity_hurt` | A player took damage, or a player damaged an entity (directly or with a projectile). Damage between other entities is not reported | `entity` (`{id, typeId, name \| nameTag}`), `damage`, `cause` (as in `entity_die`), `health` (`{current, max}` after the damage) with `dimension` and `location` while the entity is readable, `attacker` when an entity did it, `projectile` (type id) when a projectile did it |
+| `effect_add` | A player got a status effect it did not have (effects on other entities are not reported) | `player`, `effect: {typeId, amplifier, duration}` |
+| `item_use` | A player used an item (threw a snowball, placed a block, …) | `player`, `item: {typeId, amount}` |
+| `explosion` | An explosion happened | `dimension`, `impactedBlocks` (number of blocks it destroyed), `bounds: {min, max}` of those blocks when there were any, `source` (`{id, typeId}`) when an entity caused it |
+| `weather_change` | The weather changed | `dimension`, `from`, `to` (`Clear`, `Rain`, `Thunder`) |
+| `entity_spawn` | An entity appeared within `eventPlayerRadius` blocks of a player in the same dimension (summoned, spawned naturally, born, a dropped item, a projectile, …). Entities coming back with a loaded chunk are not reported | `entity`, `cause` (API `EntityInitializationCause`, e.g. `Spawned`, `Born`), `dimension`, `location` |
+
 Notes measured on BDS 1.26.52.3:
+
+- `item_use` is also sent when a player places a block (the block item is "used"), together with `block_place`.
+- `effect_add` is sent only when the player had no effect of that type: re-applying, extending or strengthening an
+  effect the player already has sends nothing. Use `player` with `include: ["effects"]` for the current effects.
+- `entity_hurt` follows the game's damage: a second hit within the short invulnerability time after a hit does no
+  damage and sends nothing. Creative players take no damage.
+- `explosion` has no position of its own: the source (TNT, creeper, end crystal) is gone when it is sent. `bounds`
+  shows where blocks were destroyed; an explosion that destroyed nothing (in the air, in water) only says
+  `impactedBlocks: 0`.
+- Breaking a block in Survival drops an item: with `entity_spawn` on, a `minecraft:item` spawn follows the
+  `block_break`. In Creative nothing drops.
 
 - `dimension_change` is sent when the move completes for the player, which can be many seconds after the
   teleport (about 19 s for a teleport into the Nether). A player teleported back before that produced no event

@@ -16,7 +16,7 @@ It is published as open source in its own repository.
 ## Main features
 
 Status: all rows are implemented and verified on BDS 1.26.52.3 (`docs/TESTING.md`); protocol 1 is frozen
-(`docs/PROTOCOL.md`).
+(`docs/PROTOCOL.md`), and rows 16–17 are compatible additions to it.
 
 | # | Feature | Summary | Phase | Status |
 | --- | --- | --- | --- | --- |
@@ -35,13 +35,16 @@ Status: all rows are implemented and verified on BDS 1.26.52.3 (`docs/TESTING.md
 | 13 | `scoreboard` | Objectives, scores of one objective, or one player's scores; read only | 2 | done (BDS) |
 | 14 | Error mapping | Known Script API errors answered with stable codes (`TARGET_INVALID`, `UNLOADED_CHUNK`, `INVALID_PARAMS`) instead of `INTERNAL_ERROR` | 2 | done (unit) |
 | 15 | Operator command | `/to3izo_bo:query "<json>"`: the same requests from an operator's chat without cheats (ADR-0010) | 2 | done (BDS) |
+| 16 | Opt-in events | `subscribe` turns on `block_break`, `block_place`, `entity_hurt`, `effect_add`, `item_use`, `explosion`, `weather_change`, `entity_spawn` (players involved or near; shared rate limit); kept in memory only, off after a reload (ADR-0014) | 1.1.0 | done (BDS) |
+| 17 | Build identifier | `capabilities.build`: commit, dirty flag and bundle time embedded by `pnpm build`, so a tool can tell which build the server runs (ADR-0014) | 1.1.0 | done (BDS) |
 
-Not available: chat messages and command use (no stable API; handled by the control tool). Deferred (stable API
-exists but not in the first version): weather (stable read API does not exist), light
+Not available: chat messages and command use (no stable API; handled by the control tool), the current weather
+(no stable read API; changes are reported by the opt-in `weather_change` event). Deferred (stable API
+exists but not in the first version): light
 level, biome, rays from an arbitrary origin, small block regions (`getBlocks`), client/input info. Not planned: a BDS network
 adapter using `@minecraft/server-net` (rejected, ADR-0004). Candidates for later (ADR-0009):
-an on/off switch for event notifications, container contents (off by default), paged region reads, a build id in
-`capabilities`, and an optional reply through chat `tell` (off by default; an exception to read-only).
+container contents (off by default), paged region reads, and an optional reply through chat `tell` (off by default;
+an exception to read-only).
 
 ## Target Minecraft version
 
@@ -73,6 +76,8 @@ dynamic properties, scoreboard objectives or tags.
 ## Constraints
 
 - **Read-only.** Only read APIs. No commands, no setters, no world/entity/item state written, no chunk loading.
+  The only state the Add-On keeps is in memory (the recent events and which opt-in event kinds are on); nothing of
+  it is stored in the world, and a reload clears it (ADR-0014).
 - **Bounded.** Every request is limited in input size, counts, radii, ray distance and output size
   (`capabilities.limits`); limits are explicit in responses. No per-tick work: observations are taken only when
   a request arrives.

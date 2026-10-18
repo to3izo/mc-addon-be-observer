@@ -1,21 +1,37 @@
 /**
- * U-EVT-01..04 (docs/TESTING.md): event lines, the recent-event buffer, the rate limit and the `events`
- * parameters. Pure logic; no Minecraft runtime.
+ * U-EVT-01..06 and U-PROTO-16 (docs/TESTING.md): event lines, the recent-event buffer, the rate limit, the `events`
+ * and `subscribe` parameters, the opt-in switch and the event filters. Pure logic; no Minecraft runtime.
  */
 import assert from "node:assert/strict";
 import { test } from "node:test";
 import { ObserverError } from "../../scripts/shared/protocol/errors.ts";
 import {
+  ALL_EVENT_KINDS,
   EVENT_KINDS,
   EVENT_LIMITS,
   EVENT_PREFIX,
   EventBuffer,
   EventRateLimiter,
+  EventSwitch,
+  IGNORED_SPAWN_CAUSES,
+  OPTIONAL_EVENT_KINDS,
+  blockBounds,
   formatEventLine,
+  fullDimensionId,
+  isNearAny,
   type EventKind,
   type EventRecord,
 } from "../../scripts/shared/protocol/events.ts";
-import { parseEventQuery } from "../../scripts/shared/protocol/options.ts";
+import { parseEventQuery, parseSubscribeQuery } from "../../scripts/shared/protocol/options.ts";
+
+const code = (fn: () => unknown) => {
+  try {
+    fn();
+  } catch (error) {
+    return error instanceof ObserverError ? error.code : String(error);
+  }
+  return "no error";
+};
 
 function ev(seq: number, kind: EventKind = "player_join", dropped?: number): EventRecord {
   return dropped ? { kind, seq, tick: seq * 10, time: 0, data: { seq }, dropped } : { kind, seq, tick: seq * 10, time: 0, data: { seq } };
@@ -80,17 +96,74 @@ test("U-EVT-04 events parameters: since, limit, kinds", () => {
     limit: EVENT_LIMITS.maxEventsPerRequest,
     kinds: ["entity_die"],
   });
-  const code = (fn: () => unknown) => {
-    try {
-      fn();
-    } catch (error) {
-      return error instanceof ObserverError ? error.code : String(error);
-    }
-    return "no error";
-  };
   assert.equal(code(() => parseEventQuery({ since: -1 })), "INVALID_PARAMS");
   assert.equal(code(() => parseEventQuery({ since: 1.5 })), "INVALID_PARAMS");
   assert.equal(code(() => parseEventQuery({ limit: EVENT_LIMITS.maxEventsPerRequest + 1 })), "LIMIT_EXCEEDED");
   assert.equal(code(() => parseEventQuery({ kinds: ["chat"] })), "INVALID_PARAMS");
   assert.deepEqual([...EVENT_KINDS], ["player_join", "player_leave", "player_spawn", "entity_die", "dimension_change", "game_mode_change", "game_rule_change"]);
+});
+
+test("U-EVT-05 the opt-in switch: off by default, changed kinds reported, canonical order", () => {
+  assert.deepEqual([...OPTIONAL_EVENT_KINDS], [
+    "block_break",
+    "block_place",
+    "entity_hurt",
+    "effect_add",
+    "item_use",
+    "explosion",
+    "weather_change",
+    "entity_spawn",
+  ]);
+  // No kind is both always-on and opt-in.
+  assert.equal(new Set(ALL_EVENT_KINDS).size, EVENT_KINDS.length + OPTIONAL_EVENT_KINDS.length);
+  const sw = new EventSwitch();
+  assert.deepEqual(sw.enabled(), []);
+  assert.equal(sw.isOn("block_break"), false);
+  assert.deepEqual(sw.apply(["entity_spawn", "block_break"], []), ["block_break", "entity_spawn"]);
+  assert.deepEqual(sw.enabled(), ["block_break", "entity_spawn"]);
+  // Enabling again changes nothing; disabling one that is off changes nothing.
+  assert.deepEqual(sw.apply(["block_break"], ["item_use"]), []);
+  assert.deepEqual(sw.apply(["explosion"], ["block_break"]), ["block_break", "explosion"]);
+  assert.deepEqual(sw.enabled(), ["explosion", "entity_spawn"]);
+  assert.equal(sw.isOn("explosion"), true);
+  assert.deepEqual(sw.apply([], [...OPTIONAL_EVENT_KINDS]), ["explosion", "entity_spawn"]);
+  assert.deepEqual(sw.enabled(), []);
+  // `events` can filter by opt-in kinds too.
+  assert.deepEqual(parseEventQuery({ kinds: ["entity_hurt", "player_join"] }).kinds, ["entity_hurt", "player_join"]);
+});
+
+test("U-EVT-06 event filters: near a player, ignored spawn causes, explosion bounds, full dimension ids", () => {
+  assert.equal(fullDimensionId("overworld"), "minecraft:overworld");
+  assert.equal(fullDimensionId("minecraft:the_end"), "minecraft:the_end");
+  const players = [{ x: 0, y: -60, z: 0 }, { x: 100, y: 64, z: 100 }];
+  assert.equal(isNearAny({ x: 32, y: -60, z: 0 }, players, 32), true);
+  assert.equal(isNearAny({ x: 20, y: -40, z: 20 }, players, 32), false);
+  assert.equal(isNearAny({ x: 90, y: 64, z: 95 }, players, 32), true);
+  assert.equal(isNearAny({ x: 0, y: 0, z: 0 }, [], 32), false);
+  assert.deepEqual([...IGNORED_SPAWN_CAUSES], ["Loaded"]);
+  assert.equal(blockBounds([]), undefined);
+  assert.deepEqual(blockBounds([{ x: 1, y: -61, z: 3 }, { x: -2, y: -60, z: 5 }, { x: 0, y: -63, z: 4 }]), {
+    min: { x: -2, y: -63, z: 3 },
+    max: { x: 1, y: -60, z: 5 },
+  });
+});
+
+test("U-PROTO-16 subscribe parameters: opt-in kinds only, no overlap", () => {
+  assert.deepEqual(parseSubscribeQuery({}), { enable: [], disable: [] });
+  assert.deepEqual(parseSubscribeQuery({ enable: ["block_break", "block_break", "entity_hurt"], disable: ["explosion"] }), {
+    enable: ["block_break", "entity_hurt"],
+    disable: ["explosion"],
+  });
+  assert.equal(code(() => parseSubscribeQuery({ enable: ["player_join"] })), "INVALID_PARAMS");
+  assert.equal(code(() => parseSubscribeQuery({ disable: ["chat"] })), "INVALID_PARAMS");
+  assert.equal(code(() => parseSubscribeQuery({ enable: "block_break" })), "INVALID_PARAMS");
+  assert.equal(code(() => parseSubscribeQuery({ enable: [1] })), "INVALID_PARAMS");
+  assert.equal(code(() => parseSubscribeQuery({ enable: ["item_use"], disable: ["item_use"] })), "INVALID_PARAMS");
+  try {
+    parseSubscribeQuery({ enable: ["entity_die"] });
+  } catch (error) {
+    assert.ok(error instanceof ObserverError);
+    assert.match(error.message, /always on/);
+    assert.deepEqual(error.details, { param: "enable" });
+  }
 });

@@ -82,7 +82,7 @@ Plain Node.js + TypeScript scripts, run directly by Node (type stripping, no tra
 | --- | --- |
 | `tools/init-addon.ts` | Writes Add-On identity into config, manifests, constants, package.json, README; generates UUIDs once |
 | `tools/validate.ts` + `tools/checks/*` | Type-check, strict JSON, manifest rules, identifier/namespace rules, resource reference integrity |
-| `tools/build.ts` | clean → copy packs → bundle scripts → validate `dist/` |
+| `tools/build.ts` | clean → copy packs → bundle scripts (embedding the build id for `capabilities.build`: git commit, dirty flag, time) → validate `dist/` |
 | `tools/package.ts` | strict validate → build → `.mcpack` ×2 + `.mcaddon` (zip via fflate) |
 | `tools/deploy.ts` | Copy `dist/` packs into Minecraft's `development_*_packs` |
 | `tools/dev.ts` | Watch and rebuild (optionally deploy) |

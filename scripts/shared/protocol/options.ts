@@ -1,5 +1,6 @@
 import { PARAM_DEFAULTS, PARAM_LIMITS } from "./constants.ts";
-import { EVENT_KINDS, EVENT_LIMITS, type EventKind } from "./events.ts";
+import { ObserverError } from "./errors.ts";
+import { ALL_EVENT_KINDS, EVENT_LIMITS, OPTIONAL_EVENT_KINDS, isCoreEventKind, isOptionalEventKind, type EventKind, type OptionalEventKind } from "./events.ts";
 import {
   expectOnlyKeys,
   parseDimension,
@@ -119,8 +120,42 @@ export function parseEventQuery(params: Record<string, unknown>): EventQuery {
   return {
     since: readLimitedNumber(params, "since", { min: 0, max: Number.MAX_SAFE_INTEGER, integer: true }, 0),
     limit: readLimitedNumber(params, "limit", { min: 1, max: EVENT_LIMITS.maxEventsPerRequest, integer: true }, 32),
-    kinds: params.kinds === undefined ? undefined : readNameList(params, "kinds", EVENT_KINDS, []),
+    kinds: params.kinds === undefined ? undefined : readNameList(params, "kinds", ALL_EVENT_KINDS, []),
   };
+}
+
+/** Parameters of the `subscribe` method (docs/PROTOCOL.md §5.14, ADR-0014). */
+export interface SubscribeQuery {
+  enable: OptionalEventKind[];
+  disable: OptionalEventKind[];
+}
+
+export const SUBSCRIBE_KEYS = ["enable", "disable"] as const;
+
+/** Reads a list of opt-in event kinds. Always-on kinds are refused by name so the mistake is clear. */
+function readOptionalKinds(params: Record<string, unknown>, key: string): OptionalEventKind[] {
+  const value = params[key];
+  if (value === undefined) return [];
+  if (!Array.isArray(value)) throw new ObserverError("INVALID_PARAMS", `${key} must be an array of event kinds`, { param: key });
+  const kinds: OptionalEventKind[] = [];
+  for (const item of value) {
+    if (isCoreEventKind(item)) {
+      throw new ObserverError("INVALID_PARAMS", `${key}: "${item}" is always on and cannot be switched`, { param: key });
+    }
+    if (!isOptionalEventKind(item)) {
+      throw new ObserverError("INVALID_PARAMS", `${key} contains an unknown event kind`, { param: key, allowed: [...OPTIONAL_EVENT_KINDS] });
+    }
+    if (!kinds.includes(item)) kinds.push(item);
+  }
+  return kinds;
+}
+
+export function parseSubscribeQuery(params: Record<string, unknown>): SubscribeQuery {
+  const enable = readOptionalKinds(params, "enable");
+  const disable = readOptionalKinds(params, "disable");
+  const both = enable.find((kind) => disable.includes(kind));
+  if (both) throw new ObserverError("INVALID_PARAMS", `"${both}" is in both enable and disable`, { param: "disable" });
+  return { enable, disable };
 }
 
 /** Parameters of the `scoreboard` method (docs/PROTOCOL.md §5.13). */

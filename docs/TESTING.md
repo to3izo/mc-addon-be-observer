@@ -130,6 +130,11 @@ Record each run: platform, game/BDS version, environment (local world / BDS), pa
 | U-EVT-02 | Event buffer keeps the newest N, `since`/`limit`/`more`/`kinds`, `missed` when pushed out or dropped | same |
 | U-EVT-03 | Rate limit: max per 20-tick window, dropped events counted | same |
 | U-EVT-04 | `events` parameters: `since` ≥ 0 integer, `limit` ≤ `maxEventsPerRequest`, known `kinds` only | same |
+| U-EVT-05 | Opt-in switch: all off at start, `changed` only for real changes, canonical order; no kind is both always-on and opt-in; `events` `kinds` accepts opt-in kinds | same |
+| U-EVT-06 | Event filters: within `eventPlayerRadius` of a player, `Loaded` spawns ignored, explosion `bounds`, full dimension ids | same |
+| U-PROTO-16 | `subscribe` parameters: opt-in kinds only (always-on kinds named in the message), no kind in both lists, arrays only, unknown keys | same |
+| U-PROTO-17 | `capabilities.build` (unbundled outside a build), `optionalEvents.kinds`/`enabled`, `eventPlayerRadius`; `events` unchanged | tests/unit/protocol-dispatch.test.ts |
+| U-BUILD-01 | Build id format `<commit>[+dirty]@<UTC>`, `nogit` without git; git state outside a repository is null | tests/unit/build-info.test.ts |
 | V-VER-01 | Versions reported by `capabilities` equal `package.json` and the manifest's module dependencies (update `scripts/shared/constants/version.ts` after `pnpm version:set`) | tests/validation/version-constants.test.ts |
 | V-RO-01 | Read-only guard: `scripts/` contains no call to mutating APIs (`runCommand`, `setBlock`/`setType`/`setPermutation`, `setDynamicProperty`, `teleport`, `addEffect`, `kill`, `remove`, `spawnEntity`, `setItem`, `nameTag =`, …) | tests/validation/read-only.test.ts |
 | V-DEP-01 | The core manifest declares only `@minecraft/server` (no `server-net`/`server-admin`) | `pnpm validate` + tests/validation/read-only.test.ts |
@@ -220,6 +225,28 @@ verdicts (with every response) go to a JSON file. Case ids below are the ids in 
 | TOPS-01…03 | `tops` with 3 columns (one far), 33 columns, 32 columns | Compact results in order (`ok`, `ok`, `unloaded`); `LIMIT_EXCEEDED`; all 32 fit in one response |
 | SB-01…09 | `scoreboard` with no params, `objective`, `objective` + `limit` 1, `player` + `objective`, `player`, an unknown objective, `limit` 65, an unknown player; `player` after the objective was removed | Objectives; both scores with `type` `Player`/`FakePlayer`; `truncated: true`; score 7; at least one score; `INVALID_PARAMS`; `LIMIT_EXCEEDED`; `PLAYER_NOT_FOUND`; no scores (not an error) |
 | REG-01, -02 | `players`, `snapshot` defaults | Unchanged from Phase 2 |
+
+#### Opt-in events and build identifier (in game, BDS; ADR-0014)
+
+OPT cases marked "scripted" are in `docs/knowledge/bds-local-server/scripts/bo-verify-optional-cases.json` (run with
+`bo-verify.ps1`; the ids there are the ids below, with letters for sub-cases). The others need the player's client.
+
+| ID | Steps | Expected |
+| --- | --- | --- |
+| OBS-OPT-01 | Right after BDS starts: `capabilities` (scripted) | `methods` ends with `subscribe`; `optionalEvents.kinds` lists the 8 kinds, `enabled` is `[]`; `build.id` equals the id `pnpm build` printed |
+| OBS-OPT-02 | `subscribe` with `enable` (all 8, or a few) and then without parameters; `capabilities` (scripted) | `enabled` and `changed` in canonical order; the second call has `changed: []`; `capabilities.optionalEvents.enabled` agrees |
+| OBS-OPT-03 | Client: break a block, then place one | `block_break` (block before breaking, `item` in hand) and `block_place` (placed block, states) at the same position |
+| OBS-OPT-04 | `damage` a pig with the player as the source, a pig with no source, the player (Survival) with a pig as the source (scripted, partly) | `entity_hurt` for the first and third (`attacker`, `cause`, `health`), nothing for the second |
+| OBS-OPT-05 | `effect` on the player, and on cows (scripted) | One `effect_add` for the player; none for the cows |
+| OBS-OPT-06 | Client: throw a snowball | `item_use` (`minecraft:snowball`) and, with `entity_spawn` on, the snowball's spawn |
+| OBS-OPT-07 | End crystal in the air, damaged (scripted); TNT on the ground away from spawn, then refill the crater | `explosion` with `impactedBlocks: 0` and the crystal as `source`; for TNT the count and `bounds` |
+| OBS-OPT-08 | `weather rain`, `weather clear` (scripted) | Two `weather_change` with `minecraft:overworld`, `from`/`to` |
+| OBS-OPT-09 | `summon` a pig 3 blocks from the player and one 60 blocks away, with natural spawning off (scripted) | One `entity_spawn` (`Spawned`) for the near pig only; no spawns for mobs loaded with the chunks when a player joins |
+| OBS-OPT-10 | Effects and weather while off; `subscribe` with `disable` (scripted) | Nothing is written or kept while a kind is off |
+| OBS-OPT-11 | Console `reload`, then `capabilities`, `events`, `subscribe` | New `session`; `enabled: []`; empty buffer |
+| OBS-OPT-12 | `entity_hurt` on; 30 pigs damaged by one command; then one more event | 20 lines in that second, the rest dropped; the next line has `dropped`, `events` reports `missed: true` |
+| OBS-OPT-13 | `subscribe` with an always-on kind, an unknown kind, a kind in both lists, a string instead of a list, an unknown key; `events` with an unknown kind (scripted) | `INVALID_PARAMS` each time |
+| OBS-BUILD-01 | Rebuild, deploy over the running server, console `reload`, `capabilities` | `build.id` changes to the new build's id (and `dirty` reflects the source tree) |
 
 #### Results
 
@@ -319,6 +346,29 @@ documentation only (the script differs only in `ADDON_VERSION`).
 | Content log | clean | Only BDS's replies to the test's own cleanup commands |
 | Pack icon | not checked in game | BDS shows no pack icon; the PNG is 256×256 |
 
+1.1.0 development build — run 2026-10-18 on the same BDS (1.26.52.3), development packs replaced by `pnpm build`
+output (`addon.version` still 1.0.1; local builds are not numbered, ADR-0013). Player PlayerA joined from the same
+VM. Requests through `bds-console-bridge.ps1`.
+
+| ID | Result | Notes |
+| --- | --- | --- |
+| U-EVT-05–06, U-PROTO-16–17, U-BUILD-01 | pass | 81 tests in total |
+| OBS-OPT-01, -02, -13 | pass | Also scripted (`bo-verify-optional-cases.json` 21/21 on the final build) |
+| OBS-OPT-03 | pass | Creative: grass block broken at (1,-61,0) with `item` `minecraft:dirt`; dirt placed there with `states` `{dirt_type: normal}`. Placing also sent `item_use` (dirt). Run on the first build; the code for these kinds did not change afterwards |
+| OBS-OPT-04 | pass | Pig hit by the player: `attacker` the player, `health` 9/10; pig `fall` damage without a player: nothing; player (Survival) hit by the pig: `entity_hurt` with `attacker` the pig. A second damage 1 tick after a hit sent nothing (the game's invulnerability time; it did no damage); a later `fall` damage was reported |
+| OBS-OPT-05 | pass | Found: the event comes only when the player had no effect of that type (re-applying Speed while Speed II was active, or upgrading to Speed III, sent nothing). The scripted case clears effects first |
+| OBS-OPT-06 | pass | Snowball: `item_use` (`amount` 4) and the snowball's `entity_spawn` (`Spawned`) |
+| OBS-OPT-07 | pass | Crystal: `impactedBlocks` 0. TNT at (20,-60,20): 95 blocks, `bounds` (17,-63,17)–(23,-61,23), 5 item spawns after it; the crater was refilled and checked with `tops`. The source was never readable, so `location` was removed from the event |
+| OBS-OPT-08 | pass after a fix | The API gives `overworld`; the event now writes the full id `minecraft:overworld` |
+| OBS-OPT-09 | pass | Near pig reported (`Spawned`); the pig 60 blocks away and the mobs loaded on join were not. With natural spawning on, a slime that spawned 25 blocks away was reported (correct), so the scripted case turns natural spawning off |
+| OBS-OPT-10 | pass | `entity_spawn` off before the burst; effects and weather while off: nothing kept |
+| OBS-OPT-11 | pass | After `reload`: new `session`, `enabled: []`, `events` empty; `effect_add` not sent until enabled again |
+| OBS-OPT-12 | pass | 30 hurt pigs in one tick: 20 lines (`seq` 28–47); the 10 others and 2 weather changes in the same second dropped; the next `weather_change` had `dropped: 12`, `events` from 27 had `missed: true`, and its list was cut to fit (`omitted: {events: 11}`) |
+| OBS-BUILD-01 | pass | `23aec2ab6a45+dirty@20261018T142622Z` → after rebuilding, copying over the running server's development packs and `reload`: `…@20261018T143212Z` |
+| Regression (`bo-verify-cases.json`) | pass | 34/34 on the final build, with some opt-in kinds on |
+| Opt-in cases (`bo-verify-optional-cases.json`) | pass | 21/21 on the final build (two earlier runs failed on test setup: an active Speed II, and a natural slime spawn; the cases were fixed) |
+| Shutdown | pass | Player left with "セーブして終了"; `stop` → "Quit correctly" |
+
 ## Release checklist
 
 The Add-On is BDS-only (ADR-0006), so the checks run on BDS with the packaged `.mcaddon` installed as the README
@@ -327,6 +377,6 @@ describes. Last run: 1.0.1, 2026-10-18 (Results above).
 - [x] All smoke tests pass on BDS (Windows) with the target version, from the packaged `.mcaddon`
 - [x] Secondary platform: not applicable (BDS only; Linux BDS is stated as untested in the README)
 - [x] Upgrade from the previous version in an existing world works (first release: from the 0.1.0 development build)
-- [x] Regression sets pass (`bo-verify-cases.json`, `bo-verify-ro-cases.json`)
+- [x] Regression sets pass (`bo-verify-cases.json`, `bo-verify-ro-cases.json`; from 1.1.0 also `bo-verify-optional-cases.json`)
 - [x] Content log clean; no unreferenced-resource warnings left unexplained
 - [x] `docs/CONTENT.md` checked (no new identifiers) and `CHANGELOG.md` updated; `pnpm version:set` applied

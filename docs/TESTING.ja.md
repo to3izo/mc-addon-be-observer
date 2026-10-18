@@ -124,6 +124,11 @@ Phase 1・2（`docs/ROADMAP.md`）のテスト計画です。アドオンは **B
 | U-EVT-02 | 保持: 新しい N 件を残す。`since`・`limit`・`more`・`kinds`。押し出しや破棄があれば `missed` | 同上 |
 | U-EVT-03 | 頻度の上限: 20 tick ごとの上限、捨てた数を数える | 同上 |
 | U-EVT-04 | `events` の引数: `since` は 0 以上の整数、`limit` は `maxEventsPerRequest` 以下、`kinds` は既知の種類だけ | 同上 |
+| U-EVT-05 | 追加のイベントの切り替え: 起動時はすべて OFF。`changed` は本当に変わった種類だけ、決まった順。常時の種類と追加の種類は重ならない。`events` の `kinds` は追加の種類も受け付ける | 同上 |
+| U-EVT-06 | 通知の絞り込み: プレイヤーから `eventPlayerRadius` 以内、`Loaded` の出現は除く、爆発の `bounds`、ディメンションの完全な ID | 同上 |
+| U-PROTO-16 | `subscribe` の引数: 追加の種類だけ（常時の種類はメッセージで名前を挙げる）、両方のリストに同じ種類は不可、配列だけ、未知のキー | 同上 |
+| U-PROTO-17 | `capabilities.build`（ビルドの外では unbundled）、`optionalEvents.kinds`/`enabled`、`eventPlayerRadius`。`events` は変わらない | tests/unit/protocol-dispatch.test.ts |
+| U-BUILD-01 | ビルドの識別子の形 `<commit>[+dirty]@<UTC>`、git がなければ `nogit`。リポジトリの外では git の状態は null | tests/unit/build-info.test.ts |
 | V-VER-01 | `capabilities` が返すバージョンが、`package.json` と manifest のモジュールの依存と一致する（`pnpm version:set` のあとは `scripts/shared/constants/version.ts` を直す） | tests/validation/version-constants.test.ts |
 | V-RO-01 | 読み取り専用の検査: `scripts/` に変更系の API（`runCommand`、`setBlock`/`setType`/`setPermutation`、`setDynamicProperty`、`teleport`、`addEffect`、`kill`、`remove`、`spawnEntity`、`setItem`、`nameTag =` など）の呼び出しがない | tests/validation/read-only.test.ts |
 | V-DEP-01 | コアの manifest の依存が `@minecraft/server` だけ（`server-net`/`server-admin` がない） | `pnpm validate` と tests/validation/read-only.test.ts |
@@ -215,6 +220,28 @@ JSON のファイルに書かれる。下の ID は、ケースのファイル�
 | SB-01〜09 | `scoreboard` を引数なし、`objective`、`objective` ＋ `limit` 1、`player` ＋ `objective`、`player`、未知の objective、`limit` 65、未知のプレイヤーで。objective を消したあとに `player` で | objective の一覧。`type` が `Player`・`FakePlayer` の 2 件。`truncated: true`。スコア 7。1 件以上。`INVALID_PARAMS`。`LIMIT_EXCEEDED`。`PLAYER_NOT_FOUND`。得点なし（エラーではない） |
 | REG-01、-02 | `players`、既定の `snapshot` | Phase 2 から変わらない |
 
+#### 追加のイベントとビルドの識別子（ゲーム内、BDS。ADR-0014）
+
+「スクリプト」と書いたケースは `docs/knowledge/bds-local-server/scripts/bo-verify-optional-cases.json` にある（`bo-verify.ps1`
+で実行する。ファイルの ID は下の ID と同じで、細かいケースには英字を付けた）。ほかはプレイヤーのクライアントが要る。
+
+| ID | 手順 | 期待する結果 |
+| --- | --- | --- |
+| OBS-OPT-01 | BDS の起動直後に `capabilities`（スクリプト） | `methods` の最後が `subscribe`。`optionalEvents.kinds` に 8 種類、`enabled` は `[]`。`build.id` が `pnpm build` の表示した id と同じ |
+| OBS-OPT-02 | `subscribe` を `enable`（8 種類すべて、またはいくつか）で、次に引数なしで。`capabilities`（スクリプト） | `enabled`・`changed` が決まった順。2 回目は `changed: []`。`capabilities.optionalEvents.enabled` と一致する |
+| OBS-OPT-03 | クライアントで、ブロックを壊し、次に置く | 同じ位置の `block_break`（壊す前のブロック、手に持っていた `item`）と `block_place`（置いたブロックと状態） |
+| OBS-OPT-04 | `damage` を、プレイヤーを原因にしてブタへ、原因なしでブタへ、ブタを原因にしてプレイヤー（サバイバル）へ（一部スクリプト） | 1 つ目と 3 つ目に `entity_hurt`（`attacker`・`cause`・`health`）。2 つ目は出ない |
+| OBS-OPT-05 | `effect` をプレイヤーと、ウシに（スクリプト） | プレイヤーの `effect_add` が 1 件。ウシの分は出ない |
+| OBS-OPT-06 | クライアントで、雪玉を投げる | `item_use`（`minecraft:snowball`）。`entity_spawn` が ON なら雪玉の出現も |
+| OBS-OPT-07 | 空中のエンドクリスタルを壊す（スクリプト）。スポーンから離れた地面で TNT を爆発させ、穴を埋め戻す | クリスタルは `impactedBlocks: 0` で `source` がクリスタルの `explosion`。TNT は数と `bounds` |
+| OBS-OPT-08 | `weather rain`、`weather clear`（スクリプト） | `minecraft:overworld` で `from`/`to` の `weather_change` が 2 件 |
+| OBS-OPT-09 | 自然なスポーンを止めて、プレイヤーから 3 ブロックと 60 ブロックの位置にブタを `summon`（スクリプト） | 近いブタの `entity_spawn`（`Spawned`）だけ。参加のときにチャンクと一緒に読み込まれたモブは出ない |
+| OBS-OPT-10 | OFF の間に効果と天気を変える。`subscribe` の `disable`（スクリプト） | OFF の種類は、書かれず、保持もされない |
+| OBS-OPT-11 | コンソールの `reload` のあと、`capabilities`・`events`・`subscribe` | 新しい `session`。`enabled: []`。保持は空 |
+| OBS-OPT-12 | `entity_hurt` を ON にし、1 つのコマンドでブタ 30 頭にダメージ。そのあと別の出来事を 1 つ | その 1 秒は 20 行で、残りは捨てる。次の行に `dropped`、`events` は `missed: true` |
+| OBS-OPT-13 | `subscribe` に常時の種類、未知の種類、両方のリストに同じ種類、リストの代わりに文字列、未知のキー。`events` に未知の種類（スクリプト） | どれも `INVALID_PARAMS` |
+| OBS-BUILD-01 | ビルドし直し、動いているサーバーに配置し、コンソールで `reload`、`capabilities` | `build.id` が新しいビルドの id に変わる（`dirty` は元のツリーの状態） |
+
 #### 結果
 
 2026-10-18 に実施。BDS for Windows 1.26.52.3（Windows 11 VM）、クライアント Minecraft for Windows 1.26.52.3、アドオン 0.1.0（Phase 1）。BDS のコンソールからの要求は `bds-console-bridge.ps1` 経由、チャットからの要求はクリップボードから貼り付けた。アドオンは BDS 専用（ADR-0006）。ローカルワールドの行は参考として残す。
@@ -300,6 +327,27 @@ Phase 2 の追加分 — 2026-10-18 に同じ BDS で実施（アドオン 0.1.0
 | コンテンツログ | 問題なし | 試験の片付けのコマンドへの BDS の返事だけ |
 | パックのアイコン | ゲーム内では未確認 | BDS はアイコンを表示しない。PNG は 256×256 |
 
+1.1.0 の開発用ビルド — 2026-10-18 に同じ BDS（1.26.52.3）で、開発用のパックを `pnpm build` の出力に入れ替えて実施した（`addon.version` は 1.0.1 のまま。ローカルビルドには番号を付けない、ADR-0013）。プレイヤー PlayerA は同じ VM から参加。要求は `bds-console-bridge.ps1` 経由。
+
+| ID | 結果 | メモ |
+| --- | --- | --- |
+| U-EVT-05〜06、U-PROTO-16〜17、U-BUILD-01 | 成功 | 全体で 81 件 |
+| OBS-OPT-01、-02、-13 | 成功 | スクリプトでも確認（最終のビルドで `bo-verify-optional-cases.json` 21/21） |
+| OBS-OPT-03 | 成功 | クリエイティブ: (1,-61,0) の草ブロックを壊し、`item` は `minecraft:dirt`。そこに土を置き、`states` は `{dirt_type: normal}`。置いたときは `item_use`（土）も出た。最初のビルドで実施（この種類のコードは、そのあと変えていない） |
+| OBS-OPT-04 | 成功 | プレイヤーが叩いたブタ: `attacker` がプレイヤー、`health` 9/10。プレイヤーの関わらないブタの `fall`: 出ない。ブタが叩いたプレイヤー（サバイバル）: `attacker` がブタの `entity_hurt`。叩かれた 1 tick 後の 2 回目のダメージは出なかった（ゲームの無敵時間で、ダメージ自体がない）。あとでの `fall` は出た |
+| OBS-OPT-05 | 成功 | 分かったこと: その種類の効果がないときだけ出る（移動速度上昇 II がかかっている間に付け直す・III に上げる、では出なかった）。スクリプトのケースは、先に効果を消す |
+| OBS-OPT-06 | 成功 | 雪玉: `item_use`（`amount` 4）と雪玉の `entity_spawn`（`Spawned`） |
+| OBS-OPT-07 | 成功 | クリスタル: `impactedBlocks` 0。(20,-60,20) の TNT: 95 ブロック、`bounds` (17,-63,17)〜(23,-61,23)、そのあとアイテムの出現が 5 件。穴は埋め戻し、`tops` で確かめた。爆発元は一度も読めなかったので、`location` を通知から除いた |
+| OBS-OPT-08 | 修正のあと成功 | API は `overworld` を返す。通知には完全な ID `minecraft:overworld` を書くようにした |
+| OBS-OPT-09 | 成功 | 近いブタは出た（`Spawned`）。60 ブロック先のブタと、参加のときに読み込まれたモブは出なかった。自然なスポーンが ON だと、25 ブロック先に出たスライムが通知された（正しい動き）ので、スクリプトのケースは自然なスポーンを止める |
+| OBS-OPT-10 | 成功 | 連続の前に `entity_spawn` を OFF。OFF の間の効果と天気は保持されない |
+| OBS-OPT-11 | 成功 | `reload` のあと: 新しい `session`、`enabled: []`、`events` は空。ON にし直すまで `effect_add` は出ない |
+| OBS-OPT-12 | 成功 | 1 tick でブタ 30 頭: 20 行（`seq` 28〜47）。残りの 10 件と、同じ 1 秒の天気の変化 2 件は捨てた。次の `weather_change` に `dropped: 12`、27 からの `events` は `missed: true` で、一覧は収まるように切られた（`omitted: {events: 11}`） |
+| OBS-BUILD-01 | 成功 | `23aec2ab6a45+dirty@20261018T142622Z` → ビルドし直して、動いているサーバーの開発用パックに上書きし、`reload`: `…@20261018T143212Z` |
+| 回帰（`bo-verify-cases.json`） | 成功 | 最終のビルドで、追加の種類をいくつか ON にしたまま 34/34 |
+| 追加のケース（`bo-verify-optional-cases.json`） | 成功 | 最終のビルドで 21/21（その前の 2 回は試験の準備が原因で失敗: 移動速度上昇 II がかかったまま、自然に出たスライム。ケースを直した） |
+| 終了 | 成功 | プレイヤーは「セーブして終了」で退出。`stop` で「Quit correctly」 |
+
 ## リリース前チェックリスト
 
 このアドオンは BDS 専用（ADR-0006）なので、パッケージした `.mcaddon` を README の手順で BDS に入れて確かめる。最後の実施: 1.0.1、2026-10-18（上の結果）。
@@ -307,6 +355,6 @@ Phase 2 の追加分 — 2026-10-18 に同じ BDS で実施（アドオン 0.1.0
 - [x] 対象バージョンの BDS（Windows）で、パッケージした `.mcaddon` からスモークテストがすべて通る
 - [x] 別プラットフォーム: 対象外（BDS 専用。Linux の BDS は未確認と README に書いてある）
 - [x] 既存ワールドで、前の版からの更新が問題なくできる（初回なので、0.1.0 の開発用ビルドから）
-- [x] 回帰のケース（`bo-verify-cases.json`、`bo-verify-ro-cases.json`）が通る
+- [x] 回帰のケース（`bo-verify-cases.json`、`bo-verify-ro-cases.json`。1.1.0 からは `bo-verify-optional-cases.json` も）が通る
 - [x] コンテンツログがきれいで、未参照リソースの警告が説明なしに残っていない
 - [x] `docs/CONTENT.md` を確認し（新しい識別子なし）、`CHANGELOG.md` を更新し、`pnpm version:set` を適用した

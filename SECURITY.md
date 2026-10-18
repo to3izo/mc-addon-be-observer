@@ -40,7 +40,9 @@ Internet, or other people's account names in the report.
   world. Do not install the Add-On on servers where that is unacceptable, and give operator permission only to
   people who may see everyone's observations.
 - **Event lines tell who joined, left, died, moved between dimensions or changed game mode, and where.** They are
-  written whenever these happen, without a request (ADR-0008).
+  written whenever these happen, without a request (ADR-0008). Anyone who can send requests can also turn on the
+  opt-in events (`subscribe`, ADR-0014), which then report every block a player breaks or places, damage, effects,
+  items used and entities appearing near players, with positions, until they are turned off or the script reloads.
 - **Script output goes to the server console.** The Add-On needs `content-log-console-output-enabled=true`, which
   also prints other packs' script logs and content errors to standard output. Protect the console and any file it
   is redirected to like other server logs.
