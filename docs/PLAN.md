@@ -1,6 +1,6 @@
 # PLAN — 実装計画
 
-Bedrock Observer を小さな段階に分けて作る計画です。2026-10-18 に承認され、Phase 1 のコードと自動テストまで進んでいます（ゲーム内の確認は未実施）。 仕様は `docs/SPEC.md`・`docs/PROTOCOL.md`、理由は `docs/adr/`、調査は `docs/RESEARCH.md`・`docs/knowledge/bds-local-server/` にあります。計画が終わったら、この文書は「完了した段階」の記録を残して短くするか、消します（決定は ADR に残っているため）。
+Bedrock Observer を小さな段階に分けて作る計画です。2026-10-18 に承認され、Phase 1 を BDS で確認しました。**進捗は `docs/ROADMAP.md` のチェックリストで管理します**（この文書は各段階の作業の中身と手順）。 仕様は `docs/SPEC.md`・`docs/PROTOCOL.md`、理由は `docs/adr/`、調査は `docs/RESEARCH.md`・`docs/knowledge/bds-local-server/` にあります。計画が終わったら、この文書は「完了した段階」の記録を残して短くするか、消します（決定は ADR に残っているため）。
 
 ## 段階
 
