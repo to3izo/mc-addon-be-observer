@@ -12,6 +12,8 @@ and must match `package.json` and both pack manifests (`pnpm version:set <x.y.z>
   releases/media and the Marketplace (ADR-0012).
 
 ### Changed
+- Pack icon: the template's checkerboard placeholder is replaced by original pixel art of a grass block side
+  with `{ }` (same icon for both packs; source `assets/textures/pack_icon.svg`).
 - Docs no longer depend on private repositories or tools: the author's tool is called "an external tool",
   examples from other add-ons were replaced, and commit references point at the rewritten history (ADR-0012).
 - The Add-On is not distributed through the Minecraft Marketplace: the "Marketplace policy" is now the
