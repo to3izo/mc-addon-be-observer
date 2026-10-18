@@ -12,8 +12,8 @@
       "mode": "listen",
       "port": 19144,
       "localRoot": "${workspaceFolder}/scripts/",
-      "sourceMapRoot": "${workspaceFolder}/dist/addon-template_BP/scripts/",
-      "generatedSourceRoot": "${workspaceFolder}/dist/addon-template_BP/scripts/"
+      "sourceMapRoot": "${workspaceFolder}/dist/be-observer_BP/scripts/",
+      "generatedSourceRoot": "${workspaceFolder}/dist/be-observer_BP/scripts/"
     },
     {
       // Bedrock Dedicated Server: run `script debugger listen 19144` on the server, then start this.
@@ -24,8 +24,8 @@
       "host": "localhost",
       "port": 19144,
       "localRoot": "${workspaceFolder}/scripts/",
-      "sourceMapRoot": "${workspaceFolder}/dist/addon-template_BP/scripts/",
-      "generatedSourceRoot": "${workspaceFolder}/dist/addon-template_BP/scripts/"
+      "sourceMapRoot": "${workspaceFolder}/dist/be-observer_BP/scripts/",
+      "generatedSourceRoot": "${workspaceFolder}/dist/be-observer_BP/scripts/"
     }
   ]
 }

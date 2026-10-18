@@ -1,13 +1,13 @@
-# Addon Template
+# Bedrock Observer
 
 <!-- addon:start -->
 | | |
 | --- | --- |
-| **Add-On 名** | Addon Template |
-| **スラッグ** | `addon-template` |
-| **名前空間** | `addon_template:` |
+| **Add-On 名** | Bedrock Observer |
+| **スラッグ** | `be-observer` |
+| **名前空間** | `to3izo_bo:` |
 | **最小 Minecraft バージョン** | 1.26.50 |
-| **説明** | Describe your Add-On here. |
+| **説明** | プレイヤーや周辺世界の情報を読み取り専用の構造化データとして提供し、デバッグやAIエージェントによるプレイを支援する。 |
 <!-- addon:end -->
 
 > English: [README.md](README.md)

@@ -2,7 +2,7 @@
 // change addon.config.json and re-run `pnpm init:addon` instead.
 
 /** Identifier namespace for every custom block/item/entity (`<namespace>:<name>`). */
-export const NAMESPACE = "addon_template";
+export const NAMESPACE = "to3izo_bo";
 
 /** Repository / package slug. Used for log prefixes and dist folder names. */
-export const ADDON_SLUG = "addon-template";
+export const ADDON_SLUG = "be-observer";

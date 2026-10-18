@@ -1,7 +1,7 @@
 {
-  "name": "addon-template",
+  "name": "be-observer",
   "version": "0.1.0",
-  "description": "Describe your Add-On here.",
+  "description": "Provides structured, read-only observations of players and the surrounding world for debugging and AI-agent gameplay.",
   "private": true,
   "type": "module",
   "packageManager": "pnpm@12.6.0",

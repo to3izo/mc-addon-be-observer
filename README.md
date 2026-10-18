@@ -1,13 +1,13 @@
-# MC Addon Template
+# Bedrock Observer
 
 <!-- addon:start -->
 | | |
 | --- | --- |
-| **Add-On** | Addon Template |
-| **Slug** | `addon-template` |
-| **Namespace** | `addon_template:` |
+| **Add-On** | Bedrock Observer |
+| **Slug** | `be-observer` |
+| **Namespace** | `to3izo_bo:` |
 | **Minimum Minecraft version** | 1.26.50 |
-| **Description** | Describe your Add-On here. |
+| **Description** | Provides structured, read-only observations of players and the surrounding world for debugging and AI-agent gameplay. |
 <!-- addon:end -->
 
 > 日本語版: [README.ja.md](README.ja.md)

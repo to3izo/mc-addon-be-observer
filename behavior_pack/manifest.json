@@ -1,9 +1,9 @@
 {
   "format_version": 2,
   "header": {
-    "name": "Addon Template [BP]",
-    "description": "Describe your Add-On here.",
-    "uuid": "00000000-0000-4000-8000-000000000001",
+    "name": "Bedrock Observer [BP]",
+    "description": "Provides structured, read-only observations of players and the surrounding world for debugging and AI-agent gameplay.",
+    "uuid": "cbe4cdb9-3dc0-43c3-9750-a100b27a414e",
     "version": [0, 1, 0],
     "min_engine_version": [1, 26, 50]
   },
@@ -11,21 +11,21 @@
     {
       "description": "Behavior data",
       "type": "data",
-      "uuid": "00000000-0000-4000-8000-000000000002",
+      "uuid": "ad4f503b-3a7b-4691-a1f2-b5a988685ba5",
       "version": [0, 1, 0]
     },
     {
       "description": "Scripts (built from scripts/ by pnpm build)",
       "type": "script",
       "language": "javascript",
-      "uuid": "00000000-0000-4000-8000-000000000003",
+      "uuid": "a0c32fd2-f698-42ad-843d-09dd3204352e",
       "version": [0, 1, 0],
       "entry": "scripts/main.js"
     }
   ],
   "dependencies": [
     {
-      "uuid": "00000000-0000-4000-8000-000000000004",
+      "uuid": "3d21d349-fedb-4dd4-8b7c-a7f130ea5fe7",
       "version": [0, 1, 0]
     },
     {
@@ -34,7 +34,9 @@
     }
   ],
   "metadata": {
-    "authors": [],
+    "authors": [
+      "to3izo"
+    ],
     "product_type": "addon"
   }
 }

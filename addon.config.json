@@ -1,8 +1,9 @@
 {
-  "name": "Addon Template",
-  "slug": "addon-template",
-  "namespace": "addon_template",
-  "description": "Describe your Add-On here.",
+  "name": "Bedrock Observer",
+  "slug": "be-observer",
+  "namespace": "to3izo_bo",
+  "description": "Provides structured, read-only observations of players and the surrounding world for debugging and AI-agent gameplay.",
+  "descriptionJa": "プレイヤーや周辺世界の情報を読み取り専用の構造化データとして提供し、デバッグやAIエージェントによるプレイを支援する。",
   "minEngineVersion": "1.26.50",
-  "author": ""
+  "author": "to3izo"
 }
