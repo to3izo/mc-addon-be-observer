@@ -6,6 +6,10 @@ and must match `package.json` and both pack manifests (`pnpm version:set <x.y.z>
 
 ## [Unreleased]
 
+## [1.0.1] - 2026-10-18
+
+Pack icon and documentation only; the protocol and behaviour are unchanged from 1.0.0.
+
 ### Removed
 - Documentation inherited from the private template that does not apply to this BDS-only Add-On:
   `docs/PROMPTS.md` and the knowledge topics on blocks, particles, textures, shared containers, iOS testing,

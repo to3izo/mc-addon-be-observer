@@ -306,10 +306,23 @@ moved aside), and the existing world `addon-lab-flat` switched from `[0,1,0]` to
 | All methods (`bo-verify-ro-cases.json`) | pass | 16/16 after preparing its state (diamond block at 3,-60,3, an armor stand, objective `bo_ro` with a score for PlayerA); removed afterwards. Without that state 5 cases fail by design |
 | Content log | clean | The only `ERROR` lines are BDS's replies to the test's own cleanup commands (`kill` / `scoreboard objectives remove` with nothing to remove) |
 
+Release 1.0.1 — run 2026-10-18 on the same BDS with `dist/be-observer-1.0.1.mcaddon` unpacked into the development
+folders (replacing 1.0.0) and `world_*_packs.json` switched to `[1,0,1]`. Changes since 1.0.0: pack icon and
+documentation only (the script differs only in `ADDON_VERSION`).
+
+| ID | Result | Notes |
+| --- | --- | --- |
+| S-01 / S-02 / S-05 | pass | `Pack Stack … version: 1.0.1`; one `scripts loaded`; `capabilities` reports `1.0.1` |
+| S-03 | pass | `reload` → new `session`, one `scripts loaded`, one response per request |
+| Upgrade 1.0.0 → 1.0.1 | pass | Same world; only the pack version in `world_*_packs.json` changed |
+| Regression (`bo-verify-cases.json`) | pass | 34/34. The first run had 6 failures caused by the world, not the Add-On: a crater at spawn (after a night-time shoot in Survival) put the test pig inside the ground and changed column (0,0). Mapped with `tops`, refilled with `fill … replace air`, re-run passed |
+| Content log | clean | Only BDS's replies to the test's own cleanup commands |
+| Pack icon | not checked in game | BDS shows no pack icon; the PNG is 256×256 |
+
 ## Release checklist
 
 The Add-On is BDS-only (ADR-0006), so the checks run on BDS with the packaged `.mcaddon` installed as the README
-describes. Last run: 1.0.0, 2026-10-18 (Results above).
+describes. Last run: 1.0.1, 2026-10-18 (Results above).
 
 - [x] All smoke tests pass on BDS (Windows) with the target version, from the packaged `.mcaddon`
 - [x] Secondary platform: not applicable (BDS only; Linux BDS is stated as untested in the README)
