@@ -111,6 +111,8 @@ network, forward them with a program outside Minecraft and follow `SECURITY.md`.
 | `snapshot` | Several of the above for one player, in one response |
 | `events` | Recent game events again: joins, leaves, spawns, deaths involving players, dimension, game mode and game rule changes |
 | `subscribe` | Turn on opt-in events: blocks broken and placed, damage, effects, item use, explosions, weather, nearby spawns (memory only; off after a restart) |
+| `features` | Turn on opt-in features from the BDS console (memory only; off after a restart) |
+| `container` | The items in a chest, barrel, shulker box, hopper, furnace and other block containers — only after the console turned `containers` on |
 
 The full wire format, limits and error codes are in **[docs/PROTOCOL.md](docs/PROTOCOL.md)**.
 

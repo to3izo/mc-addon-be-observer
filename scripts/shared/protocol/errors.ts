@@ -18,6 +18,8 @@ export const ERROR_CODES = [
   "INTERNAL_ERROR",
   "ENTITY_NOT_FOUND",
   "UNLOADED_CHUNK",
+  "PERMISSION_DENIED",
+  "FEATURE_DISABLED",
 ] as const;
 
 export type ErrorCode = (typeof ERROR_CODES)[number];

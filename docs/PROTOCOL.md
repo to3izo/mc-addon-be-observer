@@ -9,7 +9,8 @@ The protocol lets any external tool — an AI agent, a test script, a human at t
 observations and read the answers. It is deliberately small:
 
 - **Read-only.** Every method only reads the game. There is no method that changes the world or runs a command.
-  The one setting, which opt-in event kinds are on (`subscribe`, §5.14), lives in the Add-On's memory only.
+  The only settings, which opt-in event kinds are on (`subscribe`, §5.14) and which opt-in features are on
+  (`features`, §5.15), live in the Add-On's memory only.
 - **Tool-independent.** Requests are plain JSON in a `/scriptevent` command (or the operator command of §1); responses are one-line JSON in the
   script log. No AI model, MCP server, HTTP or WebSocket is assumed.
 - **Explicit about uncertainty.** Air, "no hit", unloaded chunks, unsupported methods and failures are different
@@ -211,6 +212,8 @@ Every method is a pure read at one tick. All of them are implemented (Phase 2, `
 | `tops` | The topmost blocks of a few columns, compact (§5.12) |
 | `scoreboard` | Objectives, the scores of one objective, or one player's scores (§5.13) |
 | `subscribe` | Turn opt-in event kinds on or off, or read which are on (§5.14) |
+| `features` | Turn opt-in features on (BDS console only) or off, or read which are on (§5.15) |
+| `container` | The items in one block's inventory (chest, barrel, hopper, ...); needs the `containers` feature (§5.16) |
 
 ### 5.1 `capabilities`
 
@@ -225,10 +228,11 @@ Every method is a pure read at one tick. All of them are implemented (Phase 2, `
   "protocol": { "version": 1, "supported": [1] },
   "scriptApi": { "@minecraft/server": "2.10.0" },
   "transport": { "requestEventId": "to3izo_bo:query", "requestCommand": "to3izo_bo:query", "responsePrefix": "to3izo_bo.response ", "eventPrefix": "to3izo_bo.event " },
-  "methods": ["capabilities", "players", "player", "block", "blocks", "target", "entities", "snapshot", "events", "entity", "top", "tops", "scoreboard", "subscribe"],
+  "methods": ["capabilities", "players", "player", "block", "blocks", "target", "entities", "snapshot", "events", "entity", "top", "tops", "scoreboard", "subscribe", "features", "container"],
   "sections": ["health", "inventory", "equipment", "effects", "world"],
   "events": ["player_join", "player_leave", "player_spawn", "entity_die", "dimension_change", "game_mode_change", "game_rule_change"],
   "optionalEvents": { "kinds": ["block_break", "block_place", "entity_hurt", "effect_add", "item_use", "explosion", "weather_change", "entity_spawn"], "enabled": ["entity_hurt"] },
+  "optionalFeatures": { "kinds": ["containers"], "enabled": [] },
   "limits": { "maxRequestChars": 2048, "maxResponseChars": 4000, "maxBlocksPerRequest": 32, "maxRayDistance": 64, "maxEntityRadius": 32, "maxEntities": 32, "maxInventorySlots": 54, "maxScoreEntries": 64, "maxEventsPerSecond": 20, "eventBufferSize": 64, "maxEventsPerRequest": 64, "eventPlayerRadius": 32 },
   "defaults": { "rayDistance": 8, "entityRadius": 16, "entityLimit": 16, "scoreLimit": 32 },
   "readOnly": true
@@ -247,6 +251,8 @@ protocol change; tools read them from here instead of hard-coding them.
   `commit` and `dirty` are `null` and `id` starts with `nogit`. Compare `id` as a whole; do not parse it.
 - `events` lists the event kinds that are always on (§10). `optionalEvents.kinds` lists the opt-in kinds and
   `optionalEvents.enabled` the ones that are on right now (§5.14).
+- `optionalFeatures.kinds` lists the opt-in features and `optionalFeatures.enabled` the ones that are on right now
+  (§5.15).
 
 ### 5.2 `players`
 
@@ -607,6 +613,83 @@ Turns opt-in event kinds (§10) on and off (ADR-0014). Parameters: `enable`, `di
 - The always-on kinds cannot be switched: naming one is `INVALID_PARAMS` (`details.param` names the list), as is an
   unknown kind, a kind in both lists, or a list that is not an array.
 
+### 5.15 `features`
+
+Turns opt-in features on and off (ADR-0015). Parameters: `enable`, `disable` (arrays of names from
+`capabilities.optionalFeatures.kinds`; both optional). Without parameters it only reports the state. The only
+feature is `containers` (§5.16).
+
+```json
+{ "requestId": "f1", "method": "features", "params": { "enable": ["containers"] } }
+```
+
+```json
+"data": { "optional": ["containers"], "enabled": ["containers"], "changed": ["containers"] }
+```
+
+- **Only the BDS console can turn a feature on.** A request with `enable` that does not come from the console is
+  `PERMISSION_DENIED` (`details: { "param": "enable", "required": "console" }`) and changes nothing. The console is
+  a request whose source the game reports as the server, with no source player: `/scriptevent` typed into the
+  console, or the custom command typed into the console. The game reports a pack script's `runCommand` as the
+  server too; that is code the server owner installed. Chat (any player, operators included), `/execute as` a
+  player, command blocks and NPC dialogue cannot turn a feature on. Verified on BDS 1.26.52.3.
+- **Anyone who can send requests can turn a feature off**, and anyone can read the state.
+- `enabled` is the state after the request; `changed` lists the features whose state the request changed. Both are
+  in the order of `optional`.
+- **Every feature is off when the script starts.** The state lives in memory only and is never written to the
+  world: `/reload` and a server restart turn every feature off again. A tool that sees a new `session` asks the
+  console to turn the feature on again.
+- The state is one per server, shared by every tool and operator: while a feature is on, every source that can send
+  requests can use it.
+- An unknown name, a name in both lists, or a list that is not an array is `INVALID_PARAMS`.
+
+### 5.16 `container`
+
+The items in one block's inventory. Needs the `containers` feature (§5.15); while it is off the answer is
+`FEATURE_DISABLED` (`details: { "feature": "containers" }`). Parameters: `x`, `y`, `z` (integers), `dimension`
+(§4), `fromSlot` (integer, default 0, at most `maxInventorySlots` - 1).
+
+```json
+{ "requestId": "k1", "method": "container", "params": { "dimension": "minecraft:overworld", "x": 6, "y": -60, "z": 6 } }
+```
+
+```json
+"data": {
+  "dimension": "minecraft:overworld",
+  "position": { "x": 6, "y": -60, "z": 6 },
+  "status": "ok",
+  "block": { "typeId": "minecraft:chest" },
+  "container": { "size": 27, "emptySlots": 25, "items": [ { "slot": 0, "typeId": "minecraft:apple", "amount": 3 }, { "slot": 13, "typeId": "minecraft:bread", "amount": 2, "nameTag": "Lunch" } ] }
+}
+```
+
+- `status` is the same as for `block` (§5.4): `ok`, `unloaded`, `out_of_bounds` or `error`; `block` and `container`
+  are present only with `ok`. Nothing is loaded to answer, and there is no distance limit: any loaded chunk can be
+  read.
+- `container` is `null` when the block has no inventory the Script API exposes (stone, air, ...). Any block with an
+  inventory is read; there is no list of types. Measured on BDS 1.26.52.3:
+
+  | Block | `size` |
+  | --- | --- |
+  | chest, trapped chest, barrel, shulker boxes | 27 |
+  | double chest (either half) | 54 |
+  | dispenser, dropper | 9 |
+  | hopper, brewing stand | 5 |
+  | furnace, blast furnace, smoker | 3 (0 input, 1 fuel, 2 output) |
+  | jukebox, lectern | 1 |
+  | crafter, ender chest, chiseled bookshelf, decorated pot, campfire | `container: null` |
+
+- **A double chest is one inventory.** Either half answers the whole double chest with the same `size` (54) and the
+  same slot numbers.
+- `size` and `emptySlots` describe the whole container. `items` lists occupied slots only, in slot order, from
+  `fromSlot` on; `nameTag` appears only when the item has a custom name. Items inside an item (a shulker box in a
+  chest) are not read.
+- `items` may be truncated (§7). A full double chest of short item ids fits one line; long ids or custom names may
+  not. When `container.truncated` is true, ask again with `fromSlot` = the last returned `slot` + 1.
+- Reading does not open the container: no lid moves, no player sees anything, and the contents do not change.
+- Not verified: a chest that still has a loot table (an unopened structure chest) was not available on a flat
+  world. Whether reading one shows it empty or fills it is unknown.
+
 ## 6. Error codes
 
 | Code | When |
@@ -624,6 +707,8 @@ Turns opt-in event kinds (§10) on and off (ADR-0014). Parameters: `enable`, `di
 | `TARGET_INVALID` | The player or entity became invalid while it was being read. |
 | `ENTITY_NOT_FOUND` | `entity`: no loaded entity has this id. |
 | `UNLOADED_CHUNK` | A read needed a chunk that is not loaded (methods that answer per item use `status: "unloaded"` instead). |
+| `PERMISSION_DENIED` | `features`: only the BDS console can turn a feature on (§5.15). `details.required` is `"console"`. |
+| `FEATURE_DISABLED` | The method needs an opt-in feature that is off (§5.15). `details.feature` names it. |
 | `RESPONSE_TOO_LARGE` | Even after the documented truncation the response would exceed `maxResponseChars`. |
 | `INTERNAL_ERROR` | An unexpected exception. The message is a short summary; the details go to a diagnostic line. |
 
@@ -642,7 +727,7 @@ name, and `details.scriptError` holds that name: `InvalidEntityError` → `TARGE
 - A request longer than `maxRequestChars` characters is refused before parsing.
 - `maxResponseChars` limits the whole line, prefix included.
 - A response is built, serialised and measured. If it exceeds `maxResponseChars`, list fields that allow it
-  are shortened from the end, in this order: `players`; `entities`; `inventory.items`; `events`; `scores`; `objectives`. The object holding the
+  are shortened from the end, in this order: `players`; `entities`; `inventory.items`; `events`; `scores`; `objectives`; `container.items`. The object holding the
   list gets `"truncated": true` and `"omitted": { "<field>": <count> }`. Single values are never cut.
 - If the response is still too long, the answer is `RESPONSE_TOO_LARGE`; ask for less (lower `limit`, fewer
   sections).

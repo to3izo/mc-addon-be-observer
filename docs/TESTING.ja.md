@@ -128,6 +128,9 @@ Phase 1・2（`docs/ROADMAP.md`）のテスト計画です。アドオンは **B
 | U-EVT-06 | 通知の絞り込み: プレイヤーから `eventPlayerRadius` 以内、`Loaded` の出現は除く、爆発の `bounds`、ディメンションの完全な ID | 同上 |
 | U-PROTO-16 | `subscribe` の引数: 追加の種類だけ（常時の種類はメッセージで名前を挙げる）、両方のリストに同じ種類は不可、配列だけ、未知のキー | 同上 |
 | U-PROTO-17 | `capabilities.build`（ビルドの外では unbundled）、`optionalEvents.kinds`/`enabled`、`eventPlayerRadius`。`events` は変わらない | tests/unit/protocol-dispatch.test.ts |
+| U-PROTO-18 | `features` の引数: 既知の機能名だけ、両方のリストに同じ名前は不可、配列だけ | tests/unit/protocol-features.test.ts |
+| U-PROTO-19 | 機能を ON にできるのは BDS のコンソール（送り主のプレイヤーがない `Server` / `command:Server`）だけ（ほかは `PERMISSION_DENIED`）。OFF は誰でも。`FEATURE_DISABLED`。機能の切り替え。新しいコードは末尾に足す | 同上 |
+| U-PROTO-20 | `capabilities` に `features`・`container`・`optionalFeatures`。`container` の引数（`fromSlot` は 0〜53）。満杯の大きいチェストは、短い ID なら 1 行に収まり、長い ID や名前なら切り詰める（拒否しない） | 同上 |
 | U-BUILD-01 | ビルドの識別子の形 `<commit>[+dirty]@<UTC>`、git がなければ `nogit`。リポジトリの外では git の状態は null | tests/unit/build-info.test.ts |
 | V-VER-01 | `capabilities` が返すバージョンが、`package.json` と manifest のモジュールの依存と一致する（`pnpm version:set` のあとは `scripts/shared/constants/version.ts` を直す） | tests/validation/version-constants.test.ts |
 | V-RO-01 | 読み取り専用の検査: `scripts/` に変更系の API（`runCommand`、`setBlock`/`setType`/`setPermutation`、`setDynamicProperty`、`teleport`、`addEffect`、`kill`、`remove`、`spawnEntity`、`setItem`、`nameTag =` など）の呼び出しがない | tests/validation/read-only.test.ts |
@@ -241,6 +244,26 @@ JSON のファイルに書かれる。下の ID は、ケースのファイル�
 | OBS-OPT-12 | `entity_hurt` を ON にし、1 つのコマンドでブタ 30 頭にダメージ。そのあと別の出来事を 1 つ | その 1 秒は 20 行で、残りは捨てる。次の行に `dropped`、`events` は `missed: true` |
 | OBS-OPT-13 | `subscribe` に常時の種類、未知の種類、両方のリストに同じ種類、リストの代わりに文字列、未知のキー。`events` に未知の種類（スクリプト） | どれも `INVALID_PARAMS` |
 | OBS-BUILD-01 | ビルドし直し、動いているサーバーに配置し、コンソールで `reload`、`capabilities` | `build.id` が新しいビルドの id に変わる（`dirty` は元のツリーの状態） |
+
+#### コンテナーの中身（ゲーム内、BDS。ADR-0015）
+
+「スクリプト」と書いたケースは `docs/knowledge/bds-local-server/scripts/bo-verify-container-cases.json` にある
+（CON-00〜20。要求はすべてコンソールから）。「プレイヤーとして」の要求は、コンソールから
+`execute as <プレイヤー> run scriptevent …` か `execute as <プレイヤー> run to3izo_bo:query "…"` で送った。このとき
+ゲームは、チャットと同じく、プレイヤーを送り主として伝える（`sourceType` は `Entity`）。
+
+| ID | 手順 | 期待する結果 |
+| --- | --- | --- |
+| OBS-CON-01 | BDS の起動直後に `capabilities`・`features`・`container`（スクリプト） | `methods` の最後が `features`・`container`。`optionalFeatures` は `{kinds: ["containers"], enabled: []}`。`container` は `FEATURE_DISABLED` |
+| OBS-CON-02 | コンソールから `features` の `enable` を、`/scriptevent`（スクリプト）とカスタムコマンドで | `enabled`・`changed` が `["containers"]`。2 回目は `changed: []` |
+| OBS-CON-03 | プレイヤーとして `features` の `enable`（`/scriptevent` とカスタムコマンド）。member がチャットでカスタムコマンドを入力 | `PERMISSION_DENIED`（`required: "console"`）で、状態は変わらない。member にはゲームの「コマンドの権限レベル」のエラーが出て、アドオンには届かない |
+| OBS-CON-04 | ON の間に、プレイヤーとして `dimension` なしで `container`。プレイヤーとして `features` の `disable`。もう一度 `container` | プレイヤーのディメンションのブロックの中身。`changed: ["containers"]`。`FEATURE_DISABLED` |
+| OBS-CON-05 | チェスト、トラップチェスト、樽、シュルカーボックス、ホッパー、ディスペンサー、ドロッパー、かまど、溶鉱炉、燻製器、醸造台、クラフター、エンダーチェスト、模様入りの本棚、飾り壺、ジュークボックス、焚き火、書見台、石、空気に `container`（一部スクリプト） | `size`・`emptySlots` と、`replaceitem` で入れたアイテム。インベントリが API に出ないブロックは `container: null`（表は `docs/PROTOCOL.md` §5.16） |
+| OBS-CON-06 | 大きいチェストの、どちらかの半分からスロット 0〜2・26・40 に入れ、両方の半分に `container`（スクリプト） | どちらの半分も `size` 54 で、同じスロット番号に同じアイテム |
+| OBS-CON-07 | 大きいチェストの 54 スロットを、32 文字の ID で、次に 43 文字の ID で埋める。`container`、次に `fromSlot` を最後のスロット＋1 で。`fromSlot` 54（スクリプト） | 32 文字: 54 件すべてが 1 行に入る。43 文字: `truncated`・`omitted.items` が付き、残りは `fromSlot` で取れる。54: `LIMIT_EXCEEDED` |
+| OBS-CON-08 | 遠く（未ロード）、ワールドの上、コンソールから `dimension` なし（スクリプト） | `unloaded`。`out_of_bounds`。`INVALID_PARAMS`（`dimension`） |
+| OBS-CON-09 | 読んでいる間、プレイヤーがチェストを見る。2 回読む。コンソールで `reload` し、`features` と `container` | ふたは閉じたまま、中身は変わらない。`reload` のあとは新しい `session`、`enabled: []`、`FEATURE_DISABLED` |
+| OBS-CON-10 | ルートテーブルが残ったチェスト（開けていない構造物のチェスト）に `container` | 未実施: 平らなワールドで用意できなかった。ADR-0015 の未確認事項 |
 
 #### 結果
 
@@ -361,6 +384,26 @@ Phase 2 の追加分 — 2026-10-18 に同じ BDS で実施（アドオン 0.1.0
 | 全メソッド（`bo-verify-ro-cases.json`） | 成功 | 前提の状態を用意して 16/16。終わったあと片付けた |
 | OBS-OPT-03、-06（クライアント） | 成功 | (1,-61,0) でブロックを壊して置いた: `block_break`・`block_place`・`item_use`。そのあと OFF に戻した |
 | コンテンツログ | 問題なし | アドオンの警告・エラーなし。試験の準備と片付けのコマンドへの BDS の返事だけ |
+
+1.2.0 の開発用ビルド（コンテナーの中身）— 2026-10-19 に同じ BDS（1.26.52.3）で、開発用のビヘイビアーパックを `pnpm build` の出力に入れ替えて実施した（`addon.version` は 1.1.0 のまま。ローカルのビルドには番号を付けない、ADR-0013）。プレイヤー PlayerA は同じ VM から参加した（operator ではなく member）。要求は `bds-console-bridge.ps1` から送った。
+
+| ID | 結果 | メモ |
+| --- | --- | --- |
+| U-PROTO-18〜20 | 成功 | 全部で 86 件 |
+| OBS-CON-01、-02 | 成功 | コンソールからのカスタムコマンド（`command:Server`）でも ON にできた |
+| OBS-CON-03 | 成功 | プレイヤーとして `execute as` で送ると、`/scriptevent` でもカスタムコマンドでも `PERMISSION_DENIED`。member のチャットのコマンドは、ゲームが拒否した（「コマンドの権限レベルが正しくありません」）。operator のチャットは別に試していない（プレイヤーを operator にすると、サーバーの権限の設定が変わるため） |
+| OBS-CON-04 | 成功 | プレイヤーとして樽を読めた。プレイヤーとして OFF にでき、そのあとは `FEATURE_DISABLED` |
+| OBS-CON-05 | 成功 | 大きさは `docs/PROTOCOL.md` §5.16 のとおり。分かったこと: クラフターは、`replaceitem` で入れられるのに、Script API ではインベントリがない（`container: null`）。エンダーチェストは `replaceitem` でもコンテナーではない |
+| OBS-CON-06 | 成功 | 分かったこと: ゲームの `replaceitem` も、どちらの半分からでも大きいチェスト全体を指す（それぞれの半分から書いたスロット 0 は同じスロット） |
+| OBS-CON-07 | 成功 | `enchanted_golden_apple` × 54: 3,986 文字で切り詰めなし。`waxed_weathered_cut_copper_stairs` × 54: 46 件、`omitted.items` 8。`fromSlot` 46 でスロット 46〜53 が返った |
+| OBS-CON-08 | 成功 | |
+| OBS-CON-09 | 成功 | 読んでいる間のスクリーンショットで、ふたは閉じたまま。`reload` のあと、session が変わり `enabled: []` |
+| OBS-CON-10 | 未実施 | `/place structure` はあるが、平らなワールドでルートテーブル付きのチェストのある構造物を置いて位置を突き止めるところまではしなかった |
+| コンテナーのケース（`bo-verify-container-cases.json`） | 成功 | 21/21 |
+| 回帰（`bo-verify-cases.json`） | 成功 | 34/34 |
+| 追加のケース（`bo-verify-optional-cases.json`） | 成功 | 21/21 |
+| コンテンツログ | 問題なし | `observer:` の警告なし。試験の準備のコマンドへの BDS の返事だけ |
+| 終了 | 成功 | プレイヤーは「セーブして終了」で退出。`stop` で「Quit correctly」 |
 
 ## リリース前チェックリスト
 

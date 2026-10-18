@@ -134,6 +134,9 @@ Record each run: platform, game/BDS version, environment (local world / BDS), pa
 | U-EVT-06 | Event filters: within `eventPlayerRadius` of a player, `Loaded` spawns ignored, explosion `bounds`, full dimension ids | same |
 | U-PROTO-16 | `subscribe` parameters: opt-in kinds only (always-on kinds named in the message), no kind in both lists, arrays only, unknown keys | same |
 | U-PROTO-17 | `capabilities.build` (unbundled outside a build), `optionalEvents.kinds`/`enabled`, `eventPlayerRadius`; `events` unchanged | tests/unit/protocol-dispatch.test.ts |
+| U-PROTO-18 | `features` parameters: known feature names only, no name in both lists, arrays only | tests/unit/protocol-features.test.ts |
+| U-PROTO-19 | Only the BDS console (`Server` / `command:Server` without a source player) may turn a feature on (`PERMISSION_DENIED` otherwise); anyone may turn one off; `FEATURE_DISABLED`; the feature switch; the new codes are appended | same |
+| U-PROTO-20 | `capabilities` lists `features`, `container` and `optionalFeatures`; `container` parameters (`fromSlot` 0–53); a full double chest fits one line with short ids and is truncated (not refused) with long ids or names | same |
 | U-BUILD-01 | Build id format `<commit>[+dirty]@<UTC>`, `nogit` without git; git state outside a repository is null | tests/unit/build-info.test.ts |
 | V-VER-01 | Versions reported by `capabilities` equal `package.json` and the manifest's module dependencies (update `scripts/shared/constants/version.ts` after `pnpm version:set`) | tests/validation/version-constants.test.ts |
 | V-RO-01 | Read-only guard: `scripts/` contains no call to mutating APIs (`runCommand`, `setBlock`/`setType`/`setPermutation`, `setDynamicProperty`, `teleport`, `addEffect`, `kill`, `remove`, `spawnEntity`, `setItem`, `nameTag =`, …) | tests/validation/read-only.test.ts |
@@ -247,6 +250,26 @@ OPT cases marked "scripted" are in `docs/knowledge/bds-local-server/scripts/bo-v
 | OBS-OPT-12 | `entity_hurt` on; 30 pigs damaged by one command; then one more event | 20 lines in that second, the rest dropped; the next line has `dropped`, `events` reports `missed: true` |
 | OBS-OPT-13 | `subscribe` with an always-on kind, an unknown kind, a kind in both lists, a string instead of a list, an unknown key; `events` with an unknown kind (scripted) | `INVALID_PARAMS` each time |
 | OBS-BUILD-01 | Rebuild, deploy over the running server, console `reload`, `capabilities` | `build.id` changes to the new build's id (and `dirty` reflects the source tree) |
+
+#### Container contents (in game, BDS; ADR-0015)
+
+Cases marked "scripted" are in `docs/knowledge/bds-local-server/scripts/bo-verify-container-cases.json` (CON-00…20;
+all requests from the console). Requests "as a player" were sent from the console as
+`execute as <player> run scriptevent …` or `execute as <player> run to3izo_bo:query "…"`: the game then reports the
+player as the source (`sourceType` `Entity`), as for chat.
+
+| ID | Steps | Expected |
+| --- | --- | --- |
+| OBS-CON-01 | Right after BDS starts: `capabilities`, `features`, `container` (scripted) | `methods` ends with `features`, `container`; `optionalFeatures` `{kinds: ["containers"], enabled: []}`; `container` → `FEATURE_DISABLED` |
+| OBS-CON-02 | `features` `enable` from the console, by `/scriptevent` (scripted) and by the custom command | `enabled`/`changed` `["containers"]`; again: `changed: []` |
+| OBS-CON-03 | `features` `enable` as a player (`/scriptevent` and the custom command); the custom command typed in chat by a member | `PERMISSION_DENIED` (`required: "console"`), state unchanged; the member gets the game's "command permission level" error and nothing reaches the Add-On |
+| OBS-CON-04 | While on: `container` as a player without `dimension`; `features` `disable` as a player; `container` again | Contents of the block in the player's dimension; `changed: ["containers"]`; `FEATURE_DISABLED` |
+| OBS-CON-05 | `container` on a chest, trapped chest, barrel, shulker box, hopper, dispenser, dropper, furnace, blast furnace, smoker, brewing stand, crafter, ender chest, chiseled bookshelf, decorated pot, jukebox, campfire, lectern, stone, air (partly scripted) | `size`, `emptySlots` and the items put in by `replaceitem`; `container: null` for blocks without an exposed inventory (table in `docs/PROTOCOL.md` §5.16) |
+| OBS-CON-06 | A double chest: items put into slots 0–2, 26 and 40 through either half; `container` on both halves (scripted) | Both halves: `size` 54 and the same items with the same slot numbers |
+| OBS-CON-07 | Fill the double chest's 54 slots with a 32-character id, then with a 43-character id; `container`, then `fromSlot` = last slot + 1; `fromSlot` 54 (scripted) | 32 characters: all 54 in one line. 43 characters: `truncated`, `omitted.items`, and the rest with `fromSlot`. 54: `LIMIT_EXCEEDED` |
+| OBS-CON-08 | Far away (unloaded), above the world, and without `dimension` from the console (scripted) | `unloaded`; `out_of_bounds`; `INVALID_PARAMS` (`dimension`) |
+| OBS-CON-09 | The player looks at the chests while they are read; read twice; console `reload`, then `features` and `container` | Lids stay closed, contents unchanged; after `reload`: new `session`, `enabled: []`, `FEATURE_DISABLED` |
+| OBS-CON-10 | `container` on a chest that still has a loot table (unopened structure chest) | Not run: no such chest could be made on the flat world. Open question in ADR-0015 |
 
 #### Results
 
@@ -384,6 +407,28 @@ development folders (replacing the 1.1.0 development build) and `world_*_packs.j
 | All methods (`bo-verify-ro-cases.json`) | pass | 16/16 with its state prepared and removed afterwards |
 | OBS-OPT-03, -06 (client) | pass | Block broken and placed at (1,-61,0): `block_break`, `block_place` and `item_use`; then switched off again |
 | Content log | clean | No warning or error from the Add-On; only BDS's replies to the test's own setup and cleanup commands |
+
+1.2.0 development build (container contents) — run 2026-10-19 on the same BDS (1.26.52.3), development behavior
+pack replaced by `pnpm build` output (`addon.version` still 1.1.0; local builds are not numbered, ADR-0013). Player
+PlayerA joined from the same VM (a member, not an operator). Requests through `bds-console-bridge.ps1`.
+
+| ID | Result | Notes |
+| --- | --- | --- |
+| U-PROTO-18–20 | pass | 86 tests in total |
+| OBS-CON-01, -02 | pass | Custom command from the console (`command:Server`) also turned the feature on |
+| OBS-CON-03 | pass | `execute as` the player: `PERMISSION_DENIED` by `/scriptevent` and by the custom command. The member's chat command was refused by the game ("コマンドの権限レベルが正しくありません"); an operator's chat was not tested separately (making the player an operator changes the server's permissions) |
+| OBS-CON-04 | pass | Barrel read as the player; turned off as the player; then `FEATURE_DISABLED` |
+| OBS-CON-05 | pass | Sizes as in `docs/PROTOCOL.md` §5.16. Found: the crafter has no inventory in the Script API (`container: null`) although `replaceitem` puts items into it; the ender chest is not a container for `replaceitem` either |
+| OBS-CON-06 | pass | Found: the game's `replaceitem` also addresses the whole double chest from either half (slot 0 written through each half is the same slot) |
+| OBS-CON-07 | pass | `enchanted_golden_apple` × 54: 3,986 characters, not truncated. `waxed_weathered_cut_copper_stairs` × 54: 46 items, `omitted.items` 8; `fromSlot` 46 returned slots 46–53 |
+| OBS-CON-08 | pass | |
+| OBS-CON-09 | pass | Screenshot during the reads: lids closed. After `reload`: session changed, `enabled: []` |
+| OBS-CON-10 | not run | `/place structure` exists but no loot-chest structure was placed and located on the flat world |
+| Container cases (`bo-verify-container-cases.json`) | pass | 21/21 |
+| Regression (`bo-verify-cases.json`) | pass | 34/34 |
+| Opt-in cases (`bo-verify-optional-cases.json`) | pass | 21/21 |
+| Content log | clean | No `observer:` warning; only BDS's replies to the test's own setup commands |
+| Shutdown | pass | Player left with "セーブして終了"; `stop` → "Quit correctly" |
 
 ## Release checklist
 

@@ -16,7 +16,7 @@ It is published as open source in its own repository.
 ## Main features
 
 Status: all rows are implemented and verified on BDS 1.26.52.3 (`docs/TESTING.md`); protocol 1 is frozen
-(`docs/PROTOCOL.md`), and rows 16–17 are compatible additions to it.
+(`docs/PROTOCOL.md`), and rows 16–18 are compatible additions to it.
 
 | # | Feature | Summary | Phase | Status |
 | --- | --- | --- | --- | --- |
@@ -37,14 +37,14 @@ Status: all rows are implemented and verified on BDS 1.26.52.3 (`docs/TESTING.md
 | 15 | Operator command | `/to3izo_bo:query "<json>"`: the same requests from an operator's chat without cheats (ADR-0010) | 2 | done (BDS) |
 | 16 | Opt-in events | `subscribe` turns on `block_break`, `block_place`, `entity_hurt`, `effect_add`, `item_use`, `explosion`, `weather_change`, `entity_spawn` (players involved or near; shared rate limit); kept in memory only, off after a reload (ADR-0014) | 1.1.0 | done (BDS) |
 | 17 | Build identifier | `capabilities.build`: commit, dirty flag and bundle time embedded by `pnpm build`, so a tool can tell which build the server runs (ADR-0014) | 1.1.0 | done (BDS) |
+| 18 | Container contents | `container`: the items in one block's inventory (chest, barrel, shulker box, hopper, furnace, ...), in loaded chunks, with `fromSlot` to read the rest of a truncated answer. Off when the script starts; only the BDS console turns it on (`features`), anyone can turn it off; memory only, off after a reload (ADR-0015) | 1.2.0 | done (BDS) |
 
 Not available: chat messages and command use (no stable API; handled by the control tool), the current weather
 (no stable read API; changes are reported by the opt-in `weather_change` event). Deferred (stable API
 exists but not in the first version): light
 level, biome, rays from an arbitrary origin, small block regions (`getBlocks`), client/input info. Not planned: a BDS network
 adapter using `@minecraft/server-net` (rejected, ADR-0004). Candidates for later (ADR-0009):
-container contents (off by default), paged region reads, and an optional reply through chat `tell` (off by default;
-an exception to read-only).
+paged region reads, and an optional reply through chat `tell` (off by default; an exception to read-only).
 
 ## Target Minecraft version
 

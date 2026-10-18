@@ -168,6 +168,19 @@ Phase 3（server-net のアダプター）は 2026-10-18 に却下した（ADR-0
 - **確認用のケース:** `scripts/bo-verify-optional-cases.json`（コンソールで起こせる種類だけ）。前提: PlayerA が (0,-60,0) のフラットなオーバーワールドにいる。最後に `gamerule domobspawning true` に戻す（もとから OFF のワールドでは、その手順を外す）。
 - **VM の外から JSON を送るときの引用符:** VMPal の `exec` の引数で `"` を含む JSON を PowerShell に渡すと、コマンドラインの解釈で崩れた。送る行を base64 にして渡し、VM の中で戻して `stdin.txt` に追記すると確実だった（試験用の小さなスクリプト。リポジトリには入れていない）。
 
+### コンテナーの読み取り（実機で確認、2026-10-19、BDS 1.26.52.3、ADR-0015）
+
+`BlockInventoryComponent` と、コンソールからコンテナーを用意するコマンドの動きで、公式資料に書かれていないもの。プロトコルとしての注意は `docs/PROTOCOL.md` §5.16 にある。
+
+- **大きいチェストは、どちらの半分も、54 スロットの同じインベントリを返した。** スロットの番号も同じ。コンソールの `replaceitem block <位置> slot.container <n> …` も、どちらの半分からでも大きいチェスト全体を指した（半分ずつスロット 0 に入れると、2 回目が 1 回目を上書きした）。`setblock` で同じ向きのチェストを隣に 2 つ置くと、大きいチェストになった。
+- **インベントリが Script API に出ないブロック（`getComponent("minecraft:inventory")` がない）:** クラフター（`replaceitem` では入れられるのに）、エンダーチェスト（`replaceitem` でも「is not a container」）、模様入りの本棚、飾り壺、焚き火。
+- **出るブロックの大きさ:** チェスト・トラップチェスト・樽・シュルカーボックス 27、ディスペンサー・ドロッパー 9、ホッパー・醸造台 5、かまど・溶鉱炉・燻製器 3、ジュークボックス・書見台 1。
+- **読んでもチェストのふたは開かなかった**（読んでいる間のスクリーンショット）。
+- **1 行の大きさ:** 54 スロットを `enchanted_golden_apple`（ID 32 文字）で埋めた応答は 3,986 文字で、`maxResponseChars`（4,000）に収まった。`waxed_weathered_cut_copper_stairs`（43 文字）では 46 件で切られた。
+- **`execute as <プレイヤー> run …` をコンソールから送ると、ゲームは送り主をそのプレイヤーとして伝えた**（`/scriptevent` は `sourceType` `Entity`、カスタムコマンドも同じ）。プレイヤーを operator にせずに、チャットからの要求と同じ扱いを試せる。
+- **`/place structure` はある**（「Invalid structure name.」と答えた）が、`help place` は「Unknown command」だった。ルートテーブルが残ったチェストは、用意できなかった（未確認）。
+- **確認用のケース:** `scripts/bo-verify-container-cases.json`。前提: プレイヤーが (0,-60,0) の近くにいて、z = 8 の列のチャンクが読み込まれている。始めに機能を OFF にし、終わりに OFF に戻して列を片付ける。
+
 ## 確認した組み合わせ
 
 | 日付 | クライアント | BDS | `@minecraft/server` | 接続 | アドオンの読み込み | 観測の経路 |

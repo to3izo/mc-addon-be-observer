@@ -116,6 +116,8 @@ test("U-PROTO-10 capabilities describes this build: methods, transport, limits",
     "tops",
     "scoreboard",
     "subscribe",
+    "features",
+    "container",
   ]);
   assert.deepEqual(caps.sections, ["health", "inventory", "equipment", "effects", "world"]);
   assert.equal(caps.readOnly, true);

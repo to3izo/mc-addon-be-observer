@@ -63,3 +63,4 @@
 | [0012](0012-public-docs-without-private-setup.md) | 公開の文書を、非公開のリポジトリとツールに頼らない形にする | 採用 |
 | [0013](0013-semantic-versioning.md) | バージョンを、セマンティック バージョニングに沿って付ける | 採用 |
 | [0014](0014-optional-events-and-build-id.md) | 追加のイベントを要求で付け外しし（メモリだけに持つ）、`capabilities` にビルドの識別子を入れる | 採用 |
+| [0015](0015-console-enabled-container-reading.md) | コンテナーの中身の読み取りを足し、ON にできるのは BDS のコンソールだけにする（メモリだけに持つ） | 採用 |

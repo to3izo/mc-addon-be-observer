@@ -102,25 +102,30 @@ Identifier:
   `dimension_change`, `game_mode_change`, `game_rule_change` (`docs/PROTOCOL.md` §10, ADR-0008)
 - opt-in event kinds `block_break`, `block_place`, `entity_hurt`, `effect_add`, `item_use`, `explosion`,
   `weather_change`, `entity_spawn`, switched by the `subscribe` method (in memory only; ADR-0014)
+- opt-in feature `containers` (the `container` method), switched by the `features` method; only the BDS console can
+  turn it on (in memory only; ADR-0015)
 
 Type:
 Feature (script only, read-only)
 
 Status:
 done for Phase 2 (13 methods and both entry points verified on BDS 1.26.52.3; protocol 1 frozen); 1.1.0 adds
-`subscribe`, the opt-in event kinds and `capabilities.build` (verified on BDS 1.26.52.3)
+`subscribe`, the opt-in event kinds and `capabilities.build` (verified on BDS 1.26.52.3); the next minor release adds
+`features` and `container` (verified on BDS 1.26.52.3, not released yet)
 
 Behavior:
 - Reads players, blocks, ray hits, nearby entities (with filters and effects), entities by id, the topmost block of
-  columns and the scoreboard with the stable `@minecraft/server` API and writes a
+  columns, the scoreboard and, when the console turned it on, block containers with the stable `@minecraft/server`
+  API and writes a
   JSON response to the script log. Never changes the world (no commands, no setters, no dynamic properties,
   no scoreboards, no tags).
 
 Scripts:
 - scripts/features/observer: script-event input and log output
 - scripts/core/observation: game reads → DTOs (`capabilities`, `players`, `player`, `block`/`blocks`, `target`,
-  `entities`, `snapshot`, `events`, `entity`, `top`/`tops`, `scoreboard`, `subscribe`; shared readers in `read.ts`, player/dimension resolution in `resolve.ts`, game
-  event subscriptions, the in-memory event buffer and the opt-in switch in `events.ts`)
+  `entities`, `snapshot`, `events`, `entity`, `top`/`tops`, `scoreboard`, `subscribe`, `features`, `container`; shared readers in `read.ts`, player/dimension resolution in `resolve.ts`, game
+  event subscriptions, the in-memory event buffer and the opt-in switch in `events.ts`, the feature switch in
+  `features.ts`)
 - scripts/shared/constants/build.ts: the build identifier, embedded by tools/build.ts (esbuild `define`)
 - scripts/shared/protocol: pure request validation, option parsing, dispatch, envelopes, size limits
 - scripts/shared/constants/version.ts: versions reported by `capabilities`

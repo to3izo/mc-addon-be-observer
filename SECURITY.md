@@ -43,6 +43,11 @@ Internet, or other people's account names in the report.
   written whenever these happen, without a request (ADR-0008). Anyone who can send requests can also turn on the
   opt-in events (`subscribe`, ADR-0014), which then report every block a player breaks or places, damage, effects,
   items used and entities appearing near players, with positions, until they are turned off or the script reloads.
+- **Container contents can be read without opening the container.** The `container` method (ADR-0015) shows the
+  items in any chest, barrel, shulker box, hopper or furnace in a loaded chunk, including other players' storage.
+  It is off when the script starts, and only the BDS console can turn it on (`features`); while it is on, everyone
+  who can send requests (every operator) can read containers, until someone turns it off or the script reloads.
+  Turn it on only on servers where the people who can send requests may see everyone's storage.
 - **Script output goes to the server console.** The Add-On needs `content-log-console-output-enabled=true`, which
   also prints other packs' script logs and content errors to standard output. Protect the console and any file it
   is redirected to like other server logs.

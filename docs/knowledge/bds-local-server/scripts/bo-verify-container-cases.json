@@ -1,0 +1,530 @@
+{
+  "about": "Cases for bo-verify.ps1: block container reading and the features switch (ADR-0015). Every request is sent from the BDS console, which is the only source that may turn the feature on; the player-source checks (PERMISSION_DENIED for enable, reading while on, turning off) need `execute as` or chat and are in docs/TESTING.md OBS-CON-03..05. Needs a player online near 0 -60 0 in a flat overworld so the chunks along z = 8 are loaded. The run places containers at x = 3..18, z = 8, fills the double chest at x = 3..4 with long item ids (its answer is truncated, CON-05) and clears the row at the end. It starts by turning the feature off, so earlier state does not matter, and leaves it off.",
+  "steps": [
+    {
+      "console": "fill 3 -60 8 30 -60 8 air"
+    },
+    {
+      "console": "setblock 3 -60 8 chest [\"minecraft:cardinal_direction\"=\"north\"]"
+    },
+    {
+      "console": "setblock 4 -60 8 chest [\"minecraft:cardinal_direction\"=\"north\"]"
+    },
+    {
+      "console": "setblock 6 -60 8 barrel"
+    },
+    {
+      "console": "setblock 8 -60 8 red_shulker_box"
+    },
+    {
+      "console": "setblock 10 -60 8 hopper"
+    },
+    {
+      "console": "setblock 12 -60 8 furnace"
+    },
+    {
+      "console": "setblock 14 -60 8 crafter"
+    },
+    {
+      "console": "setblock 16 -60 8 ender_chest"
+    },
+    {
+      "console": "setblock 18 -60 8 stone"
+    },
+    {
+      "console": "replaceitem block 3 -60 8 slot.container 0 diamond 5"
+    },
+    {
+      "console": "replaceitem block 3 -60 8 slot.container 30 emerald 7"
+    },
+    {
+      "console": "replaceitem block 6 -60 8 slot.container 2 wheat 32"
+    },
+    {
+      "console": "replaceitem block 10 -60 8 slot.container 4 cobblestone 1"
+    },
+    {
+      "console": "replaceitem block 12 -60 8 slot.container 0 raw_iron 8"
+    },
+    {
+      "console": "replaceitem block 3 -60 8 slot.container 0 diamond 5"
+    },
+    {
+      "console": "replaceitem block 3 -60 8 slot.container 1 waxed_weathered_cut_copper_stairs 64"
+    },
+    {
+      "console": "replaceitem block 3 -60 8 slot.container 2 waxed_weathered_cut_copper_stairs 64"
+    },
+    {
+      "console": "replaceitem block 3 -60 8 slot.container 3 waxed_weathered_cut_copper_stairs 64"
+    },
+    {
+      "console": "replaceitem block 3 -60 8 slot.container 4 waxed_weathered_cut_copper_stairs 64"
+    },
+    {
+      "console": "replaceitem block 3 -60 8 slot.container 5 waxed_weathered_cut_copper_stairs 64"
+    },
+    {
+      "console": "replaceitem block 3 -60 8 slot.container 6 waxed_weathered_cut_copper_stairs 64"
+    },
+    {
+      "console": "replaceitem block 3 -60 8 slot.container 7 waxed_weathered_cut_copper_stairs 64"
+    },
+    {
+      "console": "replaceitem block 3 -60 8 slot.container 8 waxed_weathered_cut_copper_stairs 64"
+    },
+    {
+      "console": "replaceitem block 3 -60 8 slot.container 9 waxed_weathered_cut_copper_stairs 64"
+    },
+    {
+      "console": "replaceitem block 3 -60 8 slot.container 10 waxed_weathered_cut_copper_stairs 64"
+    },
+    {
+      "console": "replaceitem block 3 -60 8 slot.container 11 waxed_weathered_cut_copper_stairs 64"
+    },
+    {
+      "console": "replaceitem block 3 -60 8 slot.container 12 waxed_weathered_cut_copper_stairs 64"
+    },
+    {
+      "console": "replaceitem block 3 -60 8 slot.container 13 waxed_weathered_cut_copper_stairs 64"
+    },
+    {
+      "console": "replaceitem block 3 -60 8 slot.container 14 waxed_weathered_cut_copper_stairs 64"
+    },
+    {
+      "console": "replaceitem block 3 -60 8 slot.container 15 waxed_weathered_cut_copper_stairs 64"
+    },
+    {
+      "console": "replaceitem block 3 -60 8 slot.container 16 waxed_weathered_cut_copper_stairs 64"
+    },
+    {
+      "console": "replaceitem block 3 -60 8 slot.container 17 waxed_weathered_cut_copper_stairs 64"
+    },
+    {
+      "console": "replaceitem block 3 -60 8 slot.container 18 waxed_weathered_cut_copper_stairs 64"
+    },
+    {
+      "console": "replaceitem block 3 -60 8 slot.container 19 waxed_weathered_cut_copper_stairs 64"
+    },
+    {
+      "console": "replaceitem block 3 -60 8 slot.container 20 waxed_weathered_cut_copper_stairs 64"
+    },
+    {
+      "console": "replaceitem block 3 -60 8 slot.container 21 waxed_weathered_cut_copper_stairs 64"
+    },
+    {
+      "console": "replaceitem block 3 -60 8 slot.container 22 waxed_weathered_cut_copper_stairs 64"
+    },
+    {
+      "console": "replaceitem block 3 -60 8 slot.container 23 waxed_weathered_cut_copper_stairs 64"
+    },
+    {
+      "console": "replaceitem block 3 -60 8 slot.container 24 waxed_weathered_cut_copper_stairs 64"
+    },
+    {
+      "console": "replaceitem block 3 -60 8 slot.container 25 waxed_weathered_cut_copper_stairs 64"
+    },
+    {
+      "console": "replaceitem block 3 -60 8 slot.container 26 waxed_weathered_cut_copper_stairs 64"
+    },
+    {
+      "console": "replaceitem block 3 -60 8 slot.container 27 waxed_weathered_cut_copper_stairs 64"
+    },
+    {
+      "console": "replaceitem block 3 -60 8 slot.container 28 waxed_weathered_cut_copper_stairs 64"
+    },
+    {
+      "console": "replaceitem block 3 -60 8 slot.container 29 waxed_weathered_cut_copper_stairs 64"
+    },
+    {
+      "console": "replaceitem block 3 -60 8 slot.container 30 emerald 7"
+    },
+    {
+      "console": "replaceitem block 3 -60 8 slot.container 31 waxed_weathered_cut_copper_stairs 64"
+    },
+    {
+      "console": "replaceitem block 3 -60 8 slot.container 32 waxed_weathered_cut_copper_stairs 64"
+    },
+    {
+      "console": "replaceitem block 3 -60 8 slot.container 33 waxed_weathered_cut_copper_stairs 64"
+    },
+    {
+      "console": "replaceitem block 3 -60 8 slot.container 34 waxed_weathered_cut_copper_stairs 64"
+    },
+    {
+      "console": "replaceitem block 3 -60 8 slot.container 35 waxed_weathered_cut_copper_stairs 64"
+    },
+    {
+      "console": "replaceitem block 3 -60 8 slot.container 36 waxed_weathered_cut_copper_stairs 64"
+    },
+    {
+      "console": "replaceitem block 3 -60 8 slot.container 37 waxed_weathered_cut_copper_stairs 64"
+    },
+    {
+      "console": "replaceitem block 3 -60 8 slot.container 38 waxed_weathered_cut_copper_stairs 64"
+    },
+    {
+      "console": "replaceitem block 3 -60 8 slot.container 39 waxed_weathered_cut_copper_stairs 64"
+    },
+    {
+      "console": "replaceitem block 3 -60 8 slot.container 40 waxed_weathered_cut_copper_stairs 64"
+    },
+    {
+      "console": "replaceitem block 3 -60 8 slot.container 41 waxed_weathered_cut_copper_stairs 64"
+    },
+    {
+      "console": "replaceitem block 3 -60 8 slot.container 42 waxed_weathered_cut_copper_stairs 64"
+    },
+    {
+      "console": "replaceitem block 3 -60 8 slot.container 43 waxed_weathered_cut_copper_stairs 64"
+    },
+    {
+      "console": "replaceitem block 3 -60 8 slot.container 44 waxed_weathered_cut_copper_stairs 64"
+    },
+    {
+      "console": "replaceitem block 3 -60 8 slot.container 45 waxed_weathered_cut_copper_stairs 64"
+    },
+    {
+      "console": "replaceitem block 3 -60 8 slot.container 46 waxed_weathered_cut_copper_stairs 64"
+    },
+    {
+      "console": "replaceitem block 3 -60 8 slot.container 47 waxed_weathered_cut_copper_stairs 64"
+    },
+    {
+      "console": "replaceitem block 3 -60 8 slot.container 48 waxed_weathered_cut_copper_stairs 64"
+    },
+    {
+      "console": "replaceitem block 3 -60 8 slot.container 49 waxed_weathered_cut_copper_stairs 64"
+    },
+    {
+      "console": "replaceitem block 3 -60 8 slot.container 50 waxed_weathered_cut_copper_stairs 64"
+    },
+    {
+      "console": "replaceitem block 3 -60 8 slot.container 51 waxed_weathered_cut_copper_stairs 64"
+    },
+    {
+      "console": "replaceitem block 3 -60 8 slot.container 52 waxed_weathered_cut_copper_stairs 64"
+    },
+    {
+      "console": "replaceitem block 3 -60 8 slot.container 53 waxed_weathered_cut_copper_stairs 64"
+    },
+    {
+      "id": "CON-00",
+      "method": "features",
+      "params": {
+        "disable": [
+          "containers"
+        ]
+      }
+    },
+    {
+      "id": "CON-01",
+      "method": "container",
+      "params": {
+        "dimension": "minecraft:overworld",
+        "x": 6,
+        "y": -60,
+        "z": 8
+      },
+      "expect": {
+        "ok": false,
+        "code": "FEATURE_DISABLED"
+      }
+    },
+    {
+      "id": "CON-02",
+      "method": "capabilities",
+      "expect": {
+        "equals": {
+          "data.optionalFeatures.kinds.0": "containers"
+        },
+        "has": [
+          "data.optionalFeatures.enabled"
+        ]
+      }
+    },
+    {
+      "id": "CON-03",
+      "method": "features",
+      "params": {
+        "enable": [
+          "containers"
+        ]
+      },
+      "expect": {
+        "equals": {
+          "data.enabled.0": "containers",
+          "data.changed.0": "containers"
+        }
+      }
+    },
+    {
+      "id": "CON-04",
+      "method": "container",
+      "params": {
+        "dimension": "minecraft:overworld",
+        "x": 6,
+        "y": -60,
+        "z": 8
+      },
+      "expect": {
+        "equals": {
+          "data.status": "ok",
+          "data.block.typeId": "minecraft:barrel",
+          "data.container.size": 27,
+          "data.container.items.0.slot": 2,
+          "data.container.items.0.typeId": "minecraft:wheat",
+          "data.container.items.0.amount": 32
+        }
+      }
+    },
+    {
+      "id": "CON-05",
+      "method": "container",
+      "params": {
+        "dimension": "minecraft:overworld",
+        "x": 3,
+        "y": -60,
+        "z": 8
+      },
+      "expect": {
+        "equals": {
+          "data.container.size": 54,
+          "data.container.items.0.typeId": "minecraft:diamond",
+          "data.container.truncated": true
+        }
+      }
+    },
+    {
+      "id": "CON-06",
+      "method": "container",
+      "params": {
+        "dimension": "minecraft:overworld",
+        "x": 4,
+        "y": -60,
+        "z": 8
+      },
+      "expect": {
+        "equals": {
+          "data.container.size": 54,
+          "data.container.items.0.typeId": "minecraft:diamond"
+        }
+      }
+    },
+    {
+      "id": "CON-07",
+      "method": "container",
+      "params": {
+        "dimension": "minecraft:overworld",
+        "x": 3,
+        "y": -60,
+        "z": 8,
+        "fromSlot": 30
+      },
+      "expect": {
+        "equals": {
+          "data.container.items.0.slot": 30,
+          "data.container.items.0.typeId": "minecraft:emerald"
+        }
+      }
+    },
+    {
+      "id": "CON-08",
+      "method": "container",
+      "params": {
+        "dimension": "minecraft:overworld",
+        "x": 8,
+        "y": -60,
+        "z": 8
+      },
+      "expect": {
+        "equals": {
+          "data.block.typeId": "minecraft:red_shulker_box",
+          "data.container.size": 27
+        }
+      }
+    },
+    {
+      "id": "CON-09",
+      "method": "container",
+      "params": {
+        "dimension": "minecraft:overworld",
+        "x": 10,
+        "y": -60,
+        "z": 8
+      },
+      "expect": {
+        "equals": {
+          "data.container.size": 5,
+          "data.container.items.0.slot": 4
+        }
+      }
+    },
+    {
+      "id": "CON-10",
+      "method": "container",
+      "params": {
+        "dimension": "minecraft:overworld",
+        "x": 12,
+        "y": -60,
+        "z": 8
+      },
+      "expect": {
+        "equals": {
+          "data.container.size": 3,
+          "data.container.items.0.typeId": "minecraft:raw_iron"
+        }
+      }
+    },
+    {
+      "id": "CON-11",
+      "method": "container",
+      "params": {
+        "dimension": "minecraft:overworld",
+        "x": 14,
+        "y": -60,
+        "z": 8
+      },
+      "expect": {
+        "equals": {
+          "data.block.typeId": "minecraft:crafter",
+          "data.container": null
+        }
+      }
+    },
+    {
+      "id": "CON-12",
+      "method": "container",
+      "params": {
+        "dimension": "minecraft:overworld",
+        "x": 16,
+        "y": -60,
+        "z": 8
+      },
+      "expect": {
+        "equals": {
+          "data.block.typeId": "minecraft:ender_chest",
+          "data.container": null
+        }
+      }
+    },
+    {
+      "id": "CON-13",
+      "method": "container",
+      "params": {
+        "dimension": "minecraft:overworld",
+        "x": 18,
+        "y": -60,
+        "z": 8
+      },
+      "expect": {
+        "equals": {
+          "data.block.typeId": "minecraft:stone",
+          "data.container": null
+        }
+      }
+    },
+    {
+      "id": "CON-14",
+      "method": "container",
+      "params": {
+        "dimension": "minecraft:overworld",
+        "x": 5000,
+        "y": -60,
+        "z": 5000
+      },
+      "expect": {
+        "equals": {
+          "data.status": "unloaded"
+        }
+      }
+    },
+    {
+      "id": "CON-15",
+      "method": "container",
+      "params": {
+        "dimension": "minecraft:overworld",
+        "x": 0,
+        "y": 400,
+        "z": 0
+      },
+      "expect": {
+        "equals": {
+          "data.status": "out_of_bounds"
+        }
+      }
+    },
+    {
+      "id": "CON-16",
+      "method": "container",
+      "params": {
+        "x": 6,
+        "y": -60,
+        "z": 8
+      },
+      "expect": {
+        "ok": false,
+        "code": "INVALID_PARAMS"
+      }
+    },
+    {
+      "id": "CON-17",
+      "method": "container",
+      "params": {
+        "dimension": "minecraft:overworld",
+        "x": 3,
+        "y": -60,
+        "z": 8,
+        "fromSlot": 54
+      },
+      "expect": {
+        "ok": false,
+        "code": "LIMIT_EXCEEDED"
+      }
+    },
+    {
+      "id": "CON-18",
+      "method": "features",
+      "params": {
+        "enable": [
+          "chests"
+        ]
+      },
+      "expect": {
+        "ok": false,
+        "code": "INVALID_PARAMS"
+      }
+    },
+    {
+      "id": "CON-19",
+      "method": "features",
+      "params": {
+        "disable": [
+          "containers"
+        ]
+      },
+      "expect": {
+        "equals": {
+          "data.changed.0": "containers"
+        }
+      }
+    },
+    {
+      "id": "CON-20",
+      "method": "container",
+      "params": {
+        "dimension": "minecraft:overworld",
+        "x": 6,
+        "y": -60,
+        "z": 8
+      },
+      "expect": {
+        "ok": false,
+        "code": "FEATURE_DISABLED"
+      }
+    },
+    {
+      "console": "fill 3 -60 8 30 -60 8 air"
+    }
+  ]
+}

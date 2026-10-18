@@ -2,6 +2,7 @@ import { NAMESPACE } from "../constants/addon.ts";
 import { PROTOCOL_VERSION } from "./constants.ts";
 import type { BlockPosition, Location } from "./params.ts";
 import { toAsciiJson } from "./response.ts";
+import { NameSwitch } from "./switch.ts";
 
 /**
  * Game events pushed as `to3izo_bo.event {json}` lines (docs/PROTOCOL.md §10, ADR-0008).
@@ -69,31 +70,9 @@ export const EVENT_LIMITS = {
 export const IGNORED_SPAWN_CAUSES: readonly string[] = ["Loaded"];
 
 /** Which opt-in kinds are on. Memory only (ADR-0014): never stored in the world. */
-export class EventSwitch {
-  private readonly on = new Set<OptionalEventKind>();
-
-  isOn(kind: OptionalEventKind): boolean {
-    return this.on.has(kind);
-  }
-
-  /** The kinds that are on, in `OPTIONAL_EVENT_KINDS` order. */
-  enabled(): OptionalEventKind[] {
-    return OPTIONAL_EVENT_KINDS.filter((kind) => this.on.has(kind));
-  }
-
-  /** Turns kinds on and off and returns the kinds whose state changed, in `OPTIONAL_EVENT_KINDS` order. */
-  apply(enable: readonly OptionalEventKind[], disable: readonly OptionalEventKind[]): OptionalEventKind[] {
-    const changed = new Set<OptionalEventKind>();
-    for (const kind of enable) {
-      if (!this.on.has(kind)) {
-        this.on.add(kind);
-        changed.add(kind);
-      }
-    }
-    for (const kind of disable) {
-      if (this.on.delete(kind)) changed.add(kind);
-    }
-    return OPTIONAL_EVENT_KINDS.filter((kind) => changed.has(kind));
+export class EventSwitch extends NameSwitch<OptionalEventKind> {
+  constructor() {
+    super(OPTIONAL_EVENT_KINDS);
   }
 }
 

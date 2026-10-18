@@ -6,6 +6,21 @@ and must match `package.json` and both pack manifests (`pnpm version:set <x.y.z>
 
 ## [Unreleased]
 
+Compatible additions to protocol 1 (ADR-0013 minor release): reading block containers (ADR-0015).
+
+### Added
+- `container`: the items in one block's inventory (chest, trapped chest, barrel, shulker box, hopper, dispenser,
+  dropper, furnace, blast furnace, smoker, brewing stand, ...) in a loaded chunk (`docs/PROTOCOL.md` §5.16). Either
+  half of a double chest answers the whole 54-slot chest. `container.items` may be truncated; `fromSlot` reads the
+  rest.
+- `features`: turns opt-in features on and off (`docs/PROTOCOL.md` §5.15). The only feature, `containers`, is off
+  when the script starts; only the BDS console can turn it on, anyone can turn it off. The switch lives in memory
+  only, so `/reload` and a restart turn it off again.
+- Error codes `PERMISSION_DENIED` (a feature turned on from somewhere other than the console) and `FEATURE_DISABLED`
+  (a method whose feature is off).
+- `capabilities.optionalFeatures` (`kinds`, `enabled`).
+- Reference cases `docs/knowledge/bds-local-server/scripts/bo-verify-container-cases.json`.
+
 ## [1.1.0] - 2026-10-19
 
 Compatible additions to protocol 1 (ADR-0013 minor release): opt-in events and a build identifier (ADR-0014).

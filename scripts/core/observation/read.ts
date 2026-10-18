@@ -6,6 +6,7 @@ import {
   Player,
   world,
   type Block,
+  type Container,
   type Dimension,
   type Entity,
   type Vector3,
@@ -86,19 +87,24 @@ function itemSummary(item: { typeId: string; amount: number; nameTag?: string | 
   return item.nameTag ? { typeId: item.typeId, amount: item.amount, nameTag: item.nameTag } : { typeId: item.typeId, amount: item.amount };
 }
 
-/** `inventory` section: occupied slots only, in slot order. The list may be truncated to fit (`items`). */
+/**
+ * `{size, emptySlots, items}` of a container: occupied slots from `fromSlot` on, in slot order, below slot
+ * `maxSlots`. Null when there is no valid container. The list may be truncated to fit (`items`).
+ */
+function containerSummary(container: Container | undefined, fromSlot: number, maxSlots: number): Record<string, unknown> | null {
+  if (!container || !container.isValid) return null;
+  const end = Math.min(container.size, maxSlots);
+  const items: Array<ItemSummary & { slot: number }> = [];
+  for (let slot = fromSlot; slot < end; slot++) {
+    const item = container.getItem(slot);
+    if (item) items.push({ slot, ...itemSummary(item) });
+  }
+  return { size: container.size, emptySlots: container.emptySlotsCount, items };
+}
+
+/** `inventory` section (docs/PROTOCOL.md §5.3). */
 export function inventoryOf(entity: Entity, maxSlots: number): Record<string, unknown> | null {
-  return readEntity("the player", () => {
-    const container = entity.getComponent("minecraft:inventory")?.container;
-    if (!container || !container.isValid) return null;
-    const size = Math.min(container.size, maxSlots);
-    const items: Array<ItemSummary & { slot: number }> = [];
-    for (let slot = 0; slot < size; slot++) {
-      const item = container.getItem(slot);
-      if (item) items.push({ slot, ...itemSummary(item) });
-    }
-    return { size: container.size, emptySlots: container.emptySlotsCount, items };
-  });
+  return readEntity("the player", () => containerSummary(entity.getComponent("minecraft:inventory")?.container, 0, maxSlots));
 }
 
 const EQUIPMENT_SLOTS: readonly EquipmentSlot[] = [
@@ -140,10 +146,10 @@ export function blockInfo(block: Block): Record<string, unknown> {
 }
 
 /**
- * One block as `block` answers it (docs/PROTOCOL.md §5.4). Never loads a chunk: an unloaded chunk is reported
- * as `unloaded`, a height outside the dimension as `out_of_bounds`.
+ * Reads one block with `read` and answers `{dimension, position, status, ...}`. Never loads a chunk: an unloaded
+ * chunk is reported as `unloaded`, a height outside the dimension as `out_of_bounds`.
  */
-export function readBlockAt(dimension: Dimension, position: BlockPosition): Record<string, unknown> {
+function readBlockWith(dimension: Dimension, position: BlockPosition, read: (block: Block) => Record<string, unknown>): Record<string, unknown> {
   const base = { dimension: dimension.id, position: { x: position.x, y: position.y, z: position.z } };
   const range = dimension.heightRange;
   // heightRange.max is the first height above the world (e.g. 320 in the overworld).
@@ -152,12 +158,28 @@ export function readBlockAt(dimension: Dimension, position: BlockPosition): Reco
   try {
     const block = dimension.getBlock(position);
     if (!block) return { ...base, status: "unloaded" };
-    return { ...base, status: "ok", block: blockInfo(block) };
+    return { ...base, status: "ok", ...read(block) };
   } catch (error) {
     if (error instanceof LocationInUnloadedChunkError) return { ...base, status: "unloaded" };
     if (error instanceof LocationOutOfWorldBoundariesError) return { ...base, status: "out_of_bounds" };
     return { ...base, status: "error", reason: error instanceof Error ? error.name : "unknown" };
   }
+}
+
+/** One block as `block` answers it (docs/PROTOCOL.md §5.4). */
+export function readBlockAt(dimension: Dimension, position: BlockPosition): Record<string, unknown> {
+  return readBlockWith(dimension, position, (block) => ({ block: blockInfo(block) }));
+}
+
+/**
+ * One block's container as `container` answers it (docs/PROTOCOL.md §5.16, ADR-0015): `container` is null when the
+ * block has no inventory. Only the inventory component's getters and `getItem` are used; nothing is opened.
+ */
+export function readContainerAt(dimension: Dimension, position: BlockPosition, fromSlot: number, maxSlots: number): Record<string, unknown> {
+  return readBlockWith(dimension, position, (block) => ({
+    block: { typeId: block.typeId },
+    container: containerSummary(block.getComponent("minecraft:inventory")?.container, fromSlot, maxSlots),
+  }));
 }
 
 export function distance(a: Vector3, b: Vector3): number {

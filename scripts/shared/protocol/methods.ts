@@ -2,7 +2,7 @@
  * Methods this build answers. The dispatcher's handler table is typed as `Record<MethodName, …>`, so it
  * cannot drift from this list, and `capabilities.methods` is built from it.
  */
-export const METHODS = ["capabilities", "players", "player", "block", "blocks", "target", "entities", "snapshot", "events", "entity", "top", "tops", "scoreboard", "subscribe"] as const;
+export const METHODS = ["capabilities", "players", "player", "block", "blocks", "target", "entities", "snapshot", "events", "entity", "top", "tops", "scoreboard", "subscribe", "features", "container"] as const;
 
 export type MethodName = (typeof METHODS)[number];
 
