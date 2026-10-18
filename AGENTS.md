@@ -39,6 +39,7 @@ dist/<slug>_BP, dist/<slug>_RP ──(zip)──► dist/<slug>-<version>.mcaddo
 | `tests/` | Unit tests for tooling/pure logic, validation tests, fixtures | no |
 | `tools/` | Build, validate, package, deploy, init scripts (Node.js + TypeScript, no framework) | no |
 | `dist/` | Generated output (git-ignored) | yes |
+| `tmp/` | Local scratch for reference repositories cloned to read (git-ignored, excluded in `.mcignore`). Nothing in it is used by the build, tools or tests; never copy its files into a pack (see "Reference sources") | no |
 | `.github/workflows/` | CI: validate on PR/push, package on release | no |
 | `.vscode/` | Shared editor setup: `extensions.json` (recommended extensions) and `launch.json` (Minecraft Debugger). Nothing else is committed | no |
 | `.mcignore` | Paths the Blockception extension must not scan (`dist/` etc.) | no |

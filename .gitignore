@@ -4,6 +4,9 @@ node_modules/
 # Generated output (never edit, never commit)
 dist/
 
+# Local scratch: reference repositories cloned for reading (never committed, never read by the tools)
+/tmp/
+
 # Local environment
 .env
 .env.*

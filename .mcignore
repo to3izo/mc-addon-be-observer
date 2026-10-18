@@ -1,6 +1,7 @@
 ## Blockception Minecraft Bedrock extension: files that are not pack source.
 ## dist/ holds built copies of the packs; scanning it would report every identifier twice.
 dist
+tmp
 node_modules
 assets
 media
