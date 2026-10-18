@@ -74,6 +74,21 @@ the JSON in double quotes, with every inner `"` written as `\"`:
 `/scriptevent to3izo_bo:query {...}` also works from chat, but needs cheats on as well. Long chat commands
 disconnect the player: keep the whole command under about 448 characters.
 
+## Using it from a tool
+
+The Add-On only reads the world and writes lines; a tool sends requests and collects the lines (`docs/PROTOCOL.md`
+§9). Run BDS with its console connected to the tool, for example with the reference bridge
+`docs/knowledge/bds-local-server/scripts/bds-console-bridge.ps1` (Windows), which writes standard output to
+`<BDS>\bo-bridge\stdout.log` and sends each line appended to `<BDS>\bo-bridge\stdin.txt` as a console command.
+
+| Where the tool runs | Sending requests | Collecting responses |
+| --- | --- | --- |
+| On the BDS host (e.g. an agent on the same Windows PC) | Write `scriptevent to3izo_bo:query {...}` to BDS's standard input (or append it to `stdin.txt`) | Read standard output (or `stdout.log`) |
+| On another machine (e.g. an agent on a Mac, BDS in a Windows VM) | Append to `stdin.txt` through the VM's own channel (such as the VM manager's command execution), or type `/to3izo_bo:query "…"` into an operator's chat | Read `stdout.log` through the same channel |
+
+There is no network transport in the Add-On (no `@minecraft/server-net`, ADR-0004). If lines must travel over a
+network, forward them with a program outside Minecraft and follow `SECURITY.md`.
+
 ## What it can observe
 
 | Method | Answers |

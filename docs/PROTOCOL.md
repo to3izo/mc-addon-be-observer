@@ -630,6 +630,11 @@ The Add-On only answers. A tool that uses it is responsible for:
 - **Recording receive time** on its own clock next to `tick`/`time`, and not treating observations as current.
 - **Rate**: sending one request at a time per world (or a small number) and not flooding the chat or console.
 - **Not exposing** the log or the console to other users or networks (`SECURITY.md`).
+- **Moving lines between machines** when the tool does not run on the BDS host (for example a tool on a Mac and
+  BDS in a Windows VM). The Add-On has no network transport and will not get one (ADR-0004); read the files of a
+  console bridge through the VM's own channel (such as a VM manager's command execution), or forward the lines
+  with a program outside Minecraft. A forwarder over the network follows `SECURITY.md` ("No network adapter;
+  forwarding observations off the server").
 
 ## 10. Event lines
 

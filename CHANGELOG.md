@@ -49,6 +49,8 @@ and must match `package.json` and both pack manifests (`pnpm version:set <x.y.z>
 - Phase 3 closed: the optional BDS network adapter using `@minecraft/server-net` is rejected (ADR-0004). The core
   stays `@minecraft/server` only, no `"reply": "event"` / `to3izo_bo:response` is added, and forwarding
   observation lines off the BDS host is left to the external tool (`SECURITY.md`). OBS-ENV-07 is not applicable.
+- README (English and Japanese): "Using it from a tool" — sending and collecting on the BDS host and from another
+  machine (e.g. a Mac with BDS in a Windows VM). `docs/PROTOCOL.md` §9 points network forwarders to `SECURITY.md`.
 
 <!--
 Release checklist:

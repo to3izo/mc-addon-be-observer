@@ -74,6 +74,17 @@ JSON を `"` で囲んだもので、中の `"` はすべて `\"` と書きま�
 チャットからの `/scriptevent to3izo_bo:query {...}` も使えますが、こちらはチートの有効化も必要です。長いコマンドを
 送るとそのプレイヤーが切断されるので、コマンド全体を約 448 文字以内にしてください。
 
+## ツールから使う
+
+アドオンは、ワールドを読んで行を書くだけです。要求を送り、行を回収するのはツールの役目です（`docs/PROTOCOL.md` §9）。BDS は、標準入出力をツールにつないで起動します。たとえば参考のブリッジ `docs/knowledge/bds-local-server/scripts/bds-console-bridge.ps1`（Windows）は、標準出力を `<BDS>\bo-bridge\stdout.log` に書き、`<BDS>\bo-bridge\stdin.txt` に追記された行をコンソールのコマンドとして送ります。
+
+| ツールが動く場所 | 要求の送り方 | 応答の回収 |
+| --- | --- | --- |
+| BDS と同じマシン（例: 同じ Windows の PC のエージェント） | BDS の標準入力に `scriptevent to3izo_bo:query {...}` を書く（または `stdin.txt` に追記する） | 標準出力（または `stdout.log`）を読む |
+| 別のマシン（例: Mac のエージェントと、Windows の VM の BDS） | VM の経路（VM の管理ツールのコマンド実行など）で `stdin.txt` に追記する。または operator のチャットに `/to3izo_bo:query "…"` を入力する | 同じ経路で `stdout.log` を読む |
+
+アドオンにはネットワークで送る仕組みはありません（`@minecraft/server-net` は使わない。ADR-0004）。ネットワークで行を運ぶ必要があるときは、Minecraft の外のプログラムで送り、`SECURITY.md` に従ってください。
+
 ## 観測できるもの
 
 | メソッド | 返すもの |
