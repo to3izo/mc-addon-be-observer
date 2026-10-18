@@ -121,6 +121,9 @@ Record each run: platform, game/BDS version, environment (local world / BDS), pa
 | U-PROTO-08 | Envelope: exactly one of `data`/`error`; serialised response is one line (names with `\n` stay escaped) and starts with the prefix | tests/unit/protocol-response.test.ts |
 | U-PROTO-09 | Truncation: lists shortened with `truncated`/`omitted`; still too large → `RESPONSE_TOO_LARGE` | same |
 | U-PROTO-10 | `capabilities` describes the build; every listed method answers through the table (the table's type requires exactly the listed names) | tests/unit/protocol-dispatch.test.ts |
+| U-PROTO-11 | Phase 2 parameters: dimension ids (`DIMENSION_NOT_FOUND`), decimal locations, booleans, name lists (`include`) | tests/unit/protocol-options.test.ts |
+| U-PROTO-12 | `blocks` positions: non-empty, at most `maxBlocksPerRequest` (`LIMIT_EXCEEDED`), per-item errors name the index | same |
+| U-PROTO-13 | Option groups: `target` / `entities` defaults and limits; `snapshot` groups reject keys of other groups | same |
 | V-VER-01 | Versions reported by `capabilities` equal `package.json` and the manifest's module dependencies (update `scripts/shared/constants/version.ts` after `pnpm version:set`) | tests/validation/version-constants.test.ts |
 | V-RO-01 | Read-only guard: `scripts/` contains no call to mutating APIs (`runCommand`, `setBlock`/`setType`/`setPermutation`, `setDynamicProperty`, `teleport`, `addEffect`, `kill`, `remove`, `spawnEntity`, `setItem`, `nameTag =`, …) | tests/validation/read-only.test.ts |
 | V-DEP-01 | The core manifest declares only `@minecraft/server` (no `server-net`/`server-admin`) | `pnpm validate` + tests/validation/read-only.test.ts |
@@ -193,6 +196,32 @@ pasted from the clipboard. The Add-On is BDS-only (ADR-0006); local-world rows a
 | OBS-PLY-01 | BDS | pass (0 and 1 player) | 2 players not run |
 | OBS-PLY-03 | — | Phase 2 | needs the `player` method |
 | OBS-PLY-06 | BDS, local world | observed | The same account had id `-4294967295` in the local world and `-8589934591` on BDS: ids are per world/session, not account ids |
+
+Phase 2 — run 2026-10-18 on the same BDS (Add-On 0.1.0 with all eight methods). Second player: account
+`PlayerB`, joined from another device on the LAN after `allowlist add`. Requests from the BDS console.
+
+| ID | Result | Notes |
+| --- | --- | --- |
+| U-PROTO-11–13 | pass | 66 tests in total |
+| OBS-IN-06 | pass | Console `player` without a selector → `NO_SOURCE_PLAYER`; with `{"name":…}` → the player |
+| OBS-PLY-01 | pass | 2 players: both listed with ids and dimensions |
+| OBS-PLY-02 | not available | No account with a space or Japanese in its name |
+| OBS-PLY-03 | pass | Unknown name → `PLAYER_NOT_FOUND`; right after the player left, by name and by id → `PLAYER_NOT_FOUND` and `players` count 1 |
+| OBS-PLY-04 | pass | After `execute in nether run tp …`: `dimension` `minecraft:nether`; back in the overworld afterwards |
+| OBS-PLY-05 | pass (partial) | Sneaking → `sneaking: true`; double-jump flying → `flying: true`, `onGround: false`; standing still → velocity 0. Sprint and swim not tried |
+| OBS-PLY-06 | pass | Same id after leaving and rejoining, and after a BDS restart (same world); different between worlds |
+| OBS-BLK-01 | pass | `(-1,-64,-1)` → `minecraft:bedrock` with `states`; positions echo the integer request |
+| OBS-BLK-02 | pass | Air → `ok` + `minecraft:air`; far chunk → `unloaded`; overworld `y=320`/`-65` → `out_of_bounds`; Nether `y=128` → `out_of_bounds` (Nether height is 0–127); with no player online even spawn is `unloaded` |
+| OBS-BLK-03 | pass (unit) | Limit covered by U-PROTO-12; 6 mixed positions answered in order in game |
+| OBS-TGT-01 | pass | Looking at the ground → block `(0,-61,1)`, face `Up`, face location |
+| OBS-TGT-02 | pass | Looking at the horizon → `block.hit: false` |
+| OBS-TGT-03 | pass | Looking at the other player with `includeEntities` → `entity.hit: true`, `typeId` `minecraft:player`, `name`, distance 7.77 |
+| OBS-TGT-04 | pass | `maxDistance` 65 → `LIMIT_EXCEEDED`; omitted → 8 reported |
+| OBS-ENT-01 | pass | Radius 32, limit 5 → 5 nearest, sorted, `truncated: true`; the centre player is left out; the other player appears with `name`; `excludePlayers` removes them |
+| OBS-SNP-01 | pass | All 7 sections in one response, one `tick`, `errors: {}`; unknown section → `INVALID_PARAMS`; `center` inside `snapshot.entities` → `INVALID_PARAMS` |
+| OBS-SIZE-01 | pass | Full inventory (36 stacks) + all sections: entity list shortened to 14 with `omitted: {entities: 11}`, line 3,965 chars, intact on stdout |
+| OBS-RO-01 | partial | V-RO-01 guard passes; no world change was seen during the tests, but the before/after comparison was not run as a separate case |
+| OBS-PERF-01 | pass | 300 requests at 1/s for 5 min (alternating `snapshot` and `entities`): every request that reached BDS (297) answered once with `ok: true`; no warnings or watchdog messages. 3 requests never reached BDS because the reference bridge's file-based input lost them (test harness, `docs/knowledge/bds-local-server/` §8) |
 
 ## Release checklist
 

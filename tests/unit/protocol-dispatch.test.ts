@@ -6,20 +6,25 @@ import assert from "node:assert/strict";
 import { test } from "node:test";
 import { NAMESPACE } from "../../scripts/shared/constants/addon.ts";
 import { buildCapabilities } from "../../scripts/shared/protocol/capabilities.ts";
-import { REQUEST_EVENT_ID, RESPONSE_PREFIX, SIZE_LIMITS } from "../../scripts/shared/protocol/constants.ts";
-import { handleRequest, type MethodTable } from "../../scripts/shared/protocol/dispatch.ts";
+import { PARAM_DEFAULTS, PARAM_LIMITS, REQUEST_EVENT_ID, RESPONSE_PREFIX, SIZE_LIMITS } from "../../scripts/shared/protocol/constants.ts";
+import { handleRequest, type MethodHandler, type MethodTable } from "../../scripts/shared/protocol/dispatch.ts";
 import { ObserverError } from "../../scripts/shared/protocol/errors.ts";
-import { METHODS, SECTIONS } from "../../scripts/shared/protocol/methods.ts";
+import { METHODS, SECTIONS, type MethodName } from "../../scripts/shared/protocol/methods.ts";
 import { createSessionId } from "../../scripts/shared/protocol/session.ts";
 
 const meta = { tick: 7, session: "s", seq: 3, time: 0 };
 
 function table(overrides: Partial<MethodTable<string>> = {}): MethodTable<string> {
+  const fakes = Object.fromEntries(METHODS.map((method) => [method, (() => ({ data: { method } })) as MethodHandler<string>])) as Record<
+    MethodName,
+    MethodHandler<string>
+  >;
   return {
+    ...fakes,
     capabilities: () => ({ data: buildCapabilities() }),
     players: (_params, context) => ({ data: { context }, truncatable: [["players"]] }),
     ...overrides,
-  };
+  } as MethodTable<string>;
 }
 
 test("U-PROTO-05 unknown methods are UNKNOWN_METHOD and never reach a handler", () => {
@@ -86,7 +91,10 @@ test("U-PROTO-10 capabilities describes this build: methods, transport, limits",
   assert.deepEqual(caps.sections, [...SECTIONS]);
   assert.deepEqual(caps.protocol, { version: 1, supported: [1] });
   assert.deepEqual(caps.transport, { requestEventId: REQUEST_EVENT_ID, responsePrefix: RESPONSE_PREFIX });
-  assert.deepEqual(caps.limits, { ...SIZE_LIMITS });
+  assert.deepEqual(caps.limits, { ...SIZE_LIMITS, ...PARAM_LIMITS });
+  assert.deepEqual(caps.defaults, { ...PARAM_DEFAULTS });
+  assert.deepEqual(caps.methods, ["capabilities", "players", "player", "block", "blocks", "target", "entities", "snapshot"]);
+  assert.deepEqual(caps.sections, ["health", "inventory", "equipment", "world"]);
   assert.equal(caps.readOnly, true);
   assert.equal(caps.addon.namespace, NAMESPACE);
   assert.equal(REQUEST_EVENT_ID, `${NAMESPACE}:query`);

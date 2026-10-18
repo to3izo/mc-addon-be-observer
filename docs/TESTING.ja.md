@@ -115,6 +115,9 @@ Phase 1・2（`docs/ROADMAP.md`）のテスト計画です。アドオンは **B
 | U-PROTO-08 | 封筒: `data` と `error` のどちらか一方だけ。応答は 1 行（名前の `\n` もエスケープされる）で、接頭辞から始まる | tests/unit/protocol-response.test.ts |
 | U-PROTO-09 | 切り詰め: リストを短くして `truncated`/`omitted` を付ける。それでも大きい → `RESPONSE_TOO_LARGE` | 同上 |
 | U-PROTO-10 | `capabilities` がビルドを正しく表し、一覧のどの method も表を通して応答する（表の型が、一覧と同じ名前を要求する） | tests/unit/protocol-dispatch.test.ts |
+| U-PROTO-11 | Phase 2 の引数: ディメンションの ID（`DIMENSION_NOT_FOUND`）、小数の座標、真偽値、名前のリスト（`include`） | tests/unit/protocol-options.test.ts |
+| U-PROTO-12 | `blocks` の座標: 空でなく、`maxBlocksPerRequest` 以下（`LIMIT_EXCEEDED`）。項目ごとのエラーに番号が付く | 同上 |
+| U-PROTO-13 | オプションのまとまり: `target`・`entities` の既定値と上限。`snapshot` のまとまりは、ほかのまとまりのキーを拒否する | 同上 |
 | V-VER-01 | `capabilities` が返すバージョンが、`package.json` と manifest のモジュールの依存と一致する（`pnpm version:set` のあとは `scripts/shared/constants/version.ts` を直す） | tests/validation/version-constants.test.ts |
 | V-RO-01 | 読み取り専用の検査: `scripts/` に変更系の API（`runCommand`、`setBlock`/`setType`/`setPermutation`、`setDynamicProperty`、`teleport`、`addEffect`、`kill`、`remove`、`spawnEntity`、`setItem`、`nameTag =` など）の呼び出しがない | tests/validation/read-only.test.ts |
 | V-DEP-01 | コアの manifest の依存が `@minecraft/server` だけ（`server-net`/`server-admin` がない） | `pnpm validate` と tests/validation/read-only.test.ts |
@@ -185,6 +188,31 @@ Phase 1・2（`docs/ROADMAP.md`）のテスト計画です。アドオンは **B
 | OBS-PLY-01 | BDS | 成功（0 人と 1 人） | 2 人は未実施 |
 | OBS-PLY-03 | — | Phase 2 | `player` が必要 |
 | OBS-PLY-06 | BDS、ローカルワールド | 観察 | 同じアカウントの id が、ローカルワールドで `-4294967295`、BDS で `-8589934591`。id はワールド・セッションごとで、アカウントの id ではない |
+
+Phase 2 — 2026-10-18 に同じ BDS で実施（アドオン 0.1.0、8 つの method すべて）。2 人目は `PlayerB` のアカウントで、`allowlist add` のあと LAN の別の機器から参加した。要求は BDS のコンソールから送った。
+
+| ID | 結果 | メモ |
+| --- | --- | --- |
+| U-PROTO-11〜13 | 成功 | 全体で 66 件 |
+| OBS-IN-06 | 成功 | コンソールから選択なしの `player` → `NO_SOURCE_PLAYER`。`{"name":…}` 付きなら、そのプレイヤー |
+| OBS-PLY-01 | 成功 | 2 人とも、id とディメンション付きで並ぶ |
+| OBS-PLY-02 | 実施不可 | 空白や日本語を含む名前のアカウントがない |
+| OBS-PLY-03 | 成功 | 存在しない名前 → `PLAYER_NOT_FOUND`。退出の直後に名前と id で問い合わせ → どちらも `PLAYER_NOT_FOUND`、`players` は 1 人 |
+| OBS-PLY-04 | 成功 | `execute in nether run tp …` のあと、`dimension` が `minecraft:nether`。そのあとオーバーワールドに戻した |
+| OBS-PLY-05 | 成功（一部） | スニーク中 → `sneaking: true`。ジャンプ 2 回で飛行 → `flying: true`、`onGround: false`。静止中は速度 0。ダッシュと水泳は未実施 |
+| OBS-PLY-06 | 成功 | 退出・再参加のあとも、BDS の再起動のあとも（同じワールド）、id は同じ。ワールドが違うと違う |
+| OBS-BLK-01 | 成功 | `(-1,-64,-1)` → `minecraft:bedrock` と `states`。位置は要求した整数のまま |
+| OBS-BLK-02 | 成功 | 空気 → `ok` と `minecraft:air`。遠いチャンク → `unloaded`。オーバーワールドの `y=320`・`-65` → `out_of_bounds`。ネザーの `y=128` → `out_of_bounds`（ネザーの高さは 0〜127）。プレイヤーが 1 人もいないと、スポーン地点も `unloaded` |
+| OBS-BLK-03 | 成功（単体テスト） | 上限は U-PROTO-12 で確認。ゲーム内では、6 か所の混在した座標が順番どおりに返った |
+| OBS-TGT-01 | 成功 | 地面を見る → ブロック `(0,-61,1)`、面 `Up`、面上の位置 |
+| OBS-TGT-02 | 成功 | 地平線を見る → `block.hit: false` |
+| OBS-TGT-03 | 成功 | `includeEntities` 付きでもう 1 人を見る → `entity.hit: true`、`minecraft:player`、`name`、距離 7.77 |
+| OBS-TGT-04 | 成功 | `maxDistance` 65 → `LIMIT_EXCEEDED`。省略時は 8 が返る |
+| OBS-ENT-01 | 成功 | 半径 32・件数 5 → 近い順に 5 件、`truncated: true`。中心のプレイヤー自身は除かれ、もう 1 人は `name` 付きで出る。`excludePlayers` で除かれる |
+| OBS-SNP-01 | 成功 | 7 つの節が 1 つの応答に入り、`tick` は 1 つ、`errors: {}`。未知の節 → `INVALID_PARAMS`。`snapshot.entities` に `center` → `INVALID_PARAMS` |
+| OBS-SIZE-01 | 成功 | インベントリ満杯（36 スタック）＋全節: エンティティを 14 件に縮め `omitted: {entities: 11}`。行は 3,965 文字で、標準出力に欠けずに出た |
+| OBS-RO-01 | 一部 | V-RO-01 の検査は成功。試験中にワールドの変化は見られなかったが、前後の比較は独立したケースとしては未実施 |
+| OBS-PERF-01 | 成功 | 1 秒に 1 回 × 5 分で 300 件（`snapshot` と `entities` を交互）: BDS に届いた 297 件すべてに、`ok: true` の応答が 1 つずつ返った。警告・ウォッチドッグなし。3 件は、参考のブリッジのファイル経由の入力で失われ、BDS に届いていない（試験の道具の問題。`docs/knowledge/bds-local-server/` §8） |
 
 ## リリース前チェックリスト
 

@@ -23,3 +23,19 @@ export const SIZE_LIMITS = {
   /** Whole response line, prefix included. */
   maxResponseChars: 4000,
 } as const;
+
+/** Upper limits of request parameters (provisional, ADR-0007). Above them a request is LIMIT_EXCEEDED. */
+export const PARAM_LIMITS = {
+  maxBlocksPerRequest: 32,
+  maxRayDistance: 64,
+  maxEntityRadius: 32,
+  maxEntities: 32,
+  maxInventorySlots: 54,
+} as const;
+
+/** Values used when a request leaves a parameter out. */
+export const PARAM_DEFAULTS = {
+  rayDistance: 8,
+  entityRadius: 16,
+  entityLimit: 16,
+} as const;

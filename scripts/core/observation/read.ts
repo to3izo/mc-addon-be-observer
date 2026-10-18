@@ -1,0 +1,171 @@
+import {
+  EquipmentSlot,
+  InvalidEntityError,
+  LocationInUnloadedChunkError,
+  LocationOutOfWorldBoundariesError,
+  Player,
+  world,
+  type Block,
+  type Dimension,
+  type Entity,
+  type Vector3,
+} from "@minecraft/server";
+import { ObserverError } from "../../shared/protocol/errors.ts";
+import type { BlockPosition, Location } from "../../shared/protocol/params.ts";
+
+/**
+ * Read-only helpers that turn Script API objects into plain JSON values (DTOs). Nothing here changes the
+ * world: only getters, `getComponent`, `getItem`, `getEquipment`, `getBlock`, `isChunkLoaded` are used.
+ */
+
+export function vec(v: Vector3): Location {
+  return { x: v.x, y: v.y, z: v.z };
+}
+
+/** Runs a read on an entity and reports an entity that disappeared meanwhile as TARGET_INVALID. */
+export function readEntity<T>(what: string, read: () => T): T {
+  try {
+    return read();
+  } catch (error) {
+    if (error instanceof InvalidEntityError) throw new ObserverError("TARGET_INVALID", `${what} is no longer valid`);
+    throw error;
+  }
+}
+
+export function playerRef(player: Player): { id: string; name: string } {
+  return { id: player.id, name: player.name };
+}
+
+/** `player` data (docs/PROTOCOL.md §5.3) without optional sections. */
+export function playerState(player: Player): Record<string, unknown> {
+  return readEntity("the player", () => {
+    const rotation = player.getRotation();
+    return {
+      id: player.id,
+      name: player.name,
+      dimension: player.dimension.id,
+      location: vec(player.location),
+      headLocation: vec(player.getHeadLocation()),
+      rotation: { pitch: rotation.x, yaw: rotation.y },
+      viewDirection: vec(player.getViewDirection()),
+      velocity: vec(player.getVelocity()),
+      movement: {
+        onGround: player.isOnGround,
+        sneaking: player.isSneaking,
+        sprinting: player.isSprinting,
+        swimming: player.isSwimming,
+        falling: player.isFalling,
+        inWater: player.isInWater,
+        flying: player.isFlying,
+        gliding: player.isGliding,
+        climbing: player.isClimbing,
+        sleeping: player.isSleeping,
+        jumping: player.isJumping,
+      },
+      gameMode: player.getGameMode(),
+      selectedSlot: player.selectedSlotIndex,
+    };
+  });
+}
+
+/** `health` section: null when the entity has no health component. */
+export function healthOf(entity: Entity): { current: number; max: number } | null {
+  return readEntity("the player", () => {
+    const health = entity.getComponent("minecraft:health");
+    return health ? { current: health.currentValue, max: health.effectiveMax } : null;
+  });
+}
+
+interface ItemSummary {
+  typeId: string;
+  amount: number;
+  nameTag?: string;
+}
+
+function itemSummary(item: { typeId: string; amount: number; nameTag?: string | undefined }): ItemSummary {
+  return item.nameTag ? { typeId: item.typeId, amount: item.amount, nameTag: item.nameTag } : { typeId: item.typeId, amount: item.amount };
+}
+
+/** `inventory` section: occupied slots only, in slot order. The list may be truncated to fit (`items`). */
+export function inventoryOf(entity: Entity, maxSlots: number): Record<string, unknown> | null {
+  return readEntity("the player", () => {
+    const container = entity.getComponent("minecraft:inventory")?.container;
+    if (!container || !container.isValid) return null;
+    const size = Math.min(container.size, maxSlots);
+    const items: Array<ItemSummary & { slot: number }> = [];
+    for (let slot = 0; slot < size; slot++) {
+      const item = container.getItem(slot);
+      if (item) items.push({ slot, ...itemSummary(item) });
+    }
+    return { size: container.size, emptySlots: container.emptySlotsCount, items };
+  });
+}
+
+const EQUIPMENT_SLOTS: readonly EquipmentSlot[] = [
+  EquipmentSlot.Head,
+  EquipmentSlot.Chest,
+  EquipmentSlot.Legs,
+  EquipmentSlot.Feet,
+  EquipmentSlot.Mainhand,
+  EquipmentSlot.Offhand,
+];
+
+/** `equipment` section: each slot's item, or null when empty. */
+export function equipmentOf(entity: Entity): Record<string, ItemSummary | null> | null {
+  return readEntity("the player", () => {
+    const equippable = entity.getComponent("minecraft:equippable");
+    if (!equippable) return null;
+    const slots: Record<string, ItemSummary | null> = {};
+    for (const slot of EQUIPMENT_SLOTS) {
+      const item = equippable.getEquipment(slot);
+      slots[slot] = item ? itemSummary(item) : null;
+    }
+    return slots;
+  });
+}
+
+/** `world` section. */
+export function worldTime(): Record<string, number> {
+  return { timeOfDay: world.getTimeOfDay(), day: world.getDay(), absoluteTime: world.getAbsoluteTime() };
+}
+
+export function blockInfo(block: Block): Record<string, unknown> {
+  return {
+    typeId: block.typeId,
+    states: { ...block.permutation.getAllStates() },
+    isAir: block.isAir,
+    isLiquid: block.isLiquid,
+    isWaterlogged: block.isWaterlogged,
+  };
+}
+
+/**
+ * One block as `block` answers it (docs/PROTOCOL.md §5.4). Never loads a chunk: an unloaded chunk is reported
+ * as `unloaded`, a height outside the dimension as `out_of_bounds`.
+ */
+export function readBlockAt(dimension: Dimension, position: BlockPosition): Record<string, unknown> {
+  const base = { dimension: dimension.id, position: { x: position.x, y: position.y, z: position.z } };
+  const range = dimension.heightRange;
+  // heightRange.max is the first height above the world (e.g. 320 in the overworld).
+  if (position.y < Number(range.min) || position.y >= Number(range.max)) return { ...base, status: "out_of_bounds" };
+  if (!dimension.isChunkLoaded(position)) return { ...base, status: "unloaded" };
+  try {
+    const block = dimension.getBlock(position);
+    if (!block) return { ...base, status: "unloaded" };
+    return { ...base, status: "ok", block: blockInfo(block) };
+  } catch (error) {
+    if (error instanceof LocationInUnloadedChunkError) return { ...base, status: "unloaded" };
+    if (error instanceof LocationOutOfWorldBoundariesError) return { ...base, status: "out_of_bounds" };
+    return { ...base, status: "error", reason: error instanceof Error ? error.name : "unknown" };
+  }
+}
+
+export function distance(a: Vector3, b: Vector3): number {
+  return Math.hypot(a.x - b.x, a.y - b.y, a.z - b.z);
+}
+
+/** One entity in `entities` / `target.entity`. Players also get their name; a custom name tag is added when set. */
+export function entitySummary(entity: Entity, from: Vector3): Record<string, unknown> {
+  const label = entity instanceof Player ? { name: entity.name } : entity.nameTag ? { nameTag: entity.nameTag } : {};
+  return { id: entity.id, typeId: entity.typeId, ...label, location: vec(entity.location), distance: distance(entity.location, from) };
+}

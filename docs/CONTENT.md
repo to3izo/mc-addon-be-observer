@@ -102,8 +102,8 @@ Type:
 Feature (script only, read-only)
 
 Status:
-in progress (Phase 1 implemented: transport, envelopes, `capabilities`, `players`; not yet verified in game.
-Phase 2 methods planned, see `docs/ROADMAP.md`)
+in progress (all eight methods implemented and verified on BDS 1.26.52.3; protocol 1 not frozen yet, see
+`docs/ROADMAP.md`)
 
 Behavior:
 - Reads players, blocks, ray hits and nearby entities with the stable `@minecraft/server` API and writes a
@@ -112,8 +112,9 @@ Behavior:
 
 Scripts:
 - scripts/features/observer: script-event input and log output
-- scripts/core/observation: game reads → DTOs (`capabilities`, `players`)
-- scripts/shared/protocol: pure request validation, dispatch, envelopes, size limits
+- scripts/core/observation: game reads → DTOs (`capabilities`, `players`, `player`, `block`/`blocks`, `target`,
+  `entities`, `snapshot`; shared readers in `read.ts`, player/dimension resolution in `resolve.ts`)
+- scripts/shared/protocol: pure request validation, option parsing, dispatch, envelopes, size limits
 - scripts/shared/constants/version.ts: versions reported by `capabilities`
 
 Tests:

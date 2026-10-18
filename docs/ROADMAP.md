@@ -12,15 +12,15 @@ Bedrock Observer を最初の公開版（初回リリース）まで進めるた
   - 仕様: `docs/SPEC.md`・`docs/PROTOCOL.md`
   - ゲーム内の確認の手順と結果: `docs/TESTING.md`
   - 調べた事実: `docs/RESEARCH.md`・`docs/knowledge/`
-- 最終更新: 2026-10-18（Phase 1 を BDS で確認したあと）
+- 最終更新: 2026-10-18（Phase 2 の機能を BDS で確認したあと）
 
 ## 現在地
 
 | 段階 | 進捗 | 状態 |
 | --- | --- | --- |
 | Phase 0: 初期設定・調査・計画 | 8 / 8 | ✅ 完了 |
-| Phase 1: 最小の経路（scriptevent ＋ JSON ログ） | 9 / 11 | 🟡 ほぼ完了（残りは Phase 2 と一緒に） |
-| Phase 2: 主要な観測機能とプロトコル v1 の確定 | 0 / 12 | ⬜ 未着手 ← **次はここ** |
+| Phase 1: 最小の経路（scriptevent ＋ JSON ログ） | 10 / 11 | 🟡 ほぼ完了（残りは運用者の作業待ち） |
+| Phase 2: 主要な観測機能とプロトコル v1 の確定 | 7 / 12 | 🟡 機能は完成。確定・README・判断が残り ← **次はここ** |
 | Phase 3: BDS からネットワークで送る仕組み（必要な場合だけ） | 0 / 5 | ⏸ Phase 2 のあとで要否を判断 |
 | 初回リリース | 0 / 6 | ⬜ 未着手 |
 | 運用・外部（このリポジトリの外の作業） | 2 / 6 | 🟡 一部 |
@@ -60,32 +60,34 @@ Bedrock Observer を最初の公開版（初回リリース）まで進めるた
   - 応答は ASCII だけ（BDS のコンソールが CP932 のため）
   - 要求は、コンソールから ASCII で送る。チャットで送るコマンドは 448 文字以下
 - [x] 対象を BDS だけにする（ADR-0006）
-- [ ] 2 人のプレイヤーでの `players`（OBS-PLY-01。2 つ目のアカウントが必要）
+- [x] 2 人のプレイヤーでの `players`（OBS-PLY-01。2026-10-18、`PlayerB` で確認）
 - [ ] VM の外から BDS に接続できないことの確認（OBS-ENV-06。運用者が公開範囲を絞ったあと）
 
-## Phase 2: 主要な観測機能とプロトコル v1 の確定 ⬜
+## Phase 2: 主要な観測機能とプロトコル v1 の確定 🟡
 
 使う API と注意点は `docs/RESEARCH.md` §2.2、応答の形は `docs/PROTOCOL.md` §5 にあります。
 
-- [ ] `player`（位置・頭の位置・回転・視線・速度・移動の状態・ゲームモード・選択スロット）
+- [x] `player`（位置・頭の位置・回転・視線・速度・移動の状態・ゲームモード・選択スロット）— `scripts/core/observation/player.ts`
   - 対象のプレイヤーは `params.player` で選ぶ（`docs/PROTOCOL.md` §3）
-- [ ] `block` / `blocks`
+- [x] `block` / `blocks` — `scripts/core/observation/block.ts`、`read.ts`
   - 先に `isChunkLoaded` と `heightRange` で判定する
   - 例外は `unloaded`・`out_of_bounds`・`error` に対応づける
   - 空気は、未ロードと区別して返す
-- [ ] `target`（`getBlockFromViewDirection` で、面と当たった位置を返す）
+- [x] `target`（`getBlockFromViewDirection` で、面と当たった位置を返す）— `scripts/core/observation/target.ts`
   - 任意で `getEntitiesFromViewDirection` も返す
-- [ ] `entities`（半径と件数に上限を付け、距離順に並べる）
-- [ ] 追加の項目: `health`・`inventory`・`equipment`・`world`（時刻）
-- [ ] `snapshot`（1 回の判断に必要な情報をまとめて取る。項目ごとにエラーを返す）
-- [ ] 単体テストの追加（新しい引数の検証、入れ子のリストの切り詰め）
+- [x] `entities`（半径と件数に上限を付け、距離順に並べる。中心のプレイヤー自身は除く）— `scripts/core/observation/entities.ts`
+- [x] 追加の項目: `health`・`inventory`・`equipment`・`world`（時刻）
+- [x] `snapshot`（1 回の判断に必要な情報をまとめて取る。項目ごとにエラーを返す）— `scripts/core/observation/snapshot.ts`
+- [x] 単体テストの追加（U-PROTO-11〜13、`tests/unit/protocol-options.test.ts`。全体で 66 件成功）
 - [ ] BDS でのゲーム内のテスト（OBS-PLY・OBS-BLK・OBS-TGT・OBS-ENT・OBS-SNP・OBS-SIZE・OBS-RO・OBS-PERF）
+  - 2026-10-18 にほぼすべて成功（`docs/TESTING.md` の Phase 2 の結果）
+  - 残り: OBS-RO-01（前後の比較を独立したケースとして行う）、OBS-PLY-05 のダッシュ・水泳、OBS-PLY-02（日本語の名前のアカウントがないので実施不可）
 - [ ] 上限値を実測で確定し、プロトコル v1 を確定する
   - `docs/PROTOCOL.md` から「draft」「provisional」を外す
   - 初期値は ADR-0007 の 7
 - [ ] README（英・日）を、テンプレートの説明から利用者向けの説明に書き換える（ADR-0007 の 8）
 - [ ] 判断: チートなしで使えるカスタムコマンドの入口を足すか
-  - 先に、JSON を 1 つの引数で渡せるかを試作で確かめる（下の「未確認の事項」の 3）
+  - 先に、JSON を 1 つの引数で渡せるかを試作で確かめる（下の「未確認の事項」の 2）
   - 決めたら ADR に書く
 - [ ] 判断: Phase 3 を採るか（ADR-0004 を「採用」か「却下」にする）
 
@@ -154,12 +156,10 @@ Play Conductor の本体は、このリポジトリから参照できません�
 
 | # | 項目 | 確かめ方 | 段階 |
 | --- | --- | --- | --- |
-| 1 | `Player.id` が、同じ BDS での再参加・再起動の後も同じか（ワールドが違うと違う id だった） | OBS-PLY-06 | 2 |
-| 2 | レイの `maxDistance` の上限と既定値 | OBS-TGT-04 | 2 |
-| 3 | カスタムコマンドに、JSON を 1 つの引数で渡せるか | 試作して確かめる | 2 |
-| 4 | BDS の標準出力の、1 行の長さの上限（569 文字は欠けなかった） | OBS-SIZE-01 | 2 |
-| 5 | チャットのコマンドで切断される長さの正確な境目（448 は通り、511 で切断） | 必要になったら二分探索 | 任意 |
-| 6 | 公開範囲を絞ったあと、VM の外から接続できないこと | OBS-ENV-06（運用者が設定を変えたあと） | 運用 |
-| 7 | ループバックの例外なしでも接続できるか | 例外を外して接続（利用者の判断） | 任意 |
-| 8 | VM から Mac に届くか、Mac がどのアドレスで待ち受けるか | `docs/knowledge/bds-local-server/` §7 | 3 |
-| 9 | server-net の上限値・許可リスト・`force_tls` の設定場所 | Phase 3 の試作 | 3 |
+| 1 | レイの `maxDistance` の上限と既定値 | OBS-TGT-04 | 2 |
+| 2 | カスタムコマンドに、JSON を 1 つの引数で渡せるか | 試作して確かめる | 2 |
+| 3 | チャットのコマンドで切断される長さの正確な境目（448 は通り、511 で切断） | 必要になったら二分探索 | 任意 |
+| 4 | 公開範囲を絞ったあと、VM の外から接続できないこと | OBS-ENV-06（運用者が設定を変えたあと） | 運用 |
+| 5 | ループバックの例外なしでも接続できるか | 例外を外して接続（利用者の判断） | 任意 |
+| 6 | VM から Mac に届くか、Mac がどのアドレスで待ち受けるか | `docs/knowledge/bds-local-server/` §7 | 3 |
+| 7 | server-net の上限値・許可リスト・`force_tls` の設定場所 | Phase 3 の試作 | 3 |

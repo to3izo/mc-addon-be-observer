@@ -15,19 +15,20 @@ It is published as open source in its own repository.
 
 ## Main features
 
-Status: rows 1–3 are implemented (Phase 1) and verified on BDS 1.26.52.3 (`docs/TESTING.md`); the rest is planned.
+Status: all rows are implemented and verified on BDS 1.26.52.3 (`docs/TESTING.md`); protocol 1 is not frozen yet
+(`docs/ROADMAP.md`).
 
 | # | Feature | Summary | Phase | Status |
 | --- | --- | --- | --- | --- |
 | 1 | Request / response path | `/scriptevent to3izo_bo:query <JSON>` → `to3izo_bo.response {JSON}` log line; validation, error codes, size limits | 1 | done (BDS) |
 | 2 | `capabilities` | Add-On / protocol / Script API versions, methods, sections, limits | 1 | done (BDS) |
 | 3 | `players` | Players in the world (id, name, dimension) | 1 | done (BDS) |
-| 4 | `player` | Position, head position, rotation, view direction, velocity, movement flags, game mode, selected slot | 2 | planned |
-| 5 | `block` / `blocks` | Block id and states at integer coordinates; `unloaded` / `out_of_bounds` distinguished from air | 2 | planned |
-| 6 | `target` | Block the player looks at (face, hit position); optionally the entity | 2 | planned |
-| 7 | `entities` | Entities near a point, radius- and count-limited, sorted by distance | 2 | planned |
-| 8 | `snapshot` | `player` + `target` (+ `entities`, `world`) in one response, per-section errors | 2 | planned |
-| 9 | Sections | `health`, `inventory`, `equipment`, `world` (time of day, day, absolute time) | 2 | planned |
+| 4 | `player` | Position, head position, rotation, view direction, velocity, movement flags, game mode, selected slot | 2 | done (BDS) |
+| 5 | `block` / `blocks` | Block id and states at integer coordinates; `unloaded` / `out_of_bounds` distinguished from air | 2 | done (BDS) |
+| 6 | `target` | Block the player looks at (face, hit position); optionally the entity | 2 | done (BDS) |
+| 7 | `entities` | Entities near a point, radius- and count-limited, sorted by distance | 2 | done (BDS) |
+| 8 | `snapshot` | `player` + `target` (+ `entities`, `world`) in one response, per-section errors | 2 | done (BDS) |
+| 9 | Sections | `health`, `inventory`, `equipment`, `world` (time of day, day, absolute time) | 2 | done (BDS) |
 
 Deferred (stable API exists but not in the first version): weather (stable read API does not exist), light
 level, biome, rays from an arbitrary origin, small block regions (`getBlocks`), client/input info, join/leave

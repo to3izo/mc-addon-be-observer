@@ -148,34 +148,37 @@ Methods that observe a player take `params.player`:
 
 ## 4. Values and validation
 
-- **Dimensions** are full ids: `minecraft:overworld`, `minecraft:nether`, `minecraft:the_end`. When omitted,
-  the selected player's dimension is used; with no player context it is required.
+- **Dimensions** are full ids: `minecraft:overworld`, `minecraft:nether`, `minecraft:the_end` (anything else is
+  `DIMENSION_NOT_FOUND`). Where a method takes `dimension` and it is omitted, the source player's dimension is
+  used; a request from the BDS console has no source player, so it must give `dimension` (else
+  `INVALID_PARAMS`).
 - **Positions** (`location`, `headLocation`, ray hit points) are `{ "x": number, "y": number, "z": number }`
   in blocks, as returned by the API (not rounded).
-- **Block coordinates** are integers. A request with a non-integer, `NaN`, infinite, or out-of-range value is
-  `INVALID_PARAMS`. Horizontal range: |x|, |z| ≤ 30,000,000; vertical range: the dimension's height range
-  (`OUT_OF_BOUNDS` per item for in-range-type but outside-world values, see §6).
+- **Block coordinates** are integers. A non-integer, non-number or |value| > 30,000,000 is `INVALID_PARAMS`.
+  A position outside the dimension's height range (`y < min` or `y >= max`, e.g. -64…319 in the overworld) is not
+  an error: it is answered per item as `out_of_bounds` (§5.4).
 - **Rotations** are `{ "pitch": number, "yaw": number }` in degrees (API `x` = pitch, `y` = yaw).
 - **Directions** are unit vectors `{x,y,z}`.
-- All numbers in requests must be finite JSON numbers; strings are not converted to numbers.
+- Requests use JSON numbers and booleans as such; strings are never converted (`"8"` is not 8, `"true"` is not
+  true).
+- Distances (`radius`, `maxDistance`) accept decimals; counts (`limit`) are integers. A value above its
+  `capabilities.limits` entry is `LIMIT_EXCEEDED`; below the minimum (1) is `INVALID_PARAMS`. Omitted values use
+  `capabilities.defaults`.
 
 ## 5. Methods
 
-Every method is a pure read at one tick. "Phase" refers to `docs/ROADMAP.md`.
+Every method is a pure read at one tick. All of them are implemented (Phase 2, `docs/ROADMAP.md`).
 
-| Method | Phase | Summary |
-| --- | --- | --- |
-| `capabilities` | 1 | Versions, methods, limits |
-| `players` | 1 | Players in the world |
-| `player` | 2 | One player's state |
-| `block` | 2 | One block |
-| `blocks` | 2 | A few blocks by coordinates |
-| `target` | 2 | What a player is looking at (block, optionally entity) |
-| `entities` | 2 | Entities near a point, limited |
-| `snapshot` | 2 | Several of the above for one player in one response |
-
-Optional sections (`health`, `inventory`, `equipment`, `world`) are added only where the stable API makes them
-trivial; `capabilities.methods` and `capabilities.sections` list what a build really supports.
+| Method | Summary |
+| --- | --- |
+| `capabilities` | Versions, methods, sections, limits, defaults |
+| `players` | Players in the world |
+| `player` | One player's state, plus optional sections |
+| `block` | One block |
+| `blocks` | A few blocks by coordinates |
+| `target` | What a player is looking at (block, optionally entity) |
+| `entities` | Entities near a player or a point, limited |
+| `snapshot` | Several of the above for one player in one response |
 
 ### 5.1 `capabilities`
 
@@ -184,26 +187,22 @@ trivial; `capabilities.methods` and `capabilities.sections` list what a build re
 ```
 
 ```json
-{
-  "protocol": 1, "requestId": "c1", "ok": true, "method": "capabilities", "tick": 100, "session": "k3f9q2", "seq": 1, "time": 1797590000000,
-  "data": {
-    "addon": { "slug": "be-observer", "namespace": "to3izo_bo", "version": "0.1.0" },
-    "protocol": { "version": 1, "supported": [1] },
-    "scriptApi": { "@minecraft/server": "2.10.0" },
-    "transport": { "requestEventId": "to3izo_bo:query", "responsePrefix": "to3izo_bo.response " },
-    "methods": ["capabilities", "players"],
-    "sections": [],
-    "limits": { "maxRequestChars": 2048, "maxResponseChars": 4000 },
-    "readOnly": true
-  }
+"data": {
+  "addon": { "slug": "be-observer", "namespace": "to3izo_bo", "version": "0.1.0" },
+  "protocol": { "version": 1, "supported": [1] },
+  "scriptApi": { "@minecraft/server": "2.10.0" },
+  "transport": { "requestEventId": "to3izo_bo:query", "responsePrefix": "to3izo_bo.response " },
+  "methods": ["capabilities", "players", "player", "block", "blocks", "target", "entities", "snapshot"],
+  "sections": ["health", "inventory", "equipment", "world"],
+  "limits": { "maxRequestChars": 2048, "maxResponseChars": 4000, "maxBlocksPerRequest": 32, "maxRayDistance": 64, "maxEntityRadius": 32, "maxEntities": 32, "maxInventorySlots": 54 },
+  "defaults": { "rayDistance": 8, "entityRadius": 16, "entityLimit": 16 },
+  "readOnly": true
 }
 ```
 
-The example is the Phase 1 build. `capabilities` describes the running build exactly: `methods` and the handler
-table come from one list, and a test checks that every listed method answers. Phase 2 adds its methods, sections
-and parameter limits (planned: `maxBlocksPerRequest` 32, `maxRayDistance` 64, `maxEntityRadius` 32,
-`maxEntities` 32, `maxInventorySlots` 54). All limit values are *provisional*. `capabilities` takes no
-parameters.
+`capabilities` describes the running build exactly: `methods` and the handler table come from one list, and a
+test checks that every listed method answers. Limit values are *provisional* until protocol 1 is frozen.
+`capabilities` takes no parameters.
 
 ### 5.2 `players`
 
@@ -214,8 +213,8 @@ parameters.
 ```json
 "data": {
   "players": [
-    { "id": "-4294967295", "name": "Steve", "dimension": "minecraft:overworld" },
-    { "id": "-8589934591", "name": "テスト プレイヤー", "dimension": "minecraft:nether" }
+    { "id": "-8589934591", "name": "Steve", "dimension": "minecraft:overworld" },
+    { "id": "-12884901887", "name": "テスト プレイヤー", "dimension": "minecraft:nether" }
   ],
   "count": 2,
   "skipped": 0
@@ -223,112 +222,141 @@ parameters.
 ```
 
 `players` takes no parameters. A player who becomes invalid while the list is read (just left) is left out and
-counted in `skipped`. The list may be truncated (§7).
+counted in `skipped`. The list may be truncated (§7). (Non-ASCII names appear as `\uXXXX` escapes on the wire,
+§1.) A player `id` is an entity id, not an account id: on one BDS world it stayed the same across leaving/rejoining
+and a server restart, but the same account had a different id in another world.
 
 ### 5.3 `player`
 
+Parameters: `player` (selector, §3), `include` (array of section names from `capabilities.sections`).
+
 ```json
-{ "requestId": "p2", "method": "player", "params": { "player": { "name": "Steve" } } }
+{ "requestId": "p2", "method": "player", "params": { "player": { "name": "Steve" }, "include": ["health", "inventory", "equipment", "world"] } }
 ```
 
 ```json
 "data": {
-  "id": "-4294967295",
+  "id": "-8589934591",
   "name": "Steve",
   "dimension": "minecraft:overworld",
-  "location": { "x": 10.5, "y": 64, "z": -3.2 },
-  "headLocation": { "x": 10.5, "y": 65.62, "z": -3.2 },
-  "rotation": { "pitch": 12.5, "yaw": -90 },
-  "viewDirection": { "x": 0.98, "y": -0.21, "z": 0 },
-  "velocity": { "x": 0, "y": -0.08, "z": 0 },
-  "movement": { "onGround": true, "sneaking": false, "sprinting": false, "swimming": false, "falling": false, "inWater": false, "flying": false, "gliding": false, "climbing": false, "sleeping": false },
+  "location": { "x": 0.5, "y": -60, "z": 0.5 },
+  "headLocation": { "x": 0.5, "y": -58.47998809814453, "z": 0.5 },
+  "rotation": { "pitch": 48.7421875, "yaw": 0.3460693359375 },
+  "viewDirection": { "x": -0.0039, "y": -0.7517, "z": 0.6594 },
+  "velocity": { "x": 0, "y": 0, "z": 0 },
+  "movement": { "onGround": true, "sneaking": false, "sprinting": false, "swimming": false, "falling": false, "inWater": false, "flying": false, "gliding": false, "climbing": false, "sleeping": false, "jumping": false },
   "gameMode": "Creative",
-  "selectedSlot": 0
+  "selectedSlot": 0,
+  "health": { "current": 20, "max": 20 },
+  "inventory": { "size": 36, "emptySlots": 34, "items": [ { "slot": 0, "typeId": "minecraft:stone", "amount": 64 }, { "slot": 1, "typeId": "minecraft:diamond_sword", "amount": 1, "nameTag": "Blade" } ] },
+  "equipment": { "Head": null, "Chest": null, "Legs": null, "Feet": null, "Mainhand": { "typeId": "minecraft:stone", "amount": 64 }, "Offhand": null },
+  "world": { "timeOfDay": 17014, "day": 3, "absoluteTime": 89014 }
 }
 ```
 
-`movement` contains only flags the stable API exposes directly; missing flags are omitted, never guessed.
-Optional `params.include`: array of section names (`health`, `inventory`, `equipment`) to add.
+- `movement` contains only flags the stable API exposes directly; nothing is guessed.
+- `health`, `inventory`, `equipment` are `null` when the entity has no such component.
+- `inventory.items` lists occupied slots only, in slot order; `nameTag` appears only when the item has a custom
+  name. It may be truncated (§7).
 
 ### 5.4 `block`
 
+Parameters: `x`, `y`, `z` (integers), `dimension` (§4).
+
 ```json
-{ "requestId": "b1", "method": "block", "params": { "dimension": "minecraft:overworld", "x": -12, "y": 63, "z": 40 } }
+{ "requestId": "b1", "method": "block", "params": { "dimension": "minecraft:overworld", "x": 0, "y": -61, "z": 0 } }
 ```
 
 ```json
 "data": {
   "dimension": "minecraft:overworld",
-  "position": { "x": -12, "y": 63, "z": 40 },
+  "position": { "x": 0, "y": -61, "z": 0 },
   "status": "ok",
   "block": { "typeId": "minecraft:grass_block", "states": {}, "isAir": false, "isLiquid": false, "isWaterlogged": false }
 }
 ```
 
-`status` values (also used per item by `blocks` and `snapshot`):
+`status` values (also used per item by `blocks`):
 
 | `status` | Meaning | `block` |
 | --- | --- | --- |
 | `ok` | The block was read. Air is a normal block (`typeId: "minecraft:air"`, `isAir: true`). | present |
-| `unloaded` | The chunk is not loaded on the server. Nothing was loaded to answer. | absent |
+| `unloaded` | The chunk is not loaded on the server (for example, no player is near). Nothing is loaded to answer. | absent |
 | `out_of_bounds` | The position is outside the dimension's height range. | absent |
-| `error` | The read failed for another reason; `reason` has a short code. | absent |
+| `error` | The read failed for another reason; `reason` has the error's name. | absent |
 
 ### 5.5 `blocks`
 
+Parameters: `positions` (1…`maxBlocksPerRequest` integer positions), `dimension` (§4).
+
 ```json
-{ "requestId": "b2", "method": "blocks", "params": { "dimension": "minecraft:overworld", "positions": [ { "x": 0, "y": 64, "z": 0 }, { "x": 0, "y": 65, "z": 0 } ] } }
+{ "requestId": "b2", "method": "blocks", "params": { "dimension": "minecraft:overworld", "positions": [ { "x": 0, "y": -61, "z": 0 }, { "x": 0, "y": 320, "z": 0 } ] } }
 ```
 
-`data.results` is an array in request order, each shaped like `block`'s data. More than `maxBlocksPerRequest`
-positions → `LIMIT_EXCEEDED` (the request is rejected, not cut).
+```json
+"data": { "dimension": "minecraft:overworld", "results": [ { "position": { "x": 0, "y": -61, "z": 0 }, "status": "ok", "block": { } }, { "position": { "x": 0, "y": 320, "z": 0 }, "status": "out_of_bounds" } ] }
+```
+
+`results` is in request order, each shaped like `block`'s data. More than `maxBlocksPerRequest` positions →
+`LIMIT_EXCEEDED` (the request is rejected, not cut).
 
 ### 5.6 `target`
 
+Parameters: `player` (§3), `maxDistance` (default `rayDistance`, at most `maxRayDistance`), `includeLiquids`,
+`includePassable`, `includeEntities` (booleans, default false).
+
 ```json
-{ "requestId": "t1", "method": "target", "params": { "maxDistance": 8, "includeLiquids": false, "includeEntities": true } }
+{ "requestId": "t1", "method": "target", "params": { "player": { "name": "Steve" }, "maxDistance": 8, "includeEntities": true } }
 ```
 
 ```json
 "data": {
-  "player": { "id": "-4294967295", "name": "Steve" },
-  "origin": { "x": 10.5, "y": 65.62, "z": -3.2 },
-  "direction": { "x": 0.98, "y": -0.21, "z": 0 },
+  "player": { "id": "-8589934591", "name": "Steve" },
+  "origin": { "x": 0.5, "y": -58.48, "z": 0.5 },
+  "direction": { "x": -0.0039, "y": -0.7517, "z": 0.6594 },
   "maxDistance": 8,
   "block": {
     "hit": true,
-    "position": { "x": 15, "y": 63, "z": -4 },
+    "position": { "x": 0, "y": -61, "z": 1 },
     "face": "Up",
-    "faceLocation": { "x": 0.42, "y": 1, "z": 0.77 },
+    "faceLocation": { "x": 0.49, "y": 0, "z": 0.83 },
     "block": { "typeId": "minecraft:grass_block", "states": {}, "isAir": false, "isLiquid": false, "isWaterlogged": false }
   },
-  "entity": { "hit": false }
+  "entity": { "hit": true, "id": "-17179869176", "typeId": "minecraft:cow", "location": { "x": 1.2, "y": -60, "z": 4.0 }, "distance": 3.4 }
 }
 ```
 
-`hit: false` means the ray met nothing within `maxDistance` (which may include rays into unloaded or empty space;
-the API does not tell those apart). `entity` is present only when `includeEntities` was requested and the build
-supports it.
+- The ray starts at the player's head. `face` is `Up`, `Down`, `North`, `South`, `East` or `West`;
+  `faceLocation` is relative to the block's bottom north-west corner.
+- `hit: false` means the ray met nothing within `maxDistance` (which may include rays into unloaded or empty
+  space; the API does not tell those apart).
+- `entity` is present only when `includeEntities` is true: the nearest entity on the ray, not the player
+  itself. Players carry `name`; other entities carry `nameTag` when they have a custom name.
 
 ### 5.7 `entities`
 
-```json
-{ "requestId": "e1", "method": "entities", "params": { "radius": 16, "limit": 10, "excludePlayers": false } }
-```
+Parameters: either `player` (§3; the centre is that player's location, and the player itself is left out) or
+`center` (`{x,y,z}`, decimals allowed) with an optional `dimension` (§4), not both; `radius` (default
+`entityRadius`), `limit` (default `entityLimit`), `excludePlayers` (boolean).
 
-The centre is the selected player's location unless `dimension` + `center` are given. Results are sorted by
-distance.
+```json
+{ "requestId": "e1", "method": "entities", "params": { "player": { "name": "Steve" }, "radius": 32, "limit": 5 } }
+```
 
 ```json
 "data": {
-  "center": { "x": 10.5, "y": 64, "z": -3.2 },
-  "radius": 16,
-  "entities": [ { "id": "-12884901887", "typeId": "minecraft:cow", "location": { "x": 13.1, "y": 64, "z": -1.5 }, "distance": 3.1 } ],
+  "dimension": "minecraft:overworld",
+  "center": { "x": 0.5, "y": -60, "z": 0.5 },
+  "radius": 32,
+  "entities": [ { "id": "-17179869176", "typeId": "minecraft:cow", "location": { "x": 10.0, "y": -60, "z": 11.2 }, "distance": 14.33 } ],
   "returned": 1,
-  "limit": 10,
+  "limit": 5,
   "truncated": false
 }
 ```
+
+Results are sorted by distance from the centre. `truncated: true` means more entities were in range than
+`limit` (or the list was shortened to fit the response, §7, which also adds `omitted`).
 
 ### 5.8 `snapshot`
 
@@ -336,8 +364,13 @@ The basic information for one decision, in one response. Each section is taken i
 tick), but the protocol does not promise transactional consistency, and it is not synchronised with
 screenshots or input.
 
+Parameters: `player` (§3); `include` (any of `player`, `health`, `inventory`, `equipment`, `target`, `entities`,
+`world`; default `["player", "target"]`); `target` (options of §5.6 except `player`); `entities` (`radius`,
+`limit`, `excludePlayers`; the centre is always the snapshot's player). Option groups are validated before
+anything is read, so a typo fails the whole request.
+
 ```json
-{ "requestId": "s1", "method": "snapshot", "params": { "include": ["player", "target", "entities", "world"], "entities": { "radius": 8, "limit": 8 } } }
+{ "requestId": "s1", "method": "snapshot", "params": { "player": { "name": "Steve" }, "include": ["player", "target", "entities", "world"], "entities": { "radius": 16, "limit": 8 } } }
 ```
 
 ```json
@@ -345,13 +378,14 @@ screenshots or input.
   "player": { },
   "target": { },
   "entities": { },
-  "world": { "timeOfDay": 6000, "day": 3, "absoluteTime": 78000 },
+  "world": { "timeOfDay": 17520, "day": 3, "absoluteTime": 89520 },
   "errors": { }
 }
 ```
 
-A section that fails does not fail the snapshot: its key is absent from `data` and `data.errors.<section>` holds
-`{ "code", "message" }`. Default `include` is `["player", "target"]`.
+Each section has the shape of the matching method or `player` section. A section that fails does not fail the
+snapshot: its key is absent from `data` and `data.errors.<section>` holds `{ "code", "message" }`. A player who
+cannot be found fails the whole request (`NO_SOURCE_PLAYER`, `PLAYER_NOT_FOUND`).
 
 ## 6. Error codes
 
@@ -380,8 +414,8 @@ Per-item conditions inside a successful response (`unloaded`, `out_of_bounds`, `
 - A request longer than `maxRequestChars` characters is refused before parsing.
 - `maxResponseChars` limits the whole line, prefix included.
 - A response is built, serialised and measured. If it exceeds `maxResponseChars`, list fields that allow it
-  (`entities`, inventory slots) are shortened from the end and the response gets `"truncated": true` and
-  `"omitted": { "<field>": <count> }` at the level of that list. Single values are never cut.
+  are shortened from the end, in this order: `players`; `entities`; `inventory.items`. The object holding the
+  list gets `"truncated": true` and `"omitted": { "<field>": <count> }`. Single values are never cut.
 - If the response is still too long, the answer is `RESPONSE_TOO_LARGE`; ask for less (lower `limit`, fewer
   sections).
 - There is no paging, resend, or multi-line response in protocol 1. If a parser sees a prefixed line that is not
