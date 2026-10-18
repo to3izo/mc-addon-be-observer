@@ -1,0 +1,21 @@
+{
+  "about": "OBS-RO-01 battery for bo-verify.ps1: every method with its options, no console steps. Run it between two identical sets of console queries and compare (docs/TESTING.md OBS-RO-01). Needs the player PlayerA online near an armor stand.",
+  "steps": [
+    { "id": "RO-CAP", "method": "capabilities" },
+    { "id": "RO-PLS", "method": "players" },
+    { "id": "RO-PLY", "method": "player", "params": { "player": { "name": "PlayerA" }, "include": ["health", "inventory", "equipment", "effects", "world"] } },
+    { "id": "RO-BLK", "method": "block", "params": { "dimension": "minecraft:overworld", "x": 3, "y": -60, "z": 3 }, "expect": { "equals": { "data.block.typeId": "minecraft:diamond_block" } } },
+    { "id": "RO-BLKS", "method": "blocks", "params": { "dimension": "minecraft:overworld", "positions": [{ "x": 3, "y": -60, "z": 3 }, { "x": 3, "y": -61, "z": 3 }, { "x": 3, "y": 400, "z": 3 }] } },
+    { "id": "RO-TGT", "method": "target", "params": { "player": { "name": "PlayerA" }, "includeEntities": true, "includeLiquids": true } },
+    { "id": "RO-ENTS", "method": "entities", "params": { "player": { "name": "PlayerA" }, "type": "minecraft:armor_stand", "includeEffects": true }, "expect": { "atLeast": { "data.returned": 1 } } },
+    { "id": "RO-ENT", "method": "entity", "params": { "id": "$ref:RO-ENTS:data.entities.0.id" } },
+    { "id": "RO-SNP", "method": "snapshot", "params": { "player": { "name": "PlayerA" }, "include": ["player", "health", "inventory", "equipment", "effects", "target", "entities", "world"], "entities": { "radius": 32, "limit": 8 } } },
+    { "id": "RO-EVT", "method": "events", "params": { "limit": 8 } },
+    { "id": "RO-TOP", "method": "top", "params": { "dimension": "minecraft:overworld", "x": 3, "z": 3 }, "expect": { "equals": { "data.block.typeId": "minecraft:diamond_block" } } },
+    { "id": "RO-TOPS", "method": "tops", "params": { "dimension": "minecraft:overworld", "columns": [{ "x": 3, "z": 3 }, { "x": 4, "z": 4 }] } },
+    { "id": "RO-SB1", "method": "scoreboard" },
+    { "id": "RO-SB2", "method": "scoreboard", "params": { "objective": "bo_ro" } },
+    { "id": "RO-SB3", "method": "scoreboard", "params": { "player": { "name": "PlayerA" } } },
+    { "id": "RO-ERR", "method": "teleport", "expect": { "ok": false, "code": "UNKNOWN_METHOD" } }
+  ]
+}

@@ -132,6 +132,19 @@ Phase 3 を採る場合の手順案（ADR-0004。人が承認してから）:
 - 応答の 1 行は、3,965 文字まで欠けずに標準出力に出た（Phase 2 の OBS-SIZE-01）。
 - **BDS の標準出力に、プレイヤーのチャットは出ない（2026-10-18、実機）。** `@PlayerB hello chatlog test 123` を送っても、何も出なかった。プレイヤーがチャットから打ったコマンド（`/scriptevent`）も出ない（アドオンの応答だけが出る）。コンソールから打ったコマンドは、`Script event … has been sent` などの結果が出る。チャットの検知は `docs/RESEARCH.md` §2.2.1。
 
+### カスタムコマンド（試作で確認、2026-10-18、BDS 1.26.52.3）
+
+`customCommandRegistry.registerCommand` で `to3izo_bo:query <json: string>`（`permissionLevel: Any`、`cheatsRequired: false`）を登録し、`/scriptevent` と同じ処理で答える試作を作った（ブランチ `proto/custom-command`。main には入れていない）。
+
+- **チートなし・`member` のプレイヤーが、チャットから使えた。** `allow-cheats=false`、`permissions.json` が空（全員 `member`）の状態で、`/to3izo_bo:query "{\"requestId\":\"pc1\",\"method\":\"player\"}"` に応答があり、送ったプレイヤーが `sourcePlayer` になった（`player` を省いた要求が通った）。入力欄には `/to3izo_bo:query <json: string>` の補助表示が出た。
+- **JSON は、引用符で囲み、中の `"` を `\"` にする。** 引用符で囲まない `{"requestId":…}` は `Syntax error: Unexpected "{"` になった。囲めば、中の空白もそのまま届いた。
+- 日本語も届いた（チャットから貼り付けた `テスト` が、応答では `\u30c6\u30b9\u30c8`）。
+- 名前空間を省いた `/query "…"` でも動いた（同じ名前のコマンドがないため）。
+- BDS のコンソールからも使えた（先頭の `/` なし）。`sourceType` は `Server`。
+- 成功の結果に `message` を付けなければ、プレイヤーのチャットには何も出なかった。
+- **`/reload` では、新しいカスタムコマンドを登録できない。** `CustomCommandError: Custom Command reload failed, cannot change parameters for 'to3izo_bo:query' during reload.` になり、コマンドは「Unknown command」のままだった。BDS を再起動すると使えた。
+- コールバックは restricted-execution で動くので、観測は `system.run` で次の tick に回した。
+
 ## 確認した組み合わせ
 
 | 日付 | クライアント | BDS | `@minecraft/server` | 接続 | アドオンの読み込み | 観測の経路 |

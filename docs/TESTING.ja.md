@@ -237,7 +237,7 @@ Phase 2 — 2026-10-18 に同じ BDS で実施（アドオン 0.1.0、8 つの m
 | OBS-PLY-02 | 実施不可 | 空白や日本語を含む名前のアカウントがない |
 | OBS-PLY-03 | 成功 | 存在しない名前 → `PLAYER_NOT_FOUND`。退出の直後に名前と id で問い合わせ → どちらも `PLAYER_NOT_FOUND`、`players` は 1 人 |
 | OBS-PLY-04 | 成功 | `execute in nether run tp …` のあと、`dimension` が `minecraft:nether`。そのあとオーバーワールドに戻した |
-| OBS-PLY-05 | 成功（一部） | スニーク中 → `sneaking: true`。ジャンプ 2 回で飛行 → `flying: true`、`onGround: false`。静止中は速度 0。ダッシュと水泳は未実施 |
+| OBS-PLY-05 | 成功 | スニーク中 → `sneaking: true`。ジャンプ 2 回で飛行 → `flying: true`、`onGround: false`。静止中は速度 0。ダッシュ（平地で Ctrl+W）→ `sprinting: true`、速度 0.28 ブロック/tick。水泳（一時的に作った深さ 3 の水場でダッシュ）→ `swimming: true`、`sprinting: true`、`inWater: true`、頭の位置は足の 0.3 上。水に入った直後は `inWater: true` だけ |
 | OBS-PLY-06 | 成功 | 退出・再参加のあとも、BDS の再起動のあとも（同じワールド）、id は同じ。ワールドが違うと違う |
 | OBS-BLK-01 | 成功 | `(-1,-64,-1)` → `minecraft:bedrock` と `states`。位置は要求した整数のまま |
 | OBS-BLK-02 | 成功 | 空気 → `ok` と `minecraft:air`。遠いチャンク → `unloaded`。オーバーワールドの `y=320`・`-65` → `out_of_bounds`。ネザーの `y=128` → `out_of_bounds`（ネザーの高さは 0〜127）。プレイヤーが 1 人もいないと、スポーン地点も `unloaded` |
@@ -249,7 +249,7 @@ Phase 2 — 2026-10-18 に同じ BDS で実施（アドオン 0.1.0、8 つの m
 | OBS-ENT-01 | 成功 | 半径 32・件数 5 → 近い順に 5 件、`truncated: true`。中心のプレイヤー自身は除かれ、もう 1 人は `name` 付きで出る。`excludePlayers` で除かれる |
 | OBS-SNP-01 | 成功 | 7 つの節が 1 つの応答に入り、`tick` は 1 つ、`errors: {}`。未知の節 → `INVALID_PARAMS`。`snapshot.entities` に `center` → `INVALID_PARAMS` |
 | OBS-SIZE-01 | 成功 | インベントリ満杯（36 スタック）＋全節: エンティティを 14 件に縮め `omitted: {entities: 11}`。行は 3,965 文字で、標準出力に欠けずに出た |
-| OBS-RO-01 | 一部 | V-RO-01 の検査は成功。試験中にワールドの変化は見られなかったが、前後の比較は独立したケースとしては未実施 |
+| OBS-RO-01 | 成功 | 独立したケースとして実施。決まった状態（ブロック、防具立て、石 5 個、タグ、objective、効果、`doMobSpawning` false）を用意し、コンソールの問い合わせ 12 個（`testforblock` ×2、`testfor` で防具立て・`hasitem` ×2・ゲームモード・タグ、`querytarget`、`tag list`、`scoreboard players list`、`scoreboard objectives list`、`gamerule`）を取り、13 メソッドすべてを実行し（`bo-verify-ro-cases.json`、16 件とも期待どおり）、同じ問い合わせを取り直した。違いなし |
 | OBS-PERF-01 | 成功 | 1 秒に 1 回 × 5 分で 300 件（`snapshot` と `entities` を交互）: BDS に届いた 297 件すべてに、`ok: true` の応答が 1 つずつ返った。警告・ウォッチドッグなし。3 件は、参考のブリッジのファイル経由の入力で失われ、BDS に届いていない（試験の道具の問題。`docs/knowledge/bds-local-server/` §8） |
 
 出来事の通知 — 2026-10-18 に同じ BDS で実施。すべて成功: OBS-EVT-01（下の修正のあと）、-02（`cause` は `selfDestruct`、リスポーンは `initialSpawn: false`）、-03（クモ、`killer` は PlayerA、`cause` は `entityAttack`）、-04（ネザーへの移動は、クライアントの読み込みが終わった tp の約 19 秒後に通知された）、-05、-06、-07、-08（`reload` で新しい session、`seq` は 1 から）。見つけて直したこと: 参加のときに BDS が `Creative → Creative` を 2 回報告していた（`force-gamemode`）。変化のないものは送らないようにした。メモ: クリエイティブのプレイヤーは `/kill` で倒せない（先にサバイバルにする）。

@@ -12,7 +12,7 @@ Bedrock Observer を最初の公開版（初回リリース）まで進めるた
   - 仕様: `docs/SPEC.md`・`docs/PROTOCOL.md`
   - ゲーム内の確認の手順と結果: `docs/TESTING.md`
   - 調べた事実: `docs/RESEARCH.md`・`docs/knowledge/`
-- 最終更新: 2026-10-18（観測の追加 6 件と確認用スクリプトを BDS で確認したあと）
+- 最終更新: 2026-10-18（ゲーム内テストの残り・README・カスタムコマンドの試作のあと）
 
 ## 現在地
 
@@ -20,7 +20,7 @@ Bedrock Observer を最初の公開版（初回リリース）まで進めるた
 | --- | --- | --- |
 | Phase 0: 初期設定・調査・計画 | 8 / 8 | ✅ 完了 |
 | Phase 1: 最小の経路（scriptevent ＋ JSON ログ） | 10 / 11 | 🟡 ほぼ完了（残りは運用者の作業待ち） |
-| Phase 2: 主要な観測機能とプロトコル v1 の確定 | 16 / 21 | 🟡 残りはゲーム内テストの残り・v1 の確定・README・判断 2 件 ← **次はここ** |
+| Phase 2: 主要な観測機能とプロトコル v1 の確定 | 18 / 21 | 🟡 残りは判断 2 件（カスタムコマンド・Phase 3）と v1 の確定 ← **次はここ** |
 | Phase 3: BDS からネットワークで送る仕組み（必要な場合だけ） | 0 / 5 | ⏸ Phase 2 のあとで要否を判断 |
 | 後回し・検討の候補 | 0 / 5 | ⏸ Phase 2 のあとで、採るかと時期を決める |
 | 初回リリース | 0 / 6 | ⬜ 未着手 |
@@ -80,15 +80,16 @@ Bedrock Observer を最初の公開版（初回リリース）まで進めるた
 - [x] 追加の項目: `health`・`inventory`・`equipment`・`world`（時刻）
 - [x] `snapshot`（1 回の判断に必要な情報をまとめて取る。項目ごとにエラーを返す）— `scripts/core/observation/snapshot.ts`
 - [x] 単体テストの追加（U-PROTO-11〜13、`tests/unit/protocol-options.test.ts`。全体で 66 件成功）
-- [ ] BDS でのゲーム内のテスト（OBS-PLY・OBS-BLK・OBS-TGT・OBS-ENT・OBS-SNP・OBS-SIZE・OBS-RO・OBS-PERF）
-  - 2026-10-18 にほぼすべて成功（`docs/TESTING.md` の Phase 2 の結果）
-  - 残り: OBS-RO-01（前後の比較を独立したケースとして行う）、OBS-PLY-05 のダッシュ・水泳、OBS-PLY-02（日本語の名前のアカウントがないので実施不可）
+- [x] BDS でのゲーム内のテスト（OBS-PLY・OBS-BLK・OBS-TGT・OBS-ENT・OBS-SNP・OBS-SIZE・OBS-RO・OBS-PERF）
+  - 2026-10-18 にすべて成功（`docs/TESTING.md` の Phase 2 の結果）。OBS-RO-01 は前後の比較を独立して実施、OBS-PLY-05 はダッシュ・水泳も確認
+  - OBS-PLY-02 は、日本語の名前のアカウントがないので実施不可（日本語の名前の受け渡しは OBS-IN-04 とカスタムコマンドの試作で確認）
 - [ ] 上限値を実測で確定し、プロトコル v1 を確定する
   - `docs/PROTOCOL.md` から「draft」「provisional」を外す
-  - 初期値は ADR-0007 の 7
-- [ ] README（英・日）を、テンプレートの説明から利用者向けの説明に書き換える（ADR-0007 の 8）
+  - 初期値は ADR-0007 の 7。実測では変える必要がなかった（ADR-0007 の経過）
+  - カスタムコマンドを入口に足すなら、§1 の書き方が変わるので、その判断のあとに確定する
+- [x] README（英・日）を、テンプレートの説明から利用者向けの説明に書き換える（ADR-0007 の 8）
 - [ ] 判断: チートなしで使えるカスタムコマンドの入口を足すか
-  - 先に、JSON を 1 つの引数で渡せるかを試作で確かめる（下の「未確認の事項」の 2）
+  - 試作で確認済み（2026-10-18、ブランチ `proto/custom-command`、`docs/knowledge/bds-local-server/`）: 引用符で囲めば JSON を 1 つの引数で渡せる。チートなし・`member` でもチャットから使える。`/reload` では登録できず、BDS の再起動が要る
   - 決めたら ADR に書く
 - [x] エンティティの絞り込み: `entities`（と `snapshot.entities`）に、種類・ファミリー・名前・タグで絞る引数を足す（例: `families: ["monster"]` で敵対モブだけ）— `docs/PROTOCOL.md` §5.7、BDS で FLT-01〜07
 - [x] `entity`: id でエンティティを 1 体取る（`world.getEntity`）。見つからなければ新しいエラーコード `ENTITY_NOT_FOUND` — `scripts/core/observation/entity.ts`、BDS で ENT-01〜05
@@ -180,10 +181,8 @@ Play Conductor の本体は、このリポジトリから参照できません�
 
 | # | 項目 | 確かめ方 | 段階 |
 | --- | --- | --- | --- |
-| 1 | レイの `maxDistance` の上限と既定値 | OBS-TGT-04 | 2 |
-| 2 | カスタムコマンドに、JSON を 1 つの引数で渡せるか | 試作して確かめる | 2 |
-| 3 | チャットのコマンドで切断される長さの正確な境目（448 は通り、511 で切断） | 必要になったら二分探索 | 任意 |
-| 4 | 公開範囲を絞ったあと、VM の外から接続できないこと | OBS-ENV-06（運用者が設定を変えたあと） | 運用 |
-| 5 | ループバックの例外なしでも接続できるか | 例外を外して接続（利用者の判断） | 任意 |
-| 6 | VM から Mac に届くか、Mac がどのアドレスで待ち受けるか | `docs/knowledge/bds-local-server/` §7 | 3 |
-| 7 | server-net の上限値・許可リスト・`force_tls` の設定場所 | Phase 3 の試作 | 3 |
+| 1 | チャットのコマンドで切断される長さの正確な境目（448 は通り、511 で切断） | 必要になったら二分探索 | 任意 |
+| 2 | 公開範囲を絞ったあと、VM の外から接続できないこと | OBS-ENV-06（運用者が設定を変えたあと） | 運用 |
+| 3 | ループバックの例外なしでも接続できるか | 例外を外して接続（利用者の判断） | 任意 |
+| 4 | VM から Mac に届くか、Mac がどのアドレスで待ち受けるか | `docs/knowledge/bds-local-server/` §7 | 3 |
+| 5 | server-net の上限値・許可リスト・`force_tls` の設定場所 | Phase 3 の試作 | 3 |

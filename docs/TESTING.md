@@ -246,7 +246,7 @@ Phase 2 — run 2026-10-18 on the same BDS (Add-On 0.1.0 with all eight methods)
 | OBS-PLY-02 | not available | No account with a space or Japanese in its name |
 | OBS-PLY-03 | pass | Unknown name → `PLAYER_NOT_FOUND`; right after the player left, by name and by id → `PLAYER_NOT_FOUND` and `players` count 1 |
 | OBS-PLY-04 | pass | After `execute in nether run tp …`: `dimension` `minecraft:nether`; back in the overworld afterwards |
-| OBS-PLY-05 | pass (partial) | Sneaking → `sneaking: true`; double-jump flying → `flying: true`, `onGround: false`; standing still → velocity 0. Sprint and swim not tried |
+| OBS-PLY-05 | pass | Sneaking → `sneaking: true`; double-jump flying → `flying: true`, `onGround: false`; standing still → velocity 0. Sprint (Ctrl+W on flat ground) → `sprinting: true`, velocity 0.28 blocks/tick. Swim (sprint in a temporary 3-deep pool) → `swimming: true`, `sprinting: true`, `inWater: true`, head 0.3 above the feet; just entering water → `inWater: true` only |
 | OBS-PLY-06 | pass | Same id after leaving and rejoining, and after a BDS restart (same world); different between worlds |
 | OBS-BLK-01 | pass | `(-1,-64,-1)` → `minecraft:bedrock` with `states`; positions echo the integer request |
 | OBS-BLK-02 | pass | Air → `ok` + `minecraft:air`; far chunk → `unloaded`; overworld `y=320`/`-65` → `out_of_bounds`; Nether `y=128` → `out_of_bounds` (Nether height is 0–127); with no player online even spawn is `unloaded` |
@@ -258,7 +258,7 @@ Phase 2 — run 2026-10-18 on the same BDS (Add-On 0.1.0 with all eight methods)
 | OBS-ENT-01 | pass | Radius 32, limit 5 → 5 nearest, sorted, `truncated: true`; the centre player is left out; the other player appears with `name`; `excludePlayers` removes them |
 | OBS-SNP-01 | pass | All 7 sections in one response, one `tick`, `errors: {}`; unknown section → `INVALID_PARAMS`; `center` inside `snapshot.entities` → `INVALID_PARAMS` |
 | OBS-SIZE-01 | pass | Full inventory (36 stacks) + all sections: entity list shortened to 14 with `omitted: {entities: 11}`, line 3,965 chars, intact on stdout |
-| OBS-RO-01 | partial | V-RO-01 guard passes; no world change was seen during the tests, but the before/after comparison was not run as a separate case |
+| OBS-RO-01 | pass | Run separately: set up a known state (block, armor stand, 5 stone, tag, objective, effect, `doMobSpawning` false), took 12 console queries (`testforblock` ×2, `testfor` armor stand / `hasitem` ×2 / game mode / tag, `querytarget`, `tag list`, `scoreboard players list`, `scoreboard objectives list`, `gamerule`), ran all 13 methods (`bo-verify-ro-cases.json`, 16/16 answered as expected), took the same queries again: no difference |
 | OBS-PERF-01 | pass | 300 requests at 1/s for 5 min (alternating `snapshot` and `entities`): every request that reached BDS (297) answered once with `ok: true`; no warnings or watchdog messages. 3 requests never reached BDS because the reference bridge's file-based input lost them (test harness, `docs/knowledge/bds-local-server/` §8) |
 
 Events — run 2026-10-18 on the same BDS. All passed: OBS-EVT-01 (after the fix below), -02 (`cause`

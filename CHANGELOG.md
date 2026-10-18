@@ -36,6 +36,9 @@ and must match `package.json` and both pack manifests (`pnpm version:set <x.y.z>
   BDS 1.26.52.3.
 - Reference script `docs/knowledge/bds-local-server/scripts/bo-verify.ps1` with `bo-verify-cases.json`: sends a
   set of requests through the bridge, judges the responses and writes the verdicts as JSON.
+  `bo-verify-ro-cases.json` runs every method for the read-only before/after check (OBS-RO-01).
+- README (English and Japanese) rewritten for users of the Add-On: requirements, BDS install, quick start,
+  methods, security, building.
 - `docs/ROADMAP.md`: checklist of every phase up to the first release, with the current progress, task details
   and open questions. It replaces `docs/PLAN.md`, whose decisions moved to ADR-0007 and ADR-0004.
 
