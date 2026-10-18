@@ -8,7 +8,7 @@
 リポジトリを OSS として公開する前に、文書の中のプライベートの IP アドレス（自宅 LAN と VMPal のローカルネットワーク）と、試験に使ったゲーマータグを、名前（`<VM の LAN 側のアドレス>`、`PlayerA`・`PlayerB` など）に置き換えた。しかし、置き換える前のコミットには、元の値が残っていた。公開すると、履歴から誰でも読める。
 
 ## 決定
-- 公開の前に、すべてのコミットで同じ置き換えをする（`git filter-repo` の `--file-info-callback`）。作者・名前空間・リポジトリ名としての `PlayerA`（`addon.config.json`、マニフェストの `authors`、`LICENSE`、`docs/PROMPTS.md`）は変えない。
+- 公開の前に、すべてのコミットで同じ置き換えをする（`git filter-repo` の `--file-info-callback`）。作者・名前空間・リポジトリ名としての `to3izo`（`addon.config.json`、マニフェストの `authors`、`LICENSE`、`docs/PROMPTS.md`）は変えない。
 - 書き換えた `main` とタグ `v1.0.0` を force-push し、GitHub Release を作り直す。
 - これは `AGENTS.md` の Git policy（`main` の履歴を書き換えない、共有のブランチに force-push しない）の例外で、公開の前のこの 1 回だけに認められたもの。公開したあとは、Git policy に従う。
 
@@ -26,3 +26,4 @@
 
 ## 経過
 - 2026-10-18: 利用者の指示で、履歴を書き換えて公開することにした。
+- 2026-10-18: `git filter-repo` で全コミットを書き換えた（書き換えの前の全 ref は、作業した Mac のローカルにバンドルで控えた）。この ADR の本文の `to3izo`（作者名）も置き換わったので、直した。main とタグ `v1.0.0` を force-push し、Release を作り直した。
