@@ -1,0 +1,117 @@
+<!doctype html>
+<!--
+  Source of media/social/x/be-observer_x_main_20261018.png (1600x900).
+  Render: see media/source/artwork/README.md.
+  Left: F2 screenshot ../screenshots/be-observer_snapshot_20261018.jpeg (1920x1080, unedited).
+  Right: excerpt of the promo-3 snapshot response in ../screenshots/be-observer_bds-stdout_20261018.txt.
+-->
+<html lang="ja">
+<head>
+<meta charset="utf-8">
+<title>Bedrock Observer main</title>
+<style>
+  :root {
+    --bg: #0b0f14; --panel: #111821; --line: #273244; --text: #e6edf3; --muted: #8b98a8;
+    --key: #9cdcfe; --str: #ce9178; --num: #b5cea8; --punc: #8b98a8;
+    --pig: #ff6fae; --sheep: #ffd84d; --cow: #ff9a3c; --target: #39e5ff;
+  }
+  html, body { margin: 0; background: var(--bg); }
+  body { width: 1600px; height: 900px; position: relative; overflow: hidden; color: var(--text);
+    font-family: "Hiragino Sans", "Hiragino Kaku Gothic ProN", sans-serif; }
+  .header { position: absolute; left: 28px; right: 28px; top: 22px; height: 76px;
+    display: flex; align-items: center; justify-content: space-between; }
+  .title { display: flex; align-items: baseline; gap: 16px; }
+  .title h1 { margin: 0; font-size: 50px; font-weight: 800; letter-spacing: 0.5px; }
+  .chip { font: 700 22px Menlo, monospace; color: var(--bg); background: var(--target);
+    padding: 4px 10px; border-radius: 8px; position: relative; top: -6px; }
+  .tagline { font-size: 34px; font-weight: 700; }
+  .tagline b { color: var(--target); }
+
+  .shot { position: absolute; left: 24px; top: 116px; width: 700px; height: 740px;
+    border-radius: 16px; overflow: hidden; border: 2px solid var(--line); }
+  /* Crop of the 1920x1080 screenshot: x 576..1354, y 250..1072, scaled by 0.9. */
+  .scene { position: absolute; left: 0; top: 0; width: 1920px; height: 1080px;
+    transform-origin: 0 0; transform: scale(0.9) translate(-576px, -250px); }
+  .scene img { position: absolute; left: 0; top: 0; width: 1920px; height: 1080px; }
+  .box { position: absolute; border: 6px solid; border-radius: 14px; box-sizing: border-box; }
+  .tag { position: absolute; font: 800 28px Menlo, monospace; color: #0b0f14; padding: 2px 12px;
+    border-radius: 8px; white-space: nowrap; }
+  .shot .caption { position: absolute; left: 0; right: 0; bottom: 0; padding: 14px 20px;
+    font-size: 26px; font-weight: 700; background: linear-gradient(transparent, rgba(0,0,0,0.75)); }
+
+  .code { position: absolute; left: 748px; top: 116px; width: 828px; height: 740px; box-sizing: border-box;
+    background: var(--panel); border: 2px solid var(--line); border-radius: 16px; padding: 18px 26px; }
+  .bar { display: flex; align-items: center; gap: 10px; color: var(--muted); font: 20px Menlo, monospace; margin-bottom: 14px; }
+  .dot { width: 14px; height: 14px; border-radius: 50%; }
+  .req { font: 22px/1.45 Menlo, monospace; color: #7ee787; white-space: pre; }
+  .req .cmd { color: var(--text); }
+  .resp { font: 22px/1.45 Menlo, monospace; color: #d2a8ff; margin: 10px 0 4px; white-space: pre; }
+  .resp span { color: var(--muted); font-family: "Hiragino Sans", sans-serif; font-size: 20px; }
+  pre { margin: 0; font: 26px/1.62 Menlo, monospace; color: var(--punc); }
+  .k { color: var(--key); } .s { color: var(--str); } .n { color: var(--num); }
+  .hl { border-radius: 6px; padding: 0 3px; margin: 0 -3px; outline: 3px solid; outline-offset: 1px; }
+  .hl.pig { outline-color: var(--pig); background: rgba(255,111,174,0.16); }
+  .hl.sheep { outline-color: var(--sheep); background: rgba(255,216,77,0.14); }
+  .hl.cow { outline-color: var(--cow); background: rgba(255,154,60,0.16); }
+  .hl.target { outline-color: var(--target); background: rgba(57,229,255,0.14); }
+  .note { position: absolute; left: 28px; right: 28px; bottom: 12px; font-size: 17px; color: var(--muted); }
+  .gutter { position: absolute; left: 8px; width: 8px; border-radius: 4px; }
+</style>
+</head>
+<body>
+  <div class="header">
+    <div class="title"><h1>Bedrock Observer</h1><span class="chip">v1.0.0</span></div>
+    <div class="tagline">ゲームの「今」が、<b>1 行の JSON</b> に。</div>
+  </div>
+
+  <div class="shot">
+    <div class="scene">
+      <img src="../screenshots/be-observer_snapshot_20261018.jpeg" alt="">
+      <!-- Boxes in screenshot pixels. -->
+      <div class="box" id="b-cow" style="left:690px; top:388px; width:152px; height:150px; border-color:var(--cow)"></div>
+      <div class="tag" style="left:690px; top:338px; background:var(--cow)">cow</div>
+      <div class="box" id="b-pig" style="left:588px; top:484px; width:162px; height:208px; border-color:var(--pig)"></div>
+      <div class="tag" style="left:588px; top:700px; background:var(--pig)">pig</div>
+      <div class="box" id="b-target" style="left:884px; top:451px; width:150px; height:158px; border-color:var(--target)"></div>
+      <div class="tag" style="left:884px; top:617px; background:var(--target)">target</div>
+      <div class="box" id="b-sheep" style="left:1188px; top:414px; width:154px; height:242px; border-color:var(--sheep)"></div>
+      <div class="tag" style="left:1188px; top:364px; background:var(--sheep)">sheep</div>
+    </div>
+    <div class="caption">ゲーム画面（BDS に接続中）</div>
+  </div>
+
+  <div class="code">
+    <div class="bar"><span class="dot" style="background:#ff5f57"></span><span class="dot" style="background:#febc2e"></span><span class="dot" style="background:#28c840"></span>&nbsp;BDS console</div>
+    <div class="req">&gt; <span class="cmd">scriptevent to3izo_bo:query {"method":"snapshot",…}</span></div>
+    <div class="resp">to3izo_bo.response <span>同じ瞬間の応答（抜粋・整形）</span></div>
+<pre>{ <span class="k">"ok"</span>: <span class="n">true</span>, <span class="k">"method"</span>: <span class="s">"snapshot"</span>, <span class="k">"data"</span>: {
+  <span class="k">"player"</span>: { <span class="k">"name"</span>: <span class="s">"Steve"</span>,
+    <span class="k">"location"</span>: {<span class="k">"x"</span>:<span class="n">300.5</span>,<span class="k">"y"</span>:<span class="n">-60</span>,<span class="k">"z"</span>:<span class="n">298.5</span>},
+    <span class="k">"rotation"</span>: {<span class="k">"pitch"</span>:<span class="n">10.0</span>,<span class="k">"yaw"</span>:<span class="n">0.0</span>}, … },
+  <span class="k">"target"</span>: { <span class="k">"block"</span>: {
+    <span class="k">"position"</span>: {<span class="k">"x"</span>:<span class="n">300</span>,<span class="k">"y"</span>:<span class="n">-60</span>,<span class="k">"z"</span>:<span class="n">305</span>},
+    <span class="k">"block"</span>: {<span class="k">"typeId"</span>:<span class="s hl target" id="j-target">"minecraft:diamond_block"</span>
+      … } } },
+  <span class="k">"entities"</span>: { <span class="k">"radius"</span>: <span class="n">12</span>, <span class="k">"entities"</span>: [
+    {<span class="k">"typeId"</span>:<span class="s hl pig" id="j-pig">"minecraft:pig"</span>,<span class="k">"distance"</span>:<span class="n">5.41</span>},
+    {<span class="k">"typeId"</span>:<span class="s hl sheep" id="j-sheep">"minecraft:sheep"</span>,<span class="k">"distance"</span>:<span class="n">6.07</span>},
+    {<span class="k">"typeId"</span>:<span class="s hl cow" id="j-cow">"minecraft:cow"</span>,<span class="k">"distance"</span>:<span class="n">10.75</span>} ]
+} } }</pre>
+  </div>
+
+  <div class="note">BDS 1.26.52.3 + Bedrock Observer v1.0.0 で撮影。右は同じ瞬間の snapshot 応答の抜粋（一部のフィールドを省略、数値は丸め）。プレイヤー名は Steve に置き換えています。</div>
+
+<script>
+  // A colour bar in the code panel's gutter beside each highlighted JSON value.
+  const code = document.querySelector(".code"), box = code.getBoundingClientRect();
+  for (const el of document.querySelectorAll(".hl")) {
+    const r = el.getBoundingClientRect(), g = document.createElement("div");
+    g.className = "gutter";
+    g.style.top = (r.top - box.top - 2) + "px";
+    g.style.height = (r.height + 4) + "px";
+    g.style.background = getComputedStyle(el).outlineColor;
+    code.appendChild(g);
+  }
+</script>
+</body>
+</html>
