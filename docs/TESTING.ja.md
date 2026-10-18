@@ -348,13 +348,27 @@ Phase 2 の追加分 — 2026-10-18 に同じ BDS で実施（アドオン 0.1.0
 | 追加のケース（`bo-verify-optional-cases.json`） | 成功 | 最終のビルドで 21/21（その前の 2 回は試験の準備が原因で失敗: 移動速度上昇 II がかかったまま、自然に出たスライム。ケースを直した） |
 | 終了 | 成功 | プレイヤーは「セーブして終了」で退出。`stop` で「Quit correctly」 |
 
+リリース 1.1.0 — 2026-10-19 に同じ BDS（1.26.52.3）で、`dist/be-observer-1.1.0.mcaddon` を開発用のフォルダに展開し（1.1.0 の開発用ビルドと入れ替え）、`world_*_packs.json` を `[1,0,1]` から `[1,1,0]` にして実施した。始める前に、昼にし、スポーンの近くの敵対モブを除き、`tops` でスポーンが平らなことを確かめた。
+
+| ID | 結果 | メモ |
+| --- | --- | --- |
+| S-01 / S-02 / S-05 | 成功 | `Pack Stack … version: 1.1.0`。`scripts loaded` が 1 行。`capabilities` が `1.1.0` と `build` を返す |
+| S-03 | 成功 | `reload` で `session` が新しくなり、`scripts loaded` が 1 行。要求 1 つに応答 1 つ |
+| S-04 | 成功 | 退出と再参加で `player_leave`、`player_join`、`player_spawn`（`initialSpawn: true`）。プレイヤーの id は同じ |
+| 1.0.1 → 1.1.0 の更新 | 成功 | 同じワールド。変えたのは `world_*_packs.json` のパックのバージョンだけ |
+| 回帰（`bo-verify-cases.json`） | 成功 | 34/34 |
+| 追加のケース（`bo-verify-optional-cases.json`） | 成功 | 21/21 |
+| 全メソッド（`bo-verify-ro-cases.json`） | 成功 | 前提の状態を用意して 16/16。終わったあと片付けた |
+| OBS-OPT-03、-06（クライアント） | 成功 | (1,-61,0) でブロックを壊して置いた: `block_break`・`block_place`・`item_use`。そのあと OFF に戻した |
+| コンテンツログ | 問題なし | アドオンの警告・エラーなし。試験の準備と片付けのコマンドへの BDS の返事だけ |
+
 ## リリース前チェックリスト
 
-このアドオンは BDS 専用（ADR-0006）なので、パッケージした `.mcaddon` を README の手順で BDS に入れて確かめる。最後の実施: 1.0.1、2026-10-18（上の結果）。
+このアドオンは BDS 専用（ADR-0006）なので、パッケージした `.mcaddon` を README の手順で BDS に入れて確かめる。最後の実施: 1.1.0、2026-10-19（上の結果）。
 
 - [x] 対象バージョンの BDS（Windows）で、パッケージした `.mcaddon` からスモークテストがすべて通る
 - [x] 別プラットフォーム: 対象外（BDS 専用。Linux の BDS は未確認と README に書いてある）
 - [x] 既存ワールドで、前の版からの更新が問題なくできる（初回なので、0.1.0 の開発用ビルドから）
 - [x] 回帰のケース（`bo-verify-cases.json`、`bo-verify-ro-cases.json`。1.1.0 からは `bo-verify-optional-cases.json` も）が通る
 - [x] コンテンツログがきれいで、未参照リソースの警告が説明なしに残っていない
-- [x] `docs/CONTENT.md` を確認し（新しい識別子なし）、`CHANGELOG.md` を更新し、`pnpm version:set` を適用した
+- [x] `docs/CONTENT.md` を確認し（1.1.0: 追加のイベントの種類と `subscribe` を載せた）、`CHANGELOG.md` を更新し、`pnpm version:set` を適用した

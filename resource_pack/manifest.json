@@ -5,7 +5,7 @@
     "description": "Provides structured, read-only observations of players and the surrounding world for debugging and AI-agent gameplay.",
     "uuid": "3d21d349-fedb-4dd4-8b7c-a7f130ea5fe7",
     "pack_scope": "world",
-    "version": [1, 0, 1],
+    "version": [1, 1, 0],
     "min_engine_version": [1, 26, 50]
   },
   "modules": [
@@ -13,7 +13,7 @@
       "description": "Resources",
       "type": "resources",
       "uuid": "5ae65ae5-9de4-41bc-ac13-a9c12e53a0ca",
-      "version": [1, 0, 1]
+      "version": [1, 1, 0]
     }
   ],
   "metadata": {
@@ -25,7 +25,7 @@
   "dependencies": [
     {
       "uuid": "cbe4cdb9-3dc0-43c3-9750-a100b27a414e",
-      "version": [1, 0, 1]
+      "version": [1, 1, 0]
     }
   ]
 }

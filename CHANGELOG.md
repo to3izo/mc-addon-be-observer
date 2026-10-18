@@ -6,6 +6,10 @@ and must match `package.json` and both pack manifests (`pnpm version:set <x.y.z>
 
 ## [Unreleased]
 
+## [1.1.0] - 2026-10-19
+
+Compatible additions to protocol 1 (ADR-0013 minor release): opt-in events and a build identifier (ADR-0014).
+
 ### Added
 - Opt-in events (ADR-0014): the new method `subscribe` turns on `block_break`, `block_place`, `entity_hurt`,
   `effect_add`, `item_use`, `explosion`, `weather_change` and `entity_spawn` event lines (`docs/PROTOCOL.md` §5.14,

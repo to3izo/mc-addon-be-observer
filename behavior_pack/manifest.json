@@ -4,7 +4,7 @@
     "name": "Bedrock Observer [BP]",
     "description": "Provides structured, read-only observations of players and the surrounding world for debugging and AI-agent gameplay.",
     "uuid": "cbe4cdb9-3dc0-43c3-9750-a100b27a414e",
-    "version": [1, 0, 1],
+    "version": [1, 1, 0],
     "min_engine_version": [1, 26, 50]
   },
   "modules": [
@@ -12,21 +12,21 @@
       "description": "Behavior data",
       "type": "data",
       "uuid": "ad4f503b-3a7b-4691-a1f2-b5a988685ba5",
-      "version": [1, 0, 1]
+      "version": [1, 1, 0]
     },
     {
       "description": "Scripts (built from scripts/ by pnpm build)",
       "type": "script",
       "language": "javascript",
       "uuid": "a0c32fd2-f698-42ad-843d-09dd3204352e",
-      "version": [1, 0, 1],
+      "version": [1, 1, 0],
       "entry": "scripts/main.js"
     }
   ],
   "dependencies": [
     {
       "uuid": "3d21d349-fedb-4dd4-8b7c-a7f130ea5fe7",
-      "version": [1, 0, 1]
+      "version": [1, 1, 0]
     },
     {
       "module_name": "@minecraft/server",

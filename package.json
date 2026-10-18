@@ -1,6 +1,6 @@
 {
   "name": "be-observer",
-  "version": "1.0.1",
+  "version": "1.1.0",
   "description": "Provides structured, read-only observations of players and the surrounding world for debugging and AI-agent gameplay.",
   "private": true,
   "type": "module",
