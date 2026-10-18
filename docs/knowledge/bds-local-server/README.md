@@ -77,7 +77,7 @@ Windows 11 VM（VMPal）の中で Bedrock Dedicated Server（BDS）を動かし�
 - server-net・server-admin はベータ版しかなく、ワールドで **Beta APIs の実験**が必要（公式資料: Learn Versioning）。
 - 未確認: モジュール別の `permissions.json` が既定を置き換えるのか足すのか（安全のため、必要なモジュールをすべて書く）、server-net の URI の許可リスト・`force_tls`・各上限の設定場所と既定値、再起動なしの再読み込み。
 
-Phase 3 を採る場合の手順案（ADR-0004。人が承認してから）:
+Phase 3（server-net のアダプター）は 2026-10-18 に却下した（ADR-0004）ので、以下は行っていない。見直すときのための手順案（人が承認してから）:
 1. アダプターは別のリポジトリの別のアドオン。その script モジュールの UUID で `config/<UUID>/permissions.json` を作る（`{"allowed_modules":["@minecraft/server","@minecraft/server-net","@minecraft/server-admin"]}`）。`default` には足さない。
 2. Beta APIs を有効にした**別の検証用ワールド**を使う（`addon-lab-flat` には有効にしない。実験は後からオフにできない）。
 3. トークンは `config/<UUID>/secrets.json` に置く。Git・パック・ワールド・ログには置かない。
@@ -93,9 +93,10 @@ Phase 3 を採る場合の手順案（ADR-0004。人が承認してから）:
 4. 確認: Mac（`nc -vz <VM の LAN 側のアドレス> 19132`、`nc -vz <VM のローカル側のアドレス> 19132`）や LAN の iPhone から接続できないこと、同じ VM のクライアントからは接続できること（`docs/TESTING.md` OBS-ENV-06）。
 5. 自宅 LAN 側の NIC を外す案は、`online-mode=true` のための Xbox Live の認証にインターネットが要るので、<VMPal のローカルネットワーク> 側から外に出られるかを確かめてからにする。
 
-## 7. VM から Mac への通信（Phase 3 を採る場合の検証手順。この環境の事実ではない）
+## 7. VM から Mac への通信（観測をネットワークで届ける場合の検証手順。この環境の事実ではない）
 
-- server-net には待受の API がない。接続はいつも **BDS（VM）→ Mac** の向き。WebSocket でも、接続を始めるのは BDS 側で、接続後は双方向に送れる（観測の経路では、Mac から BDS への命令は受け付けない設計にする）。
+- server-net のアダプターは却下した（ADR-0004）。観測をネットワークで届けるなら、ブリッジなど Minecraft の外の部品が VM から Mac へ送る（または Mac が VM から読む）。受信側の条件は ADR-0004 の「受信側の条件」。観測の経路では、Mac から BDS への命令は受け付けない設計にする。
+- 参考: server-net には待受の API がなく、接続はいつも BDS（VM）→ Mac の向きになる（WebSocket でも、接続を始めるのは BDS 側）。
 - Mac のアドレスは、<VMPal のローカルネットワークの範囲> のブリッジのアドレス（.1 であることが多いが未確認）。192.168.64.x などと決め打ちしない。
 - 手順: (1) Windows で `Get-NetIPConfiguration`・`route print -4`、(2) Mac で `ifconfig` から <VMPal のローカルネットワーク> を持つブリッジを探す、(3) 受信側をそのアドレスにだけ bind し、`lsof -nP -iTCP -sTCP:LISTEN` で `*:<port>` でないことを確認、(4) Windows から `Test-NetConnection <Mac のアドレス> -Port <port>`、(5) 自宅 LAN の別の機器から Mac の LAN のアドレスへは繋がらないことを確認。
 - macOS: TCP の待受と受信する UDP のユニキャストには、ローカルネットワークの許可は要らない（公式資料: Apple TN3179）。アプリケーションファイアウォールが有効なら、署名のないバイナリの待受で許可のプロンプトが出ることがある。

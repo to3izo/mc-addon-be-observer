@@ -38,8 +38,8 @@ Status: all rows are implemented and verified on BDS 1.26.52.3 (`docs/TESTING.md
 
 Not available: chat messages and command use (no stable API; handled by the control tool). Deferred (stable API
 exists but not in the first version): weather (stable read API does not exist), light
-level, biome, rays from an arbitrary origin, small block regions (`getBlocks`), client/input info, the BDS network
-adapter (ADR-0004). Candidates for later (ADR-0009):
+level, biome, rays from an arbitrary origin, small block regions (`getBlocks`), client/input info. Not planned: a BDS network
+adapter using `@minecraft/server-net` (rejected, ADR-0004). Candidates for later (ADR-0009):
 an on/off switch for event notifications, container contents (off by default), paged region reads, a build id in
 `capabilities`, and an optional reply through chat `tell` (off by default; an exception to read-only).
 
@@ -60,13 +60,13 @@ The Add-On is developed for **BDS only** (ADR-0006).
 | --- | --- | --- |
 | BDS (Windows; verified on 1.26.52.3) | **supported** | Needs `content-log-console-output-enabled=true` so script `console.*` lines reach standard output. Requests from the BDS console work without cheats. From a player's chat, operators can use `/to3izo_bo:query "…"` without cheats (ADR-0010); `/scriptevent` needs cheats on and operator permission. |
 | BDS on Linux | expected, untested | Same script API; not verified. |
-| BDS with the network adapter | proposal only | ADR-0004, Phase 3. |
+| BDS with a `server-net` network adapter | **not planned** | Rejected (ADR-0004): `server-net` is beta-only and needs Beta APIs on the world. Moving log lines off the BDS host is the external tool's job (`docs/PROTOCOL.md` §9). |
 | Local world hosted by a game client, Realms, other platforms | **not supported** | The script itself may run, but responses only reach the client content log (written in ~4 KB blocks, so they can be delayed); not tested or maintained. |
 
 ## Namespace
 
 `to3izo_bo:` — see `addon.config.json`. Public identifiers: script event id `to3izo_bo:query`, custom command
-`to3izo_bo:query` (ADR-0010; and, if Phase 3 is adopted, `to3izo_bo:response`), log prefixes `to3izo_bo.response` and
+`to3izo_bo:query` (ADR-0010), log prefixes `to3izo_bo.response` and
 `to3izo_bo.event`. The Add-On creates no blocks, items, entities,
 dynamic properties, scoreboard objectives or tags.
 

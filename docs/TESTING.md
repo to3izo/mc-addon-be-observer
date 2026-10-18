@@ -144,7 +144,7 @@ Record each run: platform, game/BDS version, environment (local world / BDS), pa
 | OBS-ENV-04 | Build the normal distributable (`pnpm package`); open `dist/be-observer_BP/manifest.json` | Only `@minecraft/server` among module dependencies; no experiments needed to activate the pack in a new world |
 | OBS-ENV-05 | Windows client in the same VM: add server `127.0.0.1` port `19132`, join | Connects without any loopback exemption; if it fails, record the exact error before trying any remedy (`docs/knowledge/bds-local-server/`) |
 | OBS-ENV-06 | After the operator restricts exposure (firewall scope / `server-ip`), try to connect from a device outside the VM (iPhone on the LAN, Mac) | Connection refused/times out; the in-VM client still connects |
-| OBS-ENV-07 | Phase 3 only: adapter sends to the Mac receiver with and without the token | With token: accepted; without/wrong token: rejected and logged without the token value |
+| OBS-ENV-07 | Not applicable: Phase 3 (network adapter) was rejected (ADR-0004). Kept so the id is not reused | — |
 
 #### Protocol and observations (in game; run on BDS and on a local world)
 
@@ -236,7 +236,7 @@ pasted from the clipboard. The Add-On is BDS-only (ADR-0006); local-world rows a
 | OBS-ENV-03 | BDS | as documented | Console: works with `allow-cheats=false`. Player chat: refused without cheats; refused as `member` with cheats; works with cheats + operator |
 | OBS-ENV-04 | BDS, local world | pass | Manifest depends on `@minecraft/server` only; no experiment needed |
 | OBS-ENV-05 | BDS | pass (partial) | Joined `127.0.0.1:19132`; a loopback exemption already existed, so "without exemption" is not shown |
-| OBS-ENV-06, -07 | — | not run | Exposure not changed; Phase 3 not adopted |
+| OBS-ENV-06, -07 | — | not run / not applicable | Exposure not changed; Phase 3 rejected (ADR-0004), so OBS-ENV-07 does not apply |
 | OBS-ENV-01 | local world (reference) | observed | Response lines are in `ContentLog*.txt`, intact, but the file is written in ~4 KB blocks |
 | OBS-IN-01 | BDS | pass | 569-char line, valid JSON, `requestId` kept |
 | OBS-IN-02 | BDS, local world | pass | `INVALID_JSON`, `requestId` recovered |

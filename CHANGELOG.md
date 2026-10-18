@@ -45,6 +45,11 @@ and must match `package.json` and both pack manifests (`pnpm version:set <x.y.z>
 - `docs/ROADMAP.md`: checklist of every phase up to the first release, with the current progress, task details
   and open questions. It replaces `docs/PLAN.md`, whose decisions moved to ADR-0007 and ADR-0004.
 
+### Changed
+- Phase 3 closed: the optional BDS network adapter using `@minecraft/server-net` is rejected (ADR-0004). The core
+  stays `@minecraft/server` only, no `"reply": "event"` / `to3izo_bo:response` is added, and forwarding
+  observation lines off the BDS host is left to the external tool (`SECURITY.md`). OBS-ENV-07 is not applicable.
+
 <!--
 Release checklist:
 1. pnpm version:set <x.y.z>

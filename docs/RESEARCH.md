@@ -66,7 +66,7 @@ Bedrock Observer の設計の前提にした調査の記録です（調査日 20
 | 件数・半径・範囲の上限 | A/C | `capabilities.limits`（値は実機で決める） |
 | 失敗しない診断（版・tick・人数・対応機能） | C/A | `capabilities`（`session` で再読み込みを検出） |
 | プロトコルの版と能力の通知 | A | 整数の `protocol` と `capabilities.methods`/`sections` |
-| 外向き接続、`SecretString`、バックオフ、liveness、期限切れ要求の破棄 | A/B | Phase 3 のアダプターを作る場合だけ参考にする |
+| 外向き接続、`SecretString`、バックオフ、liveness、期限切れ要求の破棄 | A/B | Phase 3 は却下した（ADR-0004）。ブリッジの側で観測を送る場合に、バックオフなどの考え方だけ参考にする |
 
 | 取り入れない | 出典 | 理由 |
 | --- | --- | --- |
@@ -182,7 +182,7 @@ AI のプレイヤーが、ほかのプレイヤーの発言やゲーム内の�
 | U5 | カスタムコマンドに JSON を 1 引数で渡せるか | **解決（2026-10-18、試作）**: 引用符で囲み、中の `"` を `\"` にすれば渡せる。チートなし・`member` でもチャットから使えた。`/reload` では登録できず、再起動が要る（`docs/knowledge/bds-local-server/`） |
 | U6 | レイの `maxDistance` の上限・既定値 | **解決（2026-10-18）**: 上限 64、既定 8 のまま。65 は `LIMIT_EXCEEDED`、省略で 8（OBS-TGT-04） |
 | U7 | `Player.id` が再参加・再起動の後も同じか | **解決（2026-10-18）**: 同じ BDS のワールドでは、退出・再参加でも BDS の再起動でも同じだった。ワールドが違うと違う id だった |
-| U8 | 通常ワールドで、manifest に server-net を宣言したパックがどう失敗するか | Phase 3 を採る場合だけ |
+| U8 | 通常ワールドで、manifest に server-net を宣言したパックがどう失敗するか | 対象外（Phase 3 は却下、ADR-0004）。確かめていない |
 
 ### 2.7 参照した公式ページ（updated_at）
 

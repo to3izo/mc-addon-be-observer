@@ -149,7 +149,6 @@ flowchart LR
   end
   IO -- "to3izo_bo.response {json}" --> LOG[(BDS stdout /<br/>client content log)]
   LOG --> T
-  A[Optional BDS adapter pack<br/>separate repo, server-net, beta] -. "script events only (Phase 3, ADR-0004)" .-> IO
 ```
 
 - `shared/protocol` imports nothing from `@minecraft/*` (unit-testable with `node --test`). It holds the generic
@@ -157,4 +156,5 @@ flowchart LR
 - `core/observation` calls only read APIs; `tests/validation/read-only.test.ts` guards that.
 - `features/observer` is the only place that knows about `/scriptevent`, the operator command (ADR-0010) and the
   log prefixes. Both entry points hand the same JSON text to the same dispatcher.
-- The network adapter, if ever built, is a different pack and talks to the core only through script events.
+- There is no network adapter (`@minecraft/server-net` was rejected, ADR-0004). Moving log lines from the BDS host
+  to another machine is done outside Minecraft by the external tool (`docs/PROTOCOL.md` §9).

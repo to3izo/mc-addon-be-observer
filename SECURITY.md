@@ -62,16 +62,19 @@ These are recommendations for the operator; the Add-On cannot enforce them.
   one pack only, through `config/<script module UUID>/permissions.json`.
 - See `docs/knowledge/bds-local-server/README.md` for the verified local setup and the open questions.
 
-## Optional BDS network adapter (not part of the core; not implemented)
+## No network adapter; forwarding observations off the server
 
-If an adapter that sends observations over the network (`@minecraft/server-net`) is ever added, it ships as a
-separate pack (`docs/adr/0004-bds-network-adapter.md`) and must follow these rules:
+The Add-On opens no network connection. An adapter pack using `@minecraft/server-net` was considered and
+rejected (`docs/adr/0004-bds-network-adapter.md`). If an external tool forwards the observation lines from the
+BDS host to another machine (for example from the console bridge to a receiver on the Mac), it is outside this
+Add-On and should follow these rules (details in ADR-0004, "受信側の条件"):
 
-- Outbound only, to one configured endpoint; observation messages only. No inbound command channel, no
-  arbitrary command execution, no world changes.
-- Authenticated with a long random shared token. The token is stored with BDS's server-side secret
-  configuration (`@minecraft/server-admin` secrets), never in a pack, a world, a script constant, a log line or
-  Git. World data and pack files are not a secret store.
-- Size, rate and queue limits on the sender; the receiver enforces its own limits as well.
+- Forward observation lines only (`to3izo_bo.response`, `to3izo_bo.event`), to one configured receiver. No
+  inbound command channel through the receiver, no arbitrary command execution, no world changes.
+- The receiver binds only to the address of the network that needs it (never `0.0.0.0`) and requires a long
+  random shared token, compared in constant time. The token lives in the OS secret stores on both sides, never
+  in a pack, a world, a script constant, a log line or Git.
+- Size, rate and queue limits on the sender; the receiver enforces its own limits as well and logs only reject
+  reasons and counts, never token or header values.
 - The path between the VM and the receiving host is assumed to be readable by others on that network unless it
   is encrypted; "it is an internal network" is not treated as a security property.
