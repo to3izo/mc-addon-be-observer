@@ -12,6 +12,7 @@
 | [block-definitions/](block-definitions/README.md) | コンポーネントの注意点、実験的機能なしの接続、シルクタッチのドロップ、クリエイティブのタブとグループ、フタの開閉アニメーション、名前の表示 |
 | [device-testing-ios/](device-testing-ios/README.md) | iPhone / iPad にビルドを確実に入れる方法と、ワールドへの適用、タッチ操作でのエンティティ、2 人でのテスト |
 | [device-testing-windows-vm/](device-testing-windows-vm/README.md) | VMPal の Windows 11 VM で、開発用パックを入れて確認する手順と、MCP 経由の操作の落とし穴、`.mcaddon` の取り込み、補助パックの `.mcfunction`、F2 と透かしなしの画像、応答しなくなったとき |
+| [bds-local-server/](bds-local-server/README.md) | 同じ Windows VM のローカル BDS（1.26.52.3）: NetherNet の通信方式、ループバック、バージョンの互換、スクリプトの権限（script モジュールの UUID）、`console.*` を標準出力に出す設定、コンソールとチャットからの `scriptevent`（チート・operator・長さ・文字コード）、標準入出力をつなぐ参考スクリプト、公開範囲の絞り方、VM から Mac への通信の確かめ方 |
 | [shared-container/](shared-container/README.md) | 実験的機能なしの共有コンテナ（エンティティの入れ物＋構造物の保存）の検証結果 |
 | [particles/](particles/README.md) | ブロックから粒子を出す方法（クライアントエンティティ）、`particle_motion_parametric` が見えなかったこと、`emitter_shape_custom` の書き方 |
 | [block-textures-and-icons/](block-textures-and-icons/README.md) | スクリプトでテクスチャとアイコンを作る方法、バニラに寄せるときの注意、内側のテクスチャ、スクリーンショットから色を測る方法 |

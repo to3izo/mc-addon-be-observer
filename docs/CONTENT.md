@@ -71,8 +71,54 @@ _None yet._
 
 ## Script-only features
 
-_None yet._ (Features with no JSON content, e.g. `scripts/features/startup` — list them here too so the
-ledger is complete.)
+This Add-On defines no blocks, items, entities, recipes, sounds or other JSON content. Its public surface
+is a script-event id and a log line prefix (see `docs/PROTOCOL.md`); both are namespaced and must not be
+renamed once released (external tools depend on them).
+
+## startup
+
+Identifier:
+none (log line `[be-observer] scripts loaded`)
+
+Type:
+Feature (script only)
+
+Status:
+done (template reference feature; kept as the load marker)
+
+Scripts:
+- scripts/features/startup
+
+Tests:
+- docs/TESTING.md → "startup"
+
+## observer
+
+Identifier:
+- script event id `to3izo_bo:query` (request, received through `/scriptevent` or `system.sendScriptEvent`)
+- response log prefix `to3izo_bo.response` (one-line JSON, see `docs/PROTOCOL.md`)
+
+Type:
+Feature (script only, read-only)
+
+Status:
+in progress (Phase 1 implemented: transport, envelopes, `capabilities`, `players`; not yet verified in game.
+Phase 2 methods planned, see `docs/PLAN.md`)
+
+Behavior:
+- Reads players, blocks, ray hits and nearby entities with the stable `@minecraft/server` API and writes a
+  JSON response to the script log. Never changes the world (no commands, no setters, no dynamic properties,
+  no scoreboards, no tags).
+
+Scripts:
+- scripts/features/observer: script-event input and log output
+- scripts/core/observation: game reads → DTOs (`capabilities`, `players`)
+- scripts/shared/protocol: pure request validation, dispatch, envelopes, size limits
+- scripts/shared/constants/version.ts: versions reported by `capabilities`
+
+Tests:
+- docs/TESTING.md → "observer"
+- tests/unit/protocol-*.test.ts, tests/validation/read-only.test.ts, tests/validation/version-constants.test.ts
 
 ## Vanilla overrides
 

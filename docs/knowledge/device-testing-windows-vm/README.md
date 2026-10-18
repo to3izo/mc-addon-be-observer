@@ -86,3 +86,10 @@ macOS 上の VMPal の Windows 11 VM で、Minecraft Bedrock（Windows 版）を
 - 配置コマンドや `/camera`、F2 を多用した後、Minecraft が「応答していません」のまま、約 10 分戻らなかった（CPU は動いていた）。ログにアドオン由来のエラーはない。`Stop-Process -Name Minecraft.Windows -Force` で止め、`cmd.exe /c start "" minecraft:` で再起動できた（ほかのヘルパーのプロセスは残るが、問題なし）。再現条件は不明。
 - **強制終了は、人の了承を得てから行う。** VM を別のセッションが使っていることがある。
 
+## チャットへの長い文字列の入力と、コンテンツログのファイル（実機で確認済み、2026-10-18、Windows 1.26.52.3）
+
+- **クリップボードから貼り付けると、JIS 配列の問題を避けられる。** `vmpal_exec` で `powershell.exe -STA -Command "Set-Clipboard -Value '<文字列>'"` を実行し、ゲームで `t` → 2.5 秒待つ → `ctrl+v` → `Return`。`"`・`{`・`}`・日本語を含む `/scriptevent` も、そのまま入った。`vmpal_act` の `type` は、JIS 配列では止められる（US 配列として打つため）。日本語を PowerShell の引数に直接書くと化けることがあるので、`[char]0x30C6` のように組み立てる。
+- **長いコマンドで切断される。** チャットから 511 文字以上の `/scriptevent` を送ると、そのプレイヤーが切断された（ローカルワールドでは「ホストから切断されました」`ClientDisconnection-41`・「Bat」、BDS では「マルチプレイ接続失敗」`ClientDisconnection-122`・「NetherNet」）。448 文字までは通った。切断のあと、ワールドに入り直せば続けられる。
+- **コンテンツログのファイル（`%APPDATA%\Minecraft Bedrock\logs\ContentLog*.txt`）は、ゲームの動作中も書かれるが、約 4 KB ずつまとめて書かれる。** ログの出力が少ないと、直前の行がしばらくファイルに出てこない（ワールドを抜けても出ないことがあった）。ファイルはゲームが開いたままなので、`[IO.File]::Open(path, 'Open', 'Read', 'ReadWrite')` で共有モードで読む。ファイルのログの水準は verbose で、`console.log` は `[Scripting][inform]`、`console.warn` は `[Scripting][warning]` として出た。以前の「動作中は 0 バイト」という記録と違うので、バージョンや条件で変わる可能性がある。
+- エラーの詳細（「詳細表示」）に、`Version: 1.26.52-Windows GDK Build`、`Transport: NetherNet:2193` が出た。ローカルワールドへの接続も NetherNet で、プロトコルの版は 2193。
+

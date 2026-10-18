@@ -10,6 +10,19 @@ and must match `package.json` and both pack manifests (`pnpm version:set <x.y.z>
 - Initial project structure created from the Bedrock Add-On template.
 - VS Code setup: `.vscode/launch.json` for the Minecraft Debugger (paths kept in sync by
   `pnpm init:addon`), `.mcignore` for the Blockception extension, `--sourcemap` for `pnpm dev`/`pnpm deploy`.
+- Add-On identity set with `pnpm init:addon`: Bedrock Observer (`be-observer`, namespace `to3izo_bo`).
+- Specification, public protocol draft, research notes, BDS setup notes, security policy and the phased
+  implementation plan for the read-only observer.
+- Observer Phase 1 (not yet verified in game): `/scriptevent to3izo_bo:query <JSON>` requests answered by one
+  `to3izo_bo.response {JSON}` log line; request validation, stable error codes, size limits with list
+  truncation, `session`/`seq`/`tick`/`time` metadata; methods `capabilities` and `players`.
+- Tests: protocol unit tests, a read-only guard over `scripts/`, and a check that the versions reported by
+  `capabilities` match `package.json` and the manifest.
+- Responses are pure ASCII (non-ASCII characters as `\uXXXX`), because BDS for Windows writes its console in the
+  system code page.
+- Target narrowed to Bedrock Dedicated Server (ADR-0006); Phase 1 verified on BDS 1.26.52.3.
+- Reference script `docs/knowledge/bds-local-server/scripts/bds-console-bridge.ps1` to run BDS with its console
+  redirected to files.
 
 <!--
 Release checklist:

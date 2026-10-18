@@ -49,5 +49,9 @@
 
 | ADR | 決定 | 状態 |
 |---|---|---|
-| [0001](0001-no-experimental-features.md) | 実験的機能を使わない | 採用（テンプレート） |
-| [0002](0002-versioning.md) | バージョン番号の付け方 | 採用（テンプレート） |
+| [0001](0001-no-experimental-features.md) | 実験的機能を使わない | 採用 |
+| [0002](0002-versioning.md) | バージョン番号の付け方 | 採用 |
+| [0003](0003-read-only-scriptevent-protocol.md) | 読み取り専用の観測を、/scriptevent と 1 行 JSON ログで提供する | 採用（細部は Phase 2 で確定） |
+| [0004](0004-bds-network-adapter.md) | BDS 専用の通信アダプターは、観測コアから切り離し、初版には入れない | 保留（分け方は承認済み。採否は Phase 2 の後） |
+| [0005](0005-keep-template-resource-pack.md) | 中身のないリソースパックを、テンプレートどおり残す | 採用 |
+| [0006](0006-bds-only-target.md) | 対象環境を BDS だけにする | 採用 |

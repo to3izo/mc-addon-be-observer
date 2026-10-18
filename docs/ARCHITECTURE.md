@@ -131,3 +131,29 @@ sequenceDiagram
   MC-->>F: events (worldLoad, itemUse, entityHurt, ...)
   F->>MC: typed API calls (@minecraft/server)
 ```
+
+## Observer architecture
+
+Bedrock Observer splits the script into three layers so the observation core knows nothing about how requests
+arrive or where answers go (`docs/adr/0003-read-only-scriptevent-protocol.md`):
+
+```mermaid
+flowchart LR
+  T[External tool<br/>chat / BDS console] -- "/scriptevent to3izo_bo:query {json}" --> IO
+  subgraph BP["be-observer BP (@minecraft/server only)"]
+    IO[features/observer<br/>scriptEventReceive · console line]
+    P[shared/protocol<br/>validate · dispatch · envelope · limits<br/>pure, unit-tested]
+    C[core/observation<br/>read-only reads → DTOs]
+    IO --> P --> C
+    C --> P --> IO
+  end
+  IO -- "to3izo_bo.response {json}" --> LOG[(BDS stdout /<br/>client content log)]
+  LOG --> T
+  A[Optional BDS adapter pack<br/>separate repo, server-net, beta] -. "script events only (Phase 3, ADR-0004)" .-> IO
+```
+
+- `shared/protocol` imports nothing from `@minecraft/*` (unit-testable with `node --test`). It holds the generic
+  dispatcher; `core/observation/methods.ts` supplies the handler table, typed to match `shared/protocol/methods.ts`.
+- `core/observation` calls only read APIs; `tests/validation/read-only.test.ts` guards that.
+- `features/observer` is the only place that knows about `/scriptevent` and the log prefix.
+- The network adapter, if ever built, is a different pack and talks to the core only through script events.
