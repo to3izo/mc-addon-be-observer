@@ -110,8 +110,8 @@ Feature (script only, read-only)
 
 Status:
 done for Phase 2 (13 methods and both entry points verified on BDS 1.26.52.3; protocol 1 frozen); 1.1.0 adds
-`subscribe`, the opt-in event kinds and `capabilities.build` (verified on BDS 1.26.52.3); the next minor release adds
-`features` and `container` (verified on BDS 1.26.52.3, not released yet)
+`subscribe`, the opt-in event kinds and `capabilities.build` (verified on BDS 1.26.52.3); 1.2.0 adds `features` and
+`container` (verified on BDS 1.26.52.3)
 
 Behavior:
 - Reads players, blocks, ray hits, nearby entities (with filters and effects), entities by id, the topmost block of

@@ -430,14 +430,30 @@ PlayerA joined from the same VM (a member, not an operator). Requests through `b
 | Content log | clean | No `observer:` warning; only BDS's replies to the test's own setup commands |
 | Shutdown | pass | Player left with "セーブして終了"; `stop` → "Quit correctly" |
 
+Release 1.2.0 — run 2026-10-19 on the same BDS (1.26.52.3) with `dist/be-observer-1.2.0.mcaddon` unpacked into the
+development folders (replacing the 1.2.0 development build) and `world_*_packs.json` switched from `[1,1,0]` to
+`[1,2,0]`. Before the run: daytime set and hostile mobs removed near spawn, spawn checked flat with `tops`.
+
+| ID | Result | Notes |
+| --- | --- | --- |
+| S-01 / S-02 / S-05 | pass | `Pack Stack … version: 1.2.0`; one `scripts loaded`; `capabilities` reports `1.2.0`, `features`/`container` in `methods` and `optionalFeatures` with `enabled: []` |
+| S-03 | pass | `reload` → new `session`, one `scripts loaded`, `seq` from 1 |
+| S-04 | pass | Leave and rejoin: `player_leave`, `player_join`, `player_spawn` (`initialSpawn: true`); same player id |
+| Upgrade 1.1.0 → 1.2.0 | pass | Same world; only the pack version in `world_*_packs.json` changed |
+| Regression (`bo-verify-cases.json`) | pass | 34/34 |
+| Opt-in cases (`bo-verify-optional-cases.json`) | pass | 21/21 |
+| Container cases (`bo-verify-container-cases.json`) | pass | 21/21 |
+| All methods (`bo-verify-ro-cases.json`) | pass | 16/16. The first before/after comparison showed the grass under the test's diamond block turned to dirt: the game does that to covered grass, and the setup placed the block just before the run. The second run, with the block already in place, showed no difference. State removed and the grass put back afterwards |
+| Content log | clean | No `observer:` warning, no error or warning lines |
+
 ## Release checklist
 
 The Add-On is BDS-only (ADR-0006), so the checks run on BDS with the packaged `.mcaddon` installed as the README
-describes. Last run: 1.1.0, 2026-10-19 (Results above).
+describes. Last run: 1.2.0, 2026-10-19 (Results above).
 
 - [x] All smoke tests pass on BDS (Windows) with the target version, from the packaged `.mcaddon`
 - [x] Secondary platform: not applicable (BDS only; Linux BDS is stated as untested in the README)
 - [x] Upgrade from the previous version in an existing world works (first release: from the 0.1.0 development build)
-- [x] Regression sets pass (`bo-verify-cases.json`, `bo-verify-ro-cases.json`; from 1.1.0 also `bo-verify-optional-cases.json`)
+- [x] Regression sets pass (`bo-verify-cases.json`, `bo-verify-ro-cases.json`; from 1.1.0 also `bo-verify-optional-cases.json`; from 1.2.0 also `bo-verify-container-cases.json`)
 - [x] Content log clean; no unreferenced-resource warnings left unexplained
-- [x] `docs/CONTENT.md` checked (1.1.0: the opt-in event kinds and `subscribe` are listed) and `CHANGELOG.md` updated; `pnpm version:set` applied
+- [x] `docs/CONTENT.md` checked (1.2.0: `features`, `container` and the `containers` feature are listed) and `CHANGELOG.md` updated; `pnpm version:set` applied

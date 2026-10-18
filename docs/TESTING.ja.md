@@ -405,13 +405,27 @@ Phase 2 の追加分 — 2026-10-18 に同じ BDS で実施（アドオン 0.1.0
 | コンテンツログ | 問題なし | `observer:` の警告なし。試験の準備のコマンドへの BDS の返事だけ |
 | 終了 | 成功 | プレイヤーは「セーブして終了」で退出。`stop` で「Quit correctly」 |
 
+リリース 1.2.0 — 2026-10-19 に同じ BDS（1.26.52.3）で、`dist/be-observer-1.2.0.mcaddon` を開発用のフォルダに展開し（1.2.0 の開発用ビルドと入れ替え）、`world_*_packs.json` を `[1,1,0]` から `[1,2,0]` にして実施した。始める前に、昼にし、スポーンの近くの敵対モブを除き、`tops` でスポーンが平らなことを確かめた。
+
+| ID | 結果 | メモ |
+| --- | --- | --- |
+| S-01 / S-02 / S-05 | 成功 | `Pack Stack … version: 1.2.0`。`scripts loaded` が 1 行。`capabilities` が `1.2.0` を返し、`methods` に `features`・`container`、`optionalFeatures` は `enabled: []` |
+| S-03 | 成功 | `reload` で `session` が新しくなり、`scripts loaded` が 1 行、`seq` は 1 から |
+| S-04 | 成功 | 退出と再参加で `player_leave`、`player_join`、`player_spawn`（`initialSpawn: true`）。プレイヤーの id は同じ |
+| 1.1.0 → 1.2.0 の更新 | 成功 | 同じワールド。変えたのは `world_*_packs.json` のパックのバージョンだけ |
+| 回帰（`bo-verify-cases.json`） | 成功 | 34/34 |
+| 追加のケース（`bo-verify-optional-cases.json`） | 成功 | 21/21 |
+| コンテナーのケース（`bo-verify-container-cases.json`） | 成功 | 21/21 |
+| 全メソッド（`bo-verify-ro-cases.json`） | 成功 | 16/16。1 回目の前後の比較で、試験のダイヤモンドブロックの下の草ブロックが土になっていた。覆われた草はゲームが土に変える。準備でブロックを置いた直後に始めたため。ブロックがある状態での 2 回目は、違いなし。終わったあと状態を片付け、草ブロックを戻した |
+| コンテンツログ | 問題なし | `observer:` の警告なし。エラー・警告の行なし |
+
 ## リリース前チェックリスト
 
-このアドオンは BDS 専用（ADR-0006）なので、パッケージした `.mcaddon` を README の手順で BDS に入れて確かめる。最後の実施: 1.1.0、2026-10-19（上の結果）。
+このアドオンは BDS 専用（ADR-0006）なので、パッケージした `.mcaddon` を README の手順で BDS に入れて確かめる。最後の実施: 1.2.0、2026-10-19（上の結果）。
 
 - [x] 対象バージョンの BDS（Windows）で、パッケージした `.mcaddon` からスモークテストがすべて通る
 - [x] 別プラットフォーム: 対象外（BDS 専用。Linux の BDS は未確認と README に書いてある）
 - [x] 既存ワールドで、前の版からの更新が問題なくできる（初回なので、0.1.0 の開発用ビルドから）
-- [x] 回帰のケース（`bo-verify-cases.json`、`bo-verify-ro-cases.json`。1.1.0 からは `bo-verify-optional-cases.json` も）が通る
+- [x] 回帰のケース（`bo-verify-cases.json`、`bo-verify-ro-cases.json`。1.1.0 からは `bo-verify-optional-cases.json`、1.2.0 からは `bo-verify-container-cases.json` も）が通る
 - [x] コンテンツログがきれいで、未参照リソースの警告が説明なしに残っていない
-- [x] `docs/CONTENT.md` を確認し（1.1.0: 追加のイベントの種類と `subscribe` を載せた）、`CHANGELOG.md` を更新し、`pnpm version:set` を適用した
+- [x] `docs/CONTENT.md` を確認し（1.2.0: `features`・`container` と機能 `containers` を載せた）、`CHANGELOG.md` を更新し、`pnpm version:set` を適用した

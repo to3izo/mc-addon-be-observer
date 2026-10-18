@@ -3,7 +3,7 @@
 // after `pnpm version:set x.y.z`, update ADDON_VERSION in the same change.
 
 /** Must equal package.json "version" (and both manifests' header.version). */
-export const ADDON_VERSION = "1.1.0";
+export const ADDON_VERSION = "1.2.0";
 
 /** Must equal the `module_name` dependencies in behavior_pack/manifest.json. */
 export const SCRIPT_API_MODULES: Readonly<Record<string, string>> = {

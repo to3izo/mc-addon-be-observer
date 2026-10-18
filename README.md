@@ -26,7 +26,7 @@ ground height, scoreboards, and game events as they happen.
 - **Bounded.** Every request has size, count, radius and distance limits, reported by `capabilities`.
 - **Stable APIs only.** `@minecraft/server` 2.10.0; no experimental toggles, no beta APIs.
 
-> **Status: 1.1.0 (first public release: 1.0.0).** All methods are implemented and verified on BDS for Windows 1.26.52.3.
+> **Status: 1.2.0 (first public release: 1.0.0).** All methods are implemented and verified on BDS for Windows 1.26.52.3.
 > Protocol 1 (`docs/PROTOCOL.md`) is frozen: later versions only add to it, or raise the protocol number.
 
 ## Requirements
@@ -45,8 +45,8 @@ ground height, scoreboards, and game events as they happen.
    `<BDS>/resource_packs/` (or `development_resource_packs/`).
 3. Enable them in the world: add the pack UUID and version to `worlds/<level>/world_behavior_packs.json` and
    `world_resource_packs.json`, e.g.
-   `[{"pack_id":"cbe4cdb9-3dc0-43c3-9750-a100b27a414e","version":[1,1,0]}]` (behavior pack) and
-   `[{"pack_id":"3d21d349-fedb-4dd4-8b7c-a7f130ea5fe7","version":[1,1,0]}]` (resource pack).
+   `[{"pack_id":"cbe4cdb9-3dc0-43c3-9750-a100b27a414e","version":[1,2,0]}]` (behavior pack) and
+   `[{"pack_id":"3d21d349-fedb-4dd4-8b7c-a7f130ea5fe7","version":[1,2,0]}]` (resource pack).
 4. Set `content-log-console-output-enabled=true` and start the server. The log shows
    `[Scripting] [be-observer] scripts loaded`.
 
@@ -114,6 +114,8 @@ network, forward them with a program outside Minecraft and follow `SECURITY.md`.
 | `features` | Turn on opt-in features from the BDS console (memory only; off after a restart) |
 | `container` | The items in a chest, barrel, shulker box, hopper, furnace and other block containers — only after the console turned `containers` on |
 
+![A closed chest on a beach, next to the container answer for it: the heart of the sea and two diamonds in the JSON match the slots of the same chest when it is opened](media/exports/be-observer_blog_container-en_20261019.png)
+
 The full wire format, limits and error codes are in **[docs/PROTOCOL.md](docs/PROTOCOL.md)**.
 
 Not available: chat messages and command use (no stable API), screenshots, input of any kind. Anything that
@@ -123,6 +125,7 @@ would change the world is out of scope by design (`docs/SPEC.md` → Non-goals).
 
 Observations include player names, positions and inventories, and they are written to the server's standard
 output. The server console and every operator can observe every player; other players cannot send requests.
+Container contents are off until the server console turns them on.
 Read **[SECURITY.md](SECURITY.md)** before installing it on a server other people join.
 
 ## Building
