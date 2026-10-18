@@ -43,7 +43,7 @@
 - 対応バージョン: addon.config.json の minEngineVersion のままでよい
 
 手順:
-1. docs/ADDONS.md を見て、名前空間・slug・名前・機能が、既存のアドオンと衝突・重複しないかを確認する。
+1. テンプレート（mc-addon-template）の docs/ADDONS.md を見て、名前空間・slug・名前・機能が、既存のアドオンと衝突・重複しないかを確認する。
    重複しそうなら、実装に入る前に教えてください。
 2. addon.config.json を更新し（descriptionJa も入れる）、pnpm init:addon を実行する。
 3. docs/adr/0001・0002 の「日付」を今日に書き換え、このアドオンでも採用でよいかを確認する。
