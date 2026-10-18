@@ -7,6 +7,27 @@
 | `exports/be-observer_readme_main-en_20261018.png` (1600×900, English, for `README.md`) | `be-observer_readme_main-en_20261018.html` | same as the Japanese main image |
 | `exports/be-observer_readme_death-event-en_20261018.png` (1600×900, English, for `README.md`) | `be-observer_readme_death-event-en_20261018.html` | same as the Japanese death image (the game UI in the capture is Japanese) |
 
+## Container images for v1.2.0 (2026-10-19)
+
+| Export | Source (this folder) | Materials (`media/source/screenshots/`) |
+| --- | --- | --- |
+| `social/x/be-observer_x_container_20261019.png` (1600×900, Japanese; also for Japanese blog posts) | `be-observer_x_container_20261019.html` | `be-observer_chest-closed_20261019.jpeg`, `be-observer_loot-chest-opened_20261019.png`, response `promo-c1` in `be-observer_bds-stdout_containers_20261019.txt` |
+| `exports/be-observer_blog_container-en_20261019.png` (1600×900, English; blog and README) | `be-observer_blog_container-en_20261019.html` | same as the Japanese image |
+
+How the materials were made (Windows 11 VM, BDS 1.26.52.3, client 1.26.52.3, Bedrock Observer development build that
+becomes 1.2.0):
+
+- A temporary generated world `addon-lab-loot` (`level-name` changed and `level-type=FLAT` commented out in
+  `server.properties`, both restored afterwards). The chest is the buried treasure at (456, 66, -312): read while
+  unopened (empty, `lr1`/`lr2` in the log), then opened in the client — `be-observer_loot-chest-opened_20261019.png`.
+- The opened chest was copied with `/clone` onto the beach at (456, 71, -312), so it can be seen closed.
+  `be-observer_chest-closed_20261019.jpeg` was captured with the HUD hidden (F1) through VMPal's screenshot, and
+  `container` was sent through the console bridge right after (`promo-c1`). The clone has the same 27 items as the
+  chest in the opened capture, so the inset shows the same contents.
+- The JSON in the images is an excerpt of `promo-c1`: envelope fields and most items are omitted (shown as `…`), and
+  spaces were added for reading. The request lines omit `requestId` and `dimension`.
+- No player name appears in these images or in the log.
+
 ## Key visual (README header)
 
 | Export | Source | Notes |
@@ -40,11 +61,13 @@ source next to this file) before reusing the artwork elsewhere.
 The HTML files are 1600×900 pages that load the materials by relative path. From `media/`:
 
 ```bash
+"/Applications/Google Chrome.app/Contents/MacOS/Google Chrome" --headless=new --disable-gpu --hide-scrollbars --force-device-scale-factor=1 --window-size=1600,900 --virtual-time-budget=3000 --screenshot="$PWD/social/x/be-observer_x_container_20261019.png" "file://$PWD/source/artwork/be-observer_x_container_20261019.html"
+"/Applications/Google Chrome.app/Contents/MacOS/Google Chrome" --headless=new --disable-gpu --hide-scrollbars --force-device-scale-factor=1 --window-size=1600,900 --virtual-time-budget=3000 --screenshot="$PWD/exports/be-observer_blog_container-en_20261019.png" "file://$PWD/source/artwork/be-observer_blog_container-en_20261019.html"
 for n in main death-event; do "/Applications/Google Chrome.app/Contents/MacOS/Google Chrome" --headless=new --disable-gpu --hide-scrollbars --force-device-scale-factor=1 --window-size=1600,900 --virtual-time-budget=3000 --screenshot="$PWD/social/x/be-observer_x_${n}_20261018.png" "file://$PWD/source/artwork/be-observer_x_${n}_20261018.html"; done
 for n in main death-event; do "/Applications/Google Chrome.app/Contents/MacOS/Google Chrome" --headless=new --disable-gpu --hide-scrollbars --force-device-scale-factor=1 --window-size=1600,900 --virtual-time-budget=3000 --screenshot="$PWD/exports/be-observer_readme_${n}-en_20261018.png" "file://$PWD/source/artwork/be-observer_readme_${n}-en_20261018.html"; done
 ```
 
 ## Licences
 
-- Fonts: Hiragino Sans and Menlo, bundled with macOS, used only to render the PNGs (no font files are stored here).
+- Fonts: Hiragino Sans, Helvetica Neue and Menlo, bundled with macOS, used only to render the PNGs (no font files are stored here).
 - Game screenshots: Minecraft content shown as captured, following Mojang's usage guidelines for screenshots.

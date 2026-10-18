@@ -178,7 +178,13 @@ Phase 3（server-net のアダプター）は 2026-10-18 に却下した（ADR-0
 - **読んでもチェストのふたは開かなかった**（読んでいる間のスクリーンショット）。
 - **1 行の大きさ:** 54 スロットを `enchanted_golden_apple`（ID 32 文字）で埋めた応答は 3,986 文字で、`maxResponseChars`（4,000）に収まった。`waxed_weathered_cut_copper_stairs`（43 文字）では 46 件で切られた。
 - **`execute as <プレイヤー> run …` をコンソールから送ると、ゲームは送り主をそのプレイヤーとして伝えた**（`/scriptevent` は `sourceType` `Entity`、カスタムコマンドも同じ）。プレイヤーを operator にせずに、チャットからの要求と同じ扱いを試せる。
-- **`/place structure` はある**（「Invalid structure name.」と答えた）が、`help place` は「Unknown command」だった。ルートテーブルが残ったチェストは、用意できなかった（未確認）。
+- **ルートテーブルが残ったチェスト（開けていない構造物のチェスト）は、空として読めた。** 読んでも中身は生成されず、プレイヤーが開けたときに生成された（埋もれた宝で確認）。
+- **ルートテーブル付きのチェストの用意のしかた:**
+  - `level-type` はワールドを作るときだけ効く。平らなワールドで `level-type=FLAT` をコメントアウトしても、平らなまま。平らでないワールドで試すには、`level-name` を新しい名前にして、新しいワールドを作る（`worlds/<名前>/` に `world_*_packs.json` を先に置けば、パックが付いた状態で生成される）。`server.properties` はバックアップを取ってから変え、終わったら戻す（変えるときは利用者に確認する）。
+  - コンソールの `locate structure` は、`execute as <プレイヤー> at @s run locate structure buried_treasure` の形で、プレイヤーの位置から探せた。結果（「The nearest minecraft:buried_treasure is at block 456, (y?), -312」）は標準出力に出る。
+  - 埋もれた宝のチェストは、`locate` の示した x・z の列にあった。`top` で地表を、`blocks` で列を下へ調べて見つけた（`blocks` は中身を読まないので、ルートテーブルに触れない）。
+  - `/place structure` はある（名前を間違えると「Invalid structure name.」）が、`help place` は「Unknown command」だった。
+  - 生成したばかりのワールドに参加しようとしたとき、一度クライアントが閉じた（原因は未確認）。ランチャーから起動し直すと参加できた。
 - **確認用のケース:** `scripts/bo-verify-container-cases.json`。前提: プレイヤーが (0,-60,0) の近くにいて、z = 8 の列のチャンクが読み込まれている。始めに機能を OFF にし、終わりに OFF に戻して列を片付ける。
 
 ## 確認した組み合わせ

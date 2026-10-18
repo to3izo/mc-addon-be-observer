@@ -126,7 +126,7 @@ Bedrock Observer を最初の公開版（初回リリース）まで進めるた
 「後回し・検討の候補」から採った（2026-10-19、ADR-0015）。互換な追加なので、`protocol` は 1 のまま、MINOR を上げる（ADR-0013）。
 
 - [x] ON/OFF の方式を決める — 起動時は OFF、メモリだけ。ON にできるのは BDS のコンソールだけ、OFF は誰でも。ON の間は、要求を送れる全員が読める。範囲は読み込み済みのチャンク（ADR-0015）
-- [x] メソッド `features`・`container`、コード `PERMISSION_DENIED`・`FEATURE_DISABLED`、`capabilities.optionalFeatures` — BDS で OBS-CON-01〜09、確認用のケース 21/21（`docs/TESTING.md`）
+- [x] メソッド `features`・`container`、コード `PERMISSION_DENIED`・`FEATURE_DISABLED`、`capabilities.optionalFeatures` — BDS で OBS-CON-01〜10、確認用のケース 21/21（`docs/TESTING.md`）
 - [ ] 1.2.0 のリリース（利用者の指示を待つ）
 
 ## 1.1.0: 追加のイベントとビルドの識別子 ✅

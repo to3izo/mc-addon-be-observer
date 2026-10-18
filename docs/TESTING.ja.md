@@ -263,7 +263,7 @@ JSON のファイルに書かれる。下の ID は、ケースのファイル�
 | OBS-CON-07 | 大きいチェストの 54 スロットを、32 文字の ID で、次に 43 文字の ID で埋める。`container`、次に `fromSlot` を最後のスロット＋1 で。`fromSlot` 54（スクリプト） | 32 文字: 54 件すべてが 1 行に入る。43 文字: `truncated`・`omitted.items` が付き、残りは `fromSlot` で取れる。54: `LIMIT_EXCEEDED` |
 | OBS-CON-08 | 遠く（未ロード）、ワールドの上、コンソールから `dimension` なし（スクリプト） | `unloaded`。`out_of_bounds`。`INVALID_PARAMS`（`dimension`） |
 | OBS-CON-09 | 読んでいる間、プレイヤーがチェストを見る。2 回読む。コンソールで `reload` し、`features` と `container` | ふたは閉じたまま、中身は変わらない。`reload` のあとは新しい `session`、`enabled: []`、`FEATURE_DISABLED` |
-| OBS-CON-10 | ルートテーブルが残ったチェスト（開けていない構造物のチェスト）に `container` | 未実施: 平らなワールドで用意できなかった。ADR-0015 の未確認事項 |
+| OBS-CON-10 | 生成した（平らでない）ワールドで、埋もれた宝のチェストを探し（`locate structure` のあと、`top` と `blocks` でその列を下へ）、`container` を 2 回、クライアントで開け、もう一度 `container` | 開ける前: `emptySlots` が `size` と同じで、アイテムなし（読んでも中身は生成されない）。開けたあと: 生成されたアイテムで、チェストの画面と同じ |
 
 #### 結果
 
@@ -398,7 +398,7 @@ Phase 2 の追加分 — 2026-10-18 に同じ BDS で実施（アドオン 0.1.0
 | OBS-CON-07 | 成功 | `enchanted_golden_apple` × 54: 3,986 文字で切り詰めなし。`waxed_weathered_cut_copper_stairs` × 54: 46 件、`omitted.items` 8。`fromSlot` 46 でスロット 46〜53 が返った |
 | OBS-CON-08 | 成功 | |
 | OBS-CON-09 | 成功 | 読んでいる間のスクリーンショットで、ふたは閉じたまま。`reload` のあと、session が変わり `enabled: []` |
-| OBS-CON-10 | 未実施 | `/place structure` はあるが、平らなワールドでルートテーブル付きのチェストのある構造物を置いて位置を突き止めるところまではしなかった |
+| OBS-CON-10 | 成功 | 同じ日のあとで、一時的に作ったワールドで実施した（`level-name=addon-lab-loot`、`level-type` をコメントアウト。終わったあと `server.properties` を元に戻した）。(456,66,-312) の埋もれた宝: 2 回とも `emptySlots` 27。クライアントで開けると 27 スロット（海洋の心、ダイヤモンドなど）が生成され、次の読み取りで同じ 27 スロットが返った |
 | コンテナーのケース（`bo-verify-container-cases.json`） | 成功 | 21/21 |
 | 回帰（`bo-verify-cases.json`） | 成功 | 34/34 |
 | 追加のケース（`bo-verify-optional-cases.json`） | 成功 | 21/21 |

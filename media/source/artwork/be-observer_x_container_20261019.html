@@ -1,0 +1,134 @@
+<!doctype html>
+<!--
+  Source of media/social/x/be-observer_x_container_20261019.png (1600x900).
+  Render: see media/source/artwork/README.md.
+  Left: ../screenshots/be-observer_chest-closed_20261019.jpeg (1920x998, HUD hidden), inset from
+  ../screenshots/be-observer_loot-chest-opened_20261019.png (1920x998; the same items, opened in the client).
+  Right: excerpt of the response promo-c1 in ../screenshots/be-observer_bds-stdout_containers_20261019.txt.
+-->
+<html lang="ja">
+<head>
+<meta charset="utf-8">
+<title>Bedrock Observer container</title>
+<style>
+  :root {
+    --bg: #0b0f14; --panel: #111821; --line: #273244; --text: #e6edf3; --muted: #8b98a8;
+    --key: #9cdcfe; --str: #ce9178; --num: #b5cea8; --punc: #8b98a8;
+    --chest: #39e5ff; --heart: #39e5ff; --diamond: #ffd84d; --emerald: #8ce35c;
+  }
+  html, body { margin: 0; background: var(--bg); }
+  body { width: 1600px; height: 900px; position: relative; overflow: hidden; color: var(--text);
+    font-family: "Hiragino Sans", "Hiragino Kaku Gothic ProN", sans-serif; }
+  .header { position: absolute; left: 28px; right: 28px; top: 22px; height: 76px;
+    display: flex; align-items: center; justify-content: space-between; }
+  .title { display: flex; align-items: baseline; gap: 16px; }
+  .title h1 { margin: 0; font-size: 50px; font-weight: 800; letter-spacing: 0.5px; }
+  .chip { font: 700 22px Menlo, monospace; color: var(--bg); background: var(--chest);
+    padding: 4px 10px; border-radius: 8px; position: relative; top: -6px; }
+  .tagline { font-size: 34px; font-weight: 700; }
+  .tagline b { color: var(--chest); }
+
+  .shot { position: absolute; left: 24px; top: 116px; width: 660px; height: 740px;
+    border-radius: 16px; overflow: hidden; border: 2px solid var(--line); }
+  /* Crop of the 1920x998 capture: x 560..1400, y 58..998, scaled to 660 wide. */
+  .scene { position: absolute; left: 0; top: 0; width: 1920px; height: 998px;
+    transform-origin: 0 0; transform: scale(0.7857) translate(-560px, -58px); }
+  .scene img { position: absolute; left: 0; top: 0; width: 1920px; height: 998px; }
+  .box { position: absolute; border: 6px solid; border-radius: 14px; box-sizing: border-box; }
+  .tag { position: absolute; font: 800 30px "Hiragino Sans", sans-serif; color: #0b0f14; padding: 2px 14px;
+    border-radius: 8px; white-space: nowrap; }
+
+  /* Inset: the chest grid of the opened chest, x 700..1222, y 268..482 of its capture. */
+  .inset { position: absolute; left: 22px; top: 452px; width: 616px; height: 248px; border-radius: 12px;
+    overflow: hidden; border: 3px solid #fff; box-shadow: 0 8px 24px rgba(0,0,0,0.55); }
+  .inset .gui { position: absolute; left: 0; top: 0; width: 1920px; height: 998px;
+    transform-origin: 0 0; transform: scale(1.1801) translate(-700px, -268px); }
+  .inset .gui img { position: absolute; left: 0; top: 0; width: 1920px; height: 998px; }
+  .inset .slot { position: absolute; width: 54px; height: 54px; border: 4px solid; border-radius: 6px; box-sizing: border-box; }
+  .inset-label { position: absolute; left: 22px; top: 404px; font-size: 24px; font-weight: 700;
+    background: rgba(11,15,20,0.82); padding: 4px 12px; border-radius: 8px; }
+
+  .code { position: absolute; left: 708px; top: 116px; width: 868px; height: 740px; box-sizing: border-box;
+    background: var(--panel); border: 2px solid var(--line); border-radius: 16px; padding: 18px 26px; }
+  .bar { display: flex; align-items: center; gap: 10px; color: var(--muted); font: 20px Menlo, monospace; margin-bottom: 12px; }
+  .dot { width: 14px; height: 14px; border-radius: 50%; }
+  .comment { font: 21px/1.45 "Hiragino Sans", sans-serif; color: var(--muted); margin-top: 6px; }
+  .req { font: 20px/1.45 Menlo, monospace; color: #7ee787; white-space: pre; }
+  .req .cmd { color: var(--text); }
+  .resp { font: 22px/1.45 Menlo, monospace; color: #d2a8ff; margin: 14px 0 4px; white-space: pre; }
+  .resp span { color: var(--muted); font-family: "Hiragino Sans", sans-serif; font-size: 20px; }
+  pre { margin: 0; font: 19px/1.62 Menlo, monospace; color: var(--punc); }
+  .k { color: var(--key); } .s { color: var(--str); } .n { color: var(--num); }
+  .hl { border-radius: 6px; padding: 0 3px; margin: 0 6px 0 -3px; outline: 3px solid; outline-offset: 1px; }
+  .hl.chest { outline-color: var(--chest); background: rgba(57,229,255,0.14); }
+  .hl.heart { outline-color: var(--heart); background: rgba(57,229,255,0.14); }
+  .hl.diamond { outline-color: var(--diamond); background: rgba(255,216,77,0.14); }
+  .more { color: var(--muted); font-family: "Hiragino Sans", sans-serif; font-size: 19px; }
+  .note { position: absolute; left: 28px; right: 28px; bottom: 12px; font-size: 17px; color: var(--muted); }
+  .gutter { position: absolute; left: 8px; width: 8px; border-radius: 4px; }
+</style>
+</head>
+<body>
+  <div class="header">
+    <div class="title"><h1>Bedrock Observer</h1><span class="chip">v1.2.0</span></div>
+    <div class="tagline">チェストを<b>開けずに</b>、中身が分かる。</div>
+  </div>
+
+  <div class="shot">
+    <div class="scene">
+      <img src="../screenshots/be-observer_chest-closed_20261019.jpeg" alt="">
+      <!-- Box in screenshot pixels. -->
+      <div class="box" style="left:878px; top:388px; width:204px; height:170px; border-color:var(--chest)"></div>
+      <div class="tag" style="left:868px; top:322px; background:var(--chest)">閉じたまま</div>
+    </div>
+    <div class="inset-label">開けて確かめると、同じ中身</div>
+    <div class="inset">
+      <div class="gui">
+        <img src="../screenshots/be-observer_loot-chest-opened_20261019.png" alt="">
+        <!-- Slots in screenshot pixels: column c at x = 717 + 54c, row r at y = 313 + 54r. -->
+        <div class="slot" style="left:987px; top:313px; border-color:var(--heart)"></div>
+        <div class="slot" style="left:1095px; top:367px; border-color:var(--diamond)"></div>
+        <div class="slot" style="left:1095px; top:421px; border-color:var(--diamond)"></div>
+      </div>
+    </div>
+  </div>
+
+  <div class="code">
+    <div class="bar"><span class="dot" style="background:#ff5f57"></span><span class="dot" style="background:#febc2e"></span><span class="dot" style="background:#28c840"></span>&nbsp;BDS console</div>
+    <div class="comment">① 既定は OFF。ON にできるのはサーバーのコンソールだけ</div>
+    <div class="req"><span class="cmd">scriptevent to3izo_bo:query</span> {"method":"features",
+  "params":{"enable":["containers"]}, …}</div>
+    <div class="comment">② 座標を指定して、閉じたままのチェストを読む</div>
+    <div class="req"><span class="cmd">scriptevent to3izo_bo:query</span> {"method":"container",
+  "params":{"x":456,"y":71,"z":-312, …}, …}</div>
+    <div class="resp">to3izo_bo.response <span>応答（抜粋・整形）</span></div>
+<pre>{ <span class="k">"block"</span>: { <span class="k">"typeId"</span>: <span class="s hl chest">"minecraft:chest"</span> },
+  <span class="k">"container"</span>: { <span class="k">"size"</span>: <span class="n">27</span>, <span class="k">"emptySlots"</span>: <span class="n">0</span>,
+    <span class="k">"items"</span>: [
+    {<span class="k">"slot"</span>: <span class="n">0</span>, <span class="k">"typeId"</span>: <span class="s">"minecraft:emerald"</span>, <span class="k">"amount"</span>: <span class="n">1</span>},
+    {<span class="k">"slot"</span>: <span class="n">4</span>, <span class="k">"typeId"</span>: <span class="s">"minecraft:gold_ingot"</span>, <span class="k">"amount"</span>: <span class="n">2</span>},
+    {<span class="k">"slot"</span>: <span class="n">5</span>, <span class="k">"typeId"</span>: <span class="s hl heart">"minecraft:heart_of_the_sea"</span>, <span class="k">"amount"</span>: <span class="n">1</span>},
+    …
+    {<span class="k">"slot"</span>: <span class="n">16</span>, <span class="k">"typeId"</span>: <span class="s hl diamond">"minecraft:diamond"</span>, <span class="k">"amount"</span>: <span class="n">1</span>},
+    …
+    {<span class="k">"slot"</span>: <span class="n">25</span>, <span class="k">"typeId"</span>: <span class="s hl diamond">"minecraft:diamond"</span>, <span class="k">"amount"</span>: <span class="n">1</span>},
+    … ]  <span class="more">27 スロットすべてが返る（ここでは一部）</span>
+  } }</pre>
+  </div>
+
+  <div class="note">BDS 1.26.52.3 + Bedrock Observer 1.2.0（開発版）で撮影。右は閉じたチェストへの container 応答の抜粋（requestId などを省略）。左下は同じ中身のチェストを開いた画面。</div>
+
+<script>
+  // A colour bar in the code panel's gutter beside each highlighted JSON value.
+  const code = document.querySelector(".code"), box = code.getBoundingClientRect();
+  for (const el of document.querySelectorAll(".hl")) {
+    const r = el.getBoundingClientRect(), g = document.createElement("div");
+    g.className = "gutter";
+    g.style.top = (r.top - box.top - 2) + "px";
+    g.style.height = (r.height + 4) + "px";
+    g.style.background = getComputedStyle(el).outlineColor;
+    code.appendChild(g);
+  }
+</script>
+</body>
+</html>

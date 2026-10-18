@@ -687,8 +687,10 @@ The items in one block's inventory. Needs the `containers` feature (§5.15); whi
 - `items` may be truncated (§7). A full double chest of short item ids fits one line; long ids or custom names may
   not. When `container.truncated` is true, ask again with `fromSlot` = the last returned `slot` + 1.
 - Reading does not open the container: no lid moves, no player sees anything, and the contents do not change.
-- Not verified: a chest that still has a loot table (an unopened structure chest) was not available on a flat
-  world. Whether reading one shows it empty or fills it is unknown.
+- **A chest that still has a loot table** (a structure chest nobody has opened yet) **reads as empty**
+  (`emptySlots` = `size`, no items), and reading it does not generate the loot: the game fills it when a player
+  opens it. A tool cannot tell such a chest from an empty one. Verified on BDS 1.26.52.3 with a buried treasure
+  chest.
 
 ## 6. Error codes
 
