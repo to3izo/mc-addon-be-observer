@@ -124,6 +124,10 @@ Record each run: platform, game/BDS version, environment (local world / BDS), pa
 | U-PROTO-11 | Phase 2 parameters: dimension ids (`DIMENSION_NOT_FOUND`), decimal locations, booleans, name lists (`include`) | tests/unit/protocol-options.test.ts |
 | U-PROTO-12 | `blocks` positions: non-empty, at most `maxBlocksPerRequest` (`LIMIT_EXCEEDED`), per-item errors name the index | same |
 | U-PROTO-13 | Option groups: `target` / `entities` defaults and limits; `snapshot` groups reject keys of other groups | same |
+| U-EVT-01 | Event line: prefix, envelope fields, `dropped` only when non-zero, pure ASCII | tests/unit/protocol-events.test.ts |
+| U-EVT-02 | Event buffer keeps the newest N, `since`/`limit`/`more`/`kinds`, `missed` when pushed out or dropped | same |
+| U-EVT-03 | Rate limit: max per 20-tick window, dropped events counted | same |
+| U-EVT-04 | `events` parameters: `since` ≥ 0 integer, `limit` ≤ `maxEventsPerRequest`, known `kinds` only | same |
 | V-VER-01 | Versions reported by `capabilities` equal `package.json` and the manifest's module dependencies (update `scripts/shared/constants/version.ts` after `pnpm version:set`) | tests/validation/version-constants.test.ts |
 | V-RO-01 | Read-only guard: `scripts/` contains no call to mutating APIs (`runCommand`, `setBlock`/`setType`/`setPermutation`, `setDynamicProperty`, `teleport`, `addEffect`, `kill`, `remove`, `spawnEntity`, `setItem`, `nameTag =`, …) | tests/validation/read-only.test.ts |
 | V-DEP-01 | The core manifest declares only `@minecraft/server` (no `server-net`/`server-admin`) | `pnpm validate` + tests/validation/read-only.test.ts |
@@ -169,6 +173,19 @@ Record each run: platform, game/BDS version, environment (local world / BDS), pa
 | OBS-SIZE-01 | Full inventory of named items; `player` with `inventory` | Response ≤ `maxResponseChars`, or `truncated`/`omitted`, or `RESPONSE_TOO_LARGE`; never a cut line |
 | OBS-RO-01 | Before/after running every method: compare the block area, inventory, game mode, entity count, `/scoreboard objectives list`, `/tag @s list` | No difference; content log has no command output from the Add-On |
 | OBS-PERF-01 | 1 request per second for 5 minutes (alternate `snapshot` and `entities`) on BDS | No script watchdog warnings, no visible lag; every request answered once |
+
+#### Events (in game, BDS)
+
+| ID | Steps | Expected |
+| --- | --- | --- |
+| OBS-EVT-01 | A player leaves and joins again | `player_leave`, `player_join`, `player_spawn` (`initialSpawn: true`); no `game_mode_change` with `from` = `to` |
+| OBS-EVT-02 | Survival player: console `kill <name>`, then the player presses Respawn | `entity_die` (player, `cause`), then `player_spawn` (`initialSpawn: false`) |
+| OBS-EVT-03 | Console `execute as <name> at @s run damage @e[…,c=1] 100 entity_attack entity <name>` | `entity_die` of that mob with `killer` = the player |
+| OBS-EVT-04 | Teleport a player into the Nether, wait until it has loaded, teleport back | Two `dimension_change` events with correct `from`/`to` |
+| OBS-EVT-05 | Console `gamemode survival <name>` then `gamemode creative <name>` | Two `game_mode_change` events |
+| OBS-EVT-06 | Console `gamerule dodaylightcycle false` then `true` | Two `game_rule_change` events (`doDayLightCycle`) |
+| OBS-EVT-07 | `events` with no params, with `since`/`limit`, with `kinds`, with an unknown kind | All held events; the next page with `more`; filtered; `INVALID_PARAMS` |
+| OBS-EVT-08 | `/reload` | New `session`; event `seq` starts at 1; `events` is empty until the next event |
 
 #### Results
 
@@ -222,6 +239,13 @@ Phase 2 — run 2026-10-18 on the same BDS (Add-On 0.1.0 with all eight methods)
 | OBS-SIZE-01 | pass | Full inventory (36 stacks) + all sections: entity list shortened to 14 with `omitted: {entities: 11}`, line 3,965 chars, intact on stdout |
 | OBS-RO-01 | partial | V-RO-01 guard passes; no world change was seen during the tests, but the before/after comparison was not run as a separate case |
 | OBS-PERF-01 | pass | 300 requests at 1/s for 5 min (alternating `snapshot` and `entities`): every request that reached BDS (297) answered once with `ok: true`; no warnings or watchdog messages. 3 requests never reached BDS because the reference bridge's file-based input lost them (test harness, `docs/knowledge/bds-local-server/` §8) |
+
+Events — run 2026-10-18 on the same BDS. All passed: OBS-EVT-01 (after the fix below), -02 (`cause`
+`selfDestruct`, respawn `initialSpawn: false`), -03 (spider, `killer` PlayerA, `cause` `entityAttack`), -04 (the
+Nether move was reported ~19 s after the teleport, when the client had loaded it), -05, -06, -07, -08 (new
+session after `reload`, `seq` from 1). Found and fixed: on join BDS reported `Creative → Creative` twice
+(`force-gamemode`); such no-op changes are no longer sent. Note: Creative players cannot be killed with `/kill`
+(switch to Survival first).
 
 ## Release checklist
 

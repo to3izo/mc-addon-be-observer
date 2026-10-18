@@ -118,6 +118,10 @@ Phase 1・2（`docs/ROADMAP.md`）のテスト計画です。アドオンは **B
 | U-PROTO-11 | Phase 2 の引数: ディメンションの ID（`DIMENSION_NOT_FOUND`）、小数の座標、真偽値、名前のリスト（`include`） | tests/unit/protocol-options.test.ts |
 | U-PROTO-12 | `blocks` の座標: 空でなく、`maxBlocksPerRequest` 以下（`LIMIT_EXCEEDED`）。項目ごとのエラーに番号が付く | 同上 |
 | U-PROTO-13 | オプションのまとまり: `target`・`entities` の既定値と上限。`snapshot` のまとまりは、ほかのまとまりのキーを拒否する | 同上 |
+| U-EVT-01 | 通知の行: 接頭辞、封筒の項目、`dropped` は 0 でないときだけ、ASCII だけ | tests/unit/protocol-events.test.ts |
+| U-EVT-02 | 保持: 新しい N 件を残す。`since`・`limit`・`more`・`kinds`。押し出しや破棄があれば `missed` | 同上 |
+| U-EVT-03 | 頻度の上限: 20 tick ごとの上限、捨てた数を数える | 同上 |
+| U-EVT-04 | `events` の引数: `since` は 0 以上の整数、`limit` は `maxEventsPerRequest` 以下、`kinds` は既知の種類だけ | 同上 |
 | V-VER-01 | `capabilities` が返すバージョンが、`package.json` と manifest のモジュールの依存と一致する（`pnpm version:set` のあとは `scripts/shared/constants/version.ts` を直す） | tests/validation/version-constants.test.ts |
 | V-RO-01 | 読み取り専用の検査: `scripts/` に変更系の API（`runCommand`、`setBlock`/`setType`/`setPermutation`、`setDynamicProperty`、`teleport`、`addEffect`、`kill`、`remove`、`spawnEntity`、`setItem`、`nameTag =` など）の呼び出しがない | tests/validation/read-only.test.ts |
 | V-DEP-01 | コアの manifest の依存が `@minecraft/server` だけ（`server-net`/`server-admin` がない） | `pnpm validate` と tests/validation/read-only.test.ts |
@@ -163,6 +167,19 @@ Phase 1・2（`docs/ROADMAP.md`）のテスト計画です。アドオンは **B
 | OBS-SIZE-01 | 名前付きのアイテムでインベントリを満たし、`inventory` 付きで `player` | `maxResponseChars` 以下か、`truncated`/`omitted` か、`RESPONSE_TOO_LARGE`。途中で切れた行は出ない |
 | OBS-RO-01 | すべての method を実行する前と後で、ブロックの範囲・インベントリ・ゲームモード・エンティティの数・`/scoreboard objectives list`・`/tag @s list` を比べる | 違いがない。コンテンツログに、アドオンによるコマンドの出力がない |
 | OBS-PERF-01 | BDS で、1 秒に 1 回の要求を 5 分（`snapshot` と `entities` を交互に） | スクリプトのウォッチドッグの警告がなく、目に見える遅れもない。どの要求にも応答が 1 つ |
+
+#### 出来事の通知（ゲーム内、BDS）
+
+| ID | 手順 | 期待結果 |
+| --- | --- | --- |
+| OBS-EVT-01 | プレイヤーが退出して、入り直す | `player_leave`、`player_join`、`player_spawn`（`initialSpawn: true`）。`from` と `to` が同じ `game_mode_change` は出ない |
+| OBS-EVT-02 | サバイバルのプレイヤーを、コンソールの `kill <名前>` で倒し、プレイヤーがリスポーンを押す | `entity_die`（プレイヤー、`cause`）、続いて `player_spawn`（`initialSpawn: false`） |
+| OBS-EVT-03 | コンソールの `execute as <名前> at @s run damage @e[…,c=1] 100 entity_attack entity <名前>` | そのモブの `entity_die`、`killer` がプレイヤー |
+| OBS-EVT-04 | プレイヤーをネザーに tp し、読み込みが終わるまで待って、戻す | `dimension_change` が 2 件、`from`・`to` が正しい |
+| OBS-EVT-05 | コンソールの `gamemode survival <名前>`、次に `gamemode creative <名前>` | `game_mode_change` が 2 件 |
+| OBS-EVT-06 | コンソールの `gamerule dodaylightcycle false`、次に `true` | `game_rule_change` が 2 件（`doDayLightCycle`） |
+| OBS-EVT-07 | `events` を、引数なし・`since` と `limit` 付き・`kinds` 付き・未知の種類付きで | 保持している全件、`more` 付きの次のページ、絞り込み、`INVALID_PARAMS` |
+| OBS-EVT-08 | `/reload` | `session` が新しくなり、通知の `seq` が 1 から。次の出来事まで `events` は空 |
 
 #### 結果
 
@@ -213,6 +230,8 @@ Phase 2 — 2026-10-18 に同じ BDS で実施（アドオン 0.1.0、8 つの m
 | OBS-SIZE-01 | 成功 | インベントリ満杯（36 スタック）＋全節: エンティティを 14 件に縮め `omitted: {entities: 11}`。行は 3,965 文字で、標準出力に欠けずに出た |
 | OBS-RO-01 | 一部 | V-RO-01 の検査は成功。試験中にワールドの変化は見られなかったが、前後の比較は独立したケースとしては未実施 |
 | OBS-PERF-01 | 成功 | 1 秒に 1 回 × 5 分で 300 件（`snapshot` と `entities` を交互）: BDS に届いた 297 件すべてに、`ok: true` の応答が 1 つずつ返った。警告・ウォッチドッグなし。3 件は、参考のブリッジのファイル経由の入力で失われ、BDS に届いていない（試験の道具の問題。`docs/knowledge/bds-local-server/` §8） |
+
+出来事の通知 — 2026-10-18 に同じ BDS で実施。すべて成功: OBS-EVT-01（下の修正のあと）、-02（`cause` は `selfDestruct`、リスポーンは `initialSpawn: false`）、-03（クモ、`killer` は PlayerA、`cause` は `entityAttack`）、-04（ネザーへの移動は、クライアントの読み込みが終わった tp の約 19 秒後に通知された）、-05、-06、-07、-08（`reload` で新しい session、`seq` は 1 から）。見つけて直したこと: 参加のときに BDS が `Creative → Creative` を 2 回報告していた（`force-gamemode`）。変化のないものは送らないようにした。メモ: クリエイティブのプレイヤーは `/kill` で倒せない（先にサバイバルにする）。
 
 ## リリース前チェックリスト
 

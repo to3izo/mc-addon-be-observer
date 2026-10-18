@@ -97,6 +97,8 @@ Tests:
 Identifier:
 - script event id `to3izo_bo:query` (request, received through `/scriptevent` or `system.sendScriptEvent`)
 - response log prefix `to3izo_bo.response` (one-line JSON, see `docs/PROTOCOL.md`)
+- event log prefix `to3izo_bo.event` and event kinds `player_join`, `player_leave`, `player_spawn`, `entity_die`,
+  `dimension_change`, `game_mode_change`, `game_rule_change` (`docs/PROTOCOL.md` §10, ADR-0008)
 
 Type:
 Feature (script only, read-only)
@@ -113,7 +115,8 @@ Behavior:
 Scripts:
 - scripts/features/observer: script-event input and log output
 - scripts/core/observation: game reads → DTOs (`capabilities`, `players`, `player`, `block`/`blocks`, `target`,
-  `entities`, `snapshot`; shared readers in `read.ts`, player/dimension resolution in `resolve.ts`)
+  `entities`, `snapshot`, `events`; shared readers in `read.ts`, player/dimension resolution in `resolve.ts`, game
+  event subscriptions and the in-memory event buffer in `events.ts`)
 - scripts/shared/protocol: pure request validation, option parsing, dispatch, envelopes, size limits
 - scripts/shared/constants/version.ts: versions reported by `capabilities`
 

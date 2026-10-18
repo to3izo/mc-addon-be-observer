@@ -48,7 +48,12 @@ const NON_ASCII = /[\u007f-\uffff]/g;
  * can no longer look like line breaks.
  */
 export function formatResponseLine(envelope: ResponseEnvelope): string {
-  return RESPONSE_PREFIX + JSON.stringify(envelope).replace(NON_ASCII, (c) => `\\u${c.charCodeAt(0).toString(16).padStart(4, "0")}`);
+  return RESPONSE_PREFIX + toAsciiJson(envelope);
+}
+
+/** JSON on one line with every non-ASCII character (and DEL) written as a \\uXXXX escape. */
+export function toAsciiJson(value: unknown): string {
+  return JSON.stringify(value).replace(NON_ASCII, (c) => `\\u${c.charCodeAt(0).toString(16).padStart(4, "0")}`);
 }
 
 export interface RenderOptions {

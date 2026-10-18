@@ -29,10 +29,12 @@ Status: all rows are implemented and verified on BDS 1.26.52.3 (`docs/TESTING.md
 | 7 | `entities` | Entities near a point, radius- and count-limited, sorted by distance | 2 | done (BDS) |
 | 8 | `snapshot` | `player` + `target` (+ `entities`, `world`) in one response, per-section errors | 2 | done (BDS) |
 | 9 | Sections | `health`, `inventory`, `equipment`, `world` (time of day, day, absolute time) | 2 | done (BDS) |
+| 10 | Event notifications | `to3izo_bo.event` lines for player join/leave/spawn, deaths involving players, dimension, game mode and game rule changes; `events` method to catch up (ADR-0008) | 2 | done (BDS) |
 
-Deferred (stable API exists but not in the first version): weather (stable read API does not exist), light
+Not available: chat messages and command use (no stable API; handled by the control tool). Deferred (stable API
+exists but not in the first version): weather (stable read API does not exist), light
 level, biome, rays from an arbitrary origin, small block regions (`getBlocks`), client/input info, join/leave
-events, a cheat-free custom command entry point, the BDS network adapter (ADR-0004).
+a cheat-free custom command entry point, the BDS network adapter (ADR-0004).
 
 ## Target Minecraft version
 

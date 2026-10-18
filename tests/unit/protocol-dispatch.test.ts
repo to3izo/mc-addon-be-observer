@@ -9,6 +9,7 @@ import { buildCapabilities } from "../../scripts/shared/protocol/capabilities.ts
 import { PARAM_DEFAULTS, PARAM_LIMITS, REQUEST_EVENT_ID, RESPONSE_PREFIX, SIZE_LIMITS } from "../../scripts/shared/protocol/constants.ts";
 import { handleRequest, type MethodHandler, type MethodTable } from "../../scripts/shared/protocol/dispatch.ts";
 import { ObserverError } from "../../scripts/shared/protocol/errors.ts";
+import { EVENT_KINDS, EVENT_LIMITS, EVENT_PREFIX } from "../../scripts/shared/protocol/events.ts";
 import { METHODS, SECTIONS, type MethodName } from "../../scripts/shared/protocol/methods.ts";
 import { createSessionId } from "../../scripts/shared/protocol/session.ts";
 
@@ -90,10 +91,11 @@ test("U-PROTO-10 capabilities describes this build: methods, transport, limits",
   assert.deepEqual(caps.methods, [...METHODS]);
   assert.deepEqual(caps.sections, [...SECTIONS]);
   assert.deepEqual(caps.protocol, { version: 1, supported: [1] });
-  assert.deepEqual(caps.transport, { requestEventId: REQUEST_EVENT_ID, responsePrefix: RESPONSE_PREFIX });
-  assert.deepEqual(caps.limits, { ...SIZE_LIMITS, ...PARAM_LIMITS });
+  assert.deepEqual(caps.transport, { requestEventId: REQUEST_EVENT_ID, responsePrefix: RESPONSE_PREFIX, eventPrefix: EVENT_PREFIX });
+  assert.deepEqual(caps.events, [...EVENT_KINDS]);
+  assert.deepEqual(caps.limits, { ...SIZE_LIMITS, ...PARAM_LIMITS, ...EVENT_LIMITS });
   assert.deepEqual(caps.defaults, { ...PARAM_DEFAULTS });
-  assert.deepEqual(caps.methods, ["capabilities", "players", "player", "block", "blocks", "target", "entities", "snapshot"]);
+  assert.deepEqual(caps.methods, ["capabilities", "players", "player", "block", "blocks", "target", "entities", "snapshot", "events"]);
   assert.deepEqual(caps.sections, ["health", "inventory", "equipment", "world"]);
   assert.equal(caps.readOnly, true);
   assert.equal(caps.addon.namespace, NAMESPACE);

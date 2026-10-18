@@ -24,6 +24,9 @@ and must match `package.json` and both pack manifests (`pnpm version:set <x.y.z>
 - Observer Phase 2: methods `player` (with `health`, `inventory`, `equipment`, `world` sections), `block`,
   `blocks`, `target`, `entities` and `snapshot`, with parameter limits and defaults reported by `capabilities`;
   verified on BDS 1.26.52.3 with two players.
+- Game event notifications (ADR-0008): `to3izo_bo.event` lines for player join/leave/spawn, deaths involving
+  players, dimension, game mode and game rule changes, rate-limited, plus the `events` method to read recent
+  events again.
 - Reference script `docs/knowledge/bds-local-server/scripts/bds-console-bridge.ps1` to run BDS with its console
   redirected to files.
 - `docs/ROADMAP.md`: checklist of every phase up to the first release, with the current progress, task details

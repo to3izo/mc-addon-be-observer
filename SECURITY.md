@@ -36,6 +36,8 @@ Internet, or other people's account names in the report.
   `/scriptevent`. On BDS (1.26.52.3) the server console can always send it; a player needs cheats on and operator
   permission. Anyone with that access can query observations of every player in the world. Do not install the
   Add-On on servers where that is unacceptable.
+- **Event lines tell who joined, left, died, moved between dimensions or changed game mode, and where.** They are
+  written whenever these happen, without a request (ADR-0008).
 - **Script output goes to the server console.** The Add-On needs `content-log-console-output-enabled=true`, which
   also prints other packs' script logs and content errors to standard output. Protect the console and any file it
   is redirected to like other server logs.

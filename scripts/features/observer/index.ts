@@ -1,10 +1,12 @@
 import { Player, system, type ScriptEventCommandMessageAfterEvent } from "@minecraft/server";
 import type { RequestContext } from "../../core/observation/context.ts";
+import { watchGameEvents } from "../../core/observation/events.ts";
 import { OBSERVATION_METHODS } from "../../core/observation/methods.ts";
 import type { Feature } from "../../core/runtime/feature.ts";
 import { ADDON_SLUG, NAMESPACE } from "../../shared/constants/addon.ts";
 import { REQUEST_EVENT_ID, SIZE_LIMITS } from "../../shared/protocol/constants.ts";
 import { handleRequest } from "../../shared/protocol/dispatch.ts";
+import { formatEventLine } from "../../shared/protocol/events.ts";
 import { errorEnvelope, renderResponseLine, type ResponseMeta } from "../../shared/protocol/response.ts";
 import { createSessionId } from "../../shared/protocol/session.ts";
 
@@ -12,8 +14,8 @@ const LOG_TAG = `[${ADDON_SLUG}] observer:`;
 
 /**
  * Read-only observation over `/scriptevent to3izo_bo:query <json>` (docs/PROTOCOL.md, ADR-0003).
- * Each request is answered by exactly one `to3izo_bo.response {json}` log line. Work happens only when a
- * request arrives; nothing runs per tick.
+ * Each request is answered by exactly one `to3izo_bo.response {json}` log line, and selected game events are
+ * pushed as `to3izo_bo.event {json}` lines (ADR-0008). Nothing runs per tick.
  */
 export const observerFeature: Feature = {
   id: "observer",
@@ -33,6 +35,12 @@ export const observerFeature: Feature = {
         emitResponse(answer(event, meta));
       },
       { namespaces: [NAMESPACE] },
+    );
+
+    // Game events (ADR-0008): one `to3izo_bo.event {json}` line each, on the same channel as responses.
+    watchGameEvents(
+      (event) => console.log(formatEventLine(event, session)),
+      (kind, error) => console.warn(`${LOG_TAG} ${kind} event could not be read: ${String(error)}`),
     );
   },
 };

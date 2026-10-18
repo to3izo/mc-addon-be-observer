@@ -2,6 +2,7 @@ import { block, blocks } from "./block.ts";
 import { capabilities } from "./capabilities.ts";
 import type { ObservationMethods } from "./context.ts";
 import { entities } from "./entities.ts";
+import { events } from "./events.ts";
 import { player } from "./player.ts";
 import { players } from "./players.ts";
 import { snapshot } from "./snapshot.ts";
@@ -20,4 +21,5 @@ export const OBSERVATION_METHODS: ObservationMethods = {
   target,
   entities,
   snapshot,
+  events,
 };

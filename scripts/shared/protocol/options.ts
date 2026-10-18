@@ -1,5 +1,15 @@
 import { PARAM_DEFAULTS, PARAM_LIMITS } from "./constants.ts";
-import { expectOnlyKeys, parseDimension, parseLocation, readBoolean, readLimitedNumber, type DimensionId, type Location } from "./params.ts";
+import { EVENT_KINDS, EVENT_LIMITS, type EventKind } from "./events.ts";
+import {
+  expectOnlyKeys,
+  parseDimension,
+  parseLocation,
+  readBoolean,
+  readLimitedNumber,
+  readNameList,
+  type DimensionId,
+  type Location,
+} from "./params.ts";
 
 /** Options of a view-direction ray (`target`, and `snapshot.target`). */
 export interface TargetOptions {
@@ -59,4 +69,21 @@ export function optionGroup(group: Record<string, unknown>, allowed: readonly st
     throw error;
   }
   return group;
+}
+
+/** Parameters of the `events` method (docs/PROTOCOL.md §5.9). */
+export interface EventQuery {
+  since: number;
+  limit: number;
+  kinds: EventKind[] | undefined;
+}
+
+export const EVENT_QUERY_KEYS = ["since", "limit", "kinds"] as const;
+
+export function parseEventQuery(params: Record<string, unknown>): EventQuery {
+  return {
+    since: readLimitedNumber(params, "since", { min: 0, max: Number.MAX_SAFE_INTEGER, integer: true }, 0),
+    limit: readLimitedNumber(params, "limit", { min: 1, max: EVENT_LIMITS.maxEventsPerRequest, integer: true }, 32),
+    kinds: params.kinds === undefined ? undefined : readNameList(params, "kinds", EVENT_KINDS, []),
+  };
 }

@@ -179,6 +179,7 @@ Every method is a pure read at one tick. All of them are implemented (Phase 2, `
 | `target` | What a player is looking at (block, optionally entity) |
 | `entities` | Entities near a player or a point, limited |
 | `snapshot` | Several of the above for one player in one response |
+| `events` | Recent game events after a sequence number (§5.9, §10) |
 
 ### 5.1 `capabilities`
 
@@ -191,10 +192,11 @@ Every method is a pure read at one tick. All of them are implemented (Phase 2, `
   "addon": { "slug": "be-observer", "namespace": "to3izo_bo", "version": "0.1.0" },
   "protocol": { "version": 1, "supported": [1] },
   "scriptApi": { "@minecraft/server": "2.10.0" },
-  "transport": { "requestEventId": "to3izo_bo:query", "responsePrefix": "to3izo_bo.response " },
-  "methods": ["capabilities", "players", "player", "block", "blocks", "target", "entities", "snapshot"],
+  "transport": { "requestEventId": "to3izo_bo:query", "responsePrefix": "to3izo_bo.response ", "eventPrefix": "to3izo_bo.event " },
+  "methods": ["capabilities", "players", "player", "block", "blocks", "target", "entities", "snapshot", "events"],
   "sections": ["health", "inventory", "equipment", "world"],
-  "limits": { "maxRequestChars": 2048, "maxResponseChars": 4000, "maxBlocksPerRequest": 32, "maxRayDistance": 64, "maxEntityRadius": 32, "maxEntities": 32, "maxInventorySlots": 54 },
+  "events": ["player_join", "player_leave", "player_spawn", "entity_die", "dimension_change", "game_mode_change", "game_rule_change"],
+  "limits": { "maxRequestChars": 2048, "maxResponseChars": 4000, "maxBlocksPerRequest": 32, "maxRayDistance": 64, "maxEntityRadius": 32, "maxEntities": 32, "maxInventorySlots": 54, "maxEventsPerSecond": 20, "eventBufferSize": 64, "maxEventsPerRequest": 64 },
   "defaults": { "rayDistance": 8, "entityRadius": 16, "entityLimit": 16 },
   "readOnly": true
 }
@@ -387,6 +389,38 @@ Each section has the shape of the matching method or `player` section. A section
 snapshot: its key is absent from `data` and `data.errors.<section>` holds `{ "code", "message" }`. A player who
 cannot be found fails the whole request (`NO_SOURCE_PLAYER`, `PLAYER_NOT_FOUND`).
 
+### 5.9 `events`
+
+Recent game events (§10) kept in memory, for a tool that missed event lines or started late. Parameters:
+`since` (event `seq`; default 0 = everything held), `limit` (1…`maxEventsPerRequest`, default 32), `kinds`
+(array of event kinds from `capabilities.events`).
+
+```json
+{ "requestId": "ev2", "method": "events", "params": { "since": 12, "limit": 2 } }
+```
+
+```json
+"data": {
+  "events": [
+    { "kind": "player_leave", "seq": 13, "tick": 119660, "time": 1792307365980, "data": { "player": { "id": "-8589934591", "name": "Steve" } } },
+    { "kind": "player_join", "seq": 14, "tick": 120260, "time": 1792307396123, "data": { "player": { "id": "-8589934591", "name": "Steve" } } }
+  ],
+  "returned": 2,
+  "limit": 2,
+  "more": true,
+  "missed": false,
+  "oldestSeq": 1,
+  "latestSeq": 17
+}
+```
+
+- Events are oldest first. `more: true` means more events after the last one returned; ask again with `since`
+  set to the last `seq`.
+- `missed: true` means some events after `since` are no longer available: pushed out of the buffer
+  (`eventBufferSize`), or dropped by the rate limit.
+- The buffer lives in memory only: `/reload` or a server restart empties it and starts a new `session`, whose
+  event `seq` starts again at 1.
+
 ## 6. Error codes
 
 | Code | When |
@@ -414,7 +448,7 @@ Per-item conditions inside a successful response (`unloaded`, `out_of_bounds`, `
 - A request longer than `maxRequestChars` characters is refused before parsing.
 - `maxResponseChars` limits the whole line, prefix included.
 - A response is built, serialised and measured. If it exceeds `maxResponseChars`, list fields that allow it
-  are shortened from the end, in this order: `players`; `entities`; `inventory.items`. The object holding the
+  are shortened from the end, in this order: `players`; `entities`; `inventory.items`; `events`. The object holding the
   list gets `"truncated": true` and `"omitted": { "<field>": <count> }`. Single values are never cut.
 - If the response is still too long, the answer is `RESPONSE_TOO_LARGE`; ask for less (lower `limit`, fewer
   sections).
@@ -440,3 +474,40 @@ The Add-On only answers. A tool that uses it is responsible for:
 - **Recording receive time** on its own clock next to `tick`/`time`, and not treating observations as current.
 - **Rate**: sending one request at a time per world (or a small number) and not flooding the chat or console.
 - **Not exposing** the log or the console to other users or networks (`SECURITY.md`).
+
+## 10. Event lines
+
+Besides answering requests, the Add-On writes one line for each of these game events (ADR-0008):
+
+```
+[2026-10-18 16:08:35:859 INFO] [Scripting] to3izo_bo.event {"protocol":1,"session":"2rgzknbo","kind":"entity_die","seq":10,"tick":118658,"time":1792307315858,"data":{...}}
+```
+
+- Prefix `to3izo_bo.event ` (one trailing space); the rest of the line is one JSON object, pure ASCII (§1).
+  Like responses, find the prefix inside the line.
+- Envelope: `protocol`, `session` (as in responses), `kind`, `seq` (event counter in the session, from 1,
+  separate from response `seq`), `tick`, `time`, `data`, and `dropped` when the rate limit dropped events just
+  before this one.
+- Rate limit: at most `maxEventsPerSecond` lines per second (20 ticks). Dropped events get no `seq`; the next line
+  carries their count in `dropped`, and `events` reports `missed`.
+- Event lines are always on; there is no switch.
+
+| `kind` | When | `data` |
+| --- | --- | --- |
+| `player_join` | A player connected (before spawning) | `player: {id, name}` |
+| `player_leave` | A player left | `player: {id, name}` |
+| `player_spawn` | A player spawned: first spawn after joining (`initialSpawn: true`) or respawn after death (`false`) | `player`, `initialSpawn`, `dimension`, `location` |
+| `entity_die` | A player died, or a player killed an entity (other deaths are not reported) | `entity: {id, typeId, name \| nameTag}`, `cause` (API `EntityDamageCause`, e.g. `entityAttack`, `selfDestruct` for `/kill`), `dimension` and `location` when still readable, `killer` when an entity did it, `projectile` (type id) when a projectile did it |
+| `dimension_change` | A player finished changing dimension | `player`, `from: {dimension, location}`, `to: {dimension, location}` |
+| `game_mode_change` | A player's game mode changed (no-op changes are not reported) | `player`, `from`, `to` (e.g. `Creative`, `Survival`) |
+| `game_rule_change` | A game rule changed | `rule` (e.g. `doDayLightCycle`), `value` |
+
+Notes measured on BDS 1.26.52.3:
+
+- `dimension_change` is sent when the move completes for the player, which can be many seconds after the
+  teleport (about 19 s for a teleport into the Nether). A player teleported back before that produced no event
+  for the first move. `to.location` was about 1.6 below the teleport target's feet height.
+- Chat messages and command use are **not** available (no stable API; BDS does not print chat). Detect chat in the
+  tool, e.g. from the game screen. `game_mode_change` and `game_rule_change` are the only cheat-related signals,
+  and they do not say who caused them.
+

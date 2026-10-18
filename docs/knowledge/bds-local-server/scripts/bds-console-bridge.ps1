@@ -39,7 +39,8 @@ $log.WriteLine("# bridge started $(Get-Date -Format o) pid $($proc.Id)")
 
 $outTask = $proc.StandardOutput.ReadLineAsync()
 $errTask = $proc.StandardError.ReadLineAsync()
-$sent = 0
+# Characters of stdin.txt already handled. Only complete lines (ending in a newline) are sent.
+$consumed = 0
 
 function Drain([ref]$task, $reader, [string]$tag) {
   while ($task.Value -ne $null -and $task.Value.IsCompleted) {
@@ -54,14 +55,25 @@ while (-not $proc.HasExited) {
   Drain ([ref]$outTask) $proc.StandardOutput ''
   Drain ([ref]$errTask) $proc.StandardError '[stderr] '
   try {
-    $lines = [IO.File]::ReadAllLines($cmdPath, $utf8)
-    for ($i = $sent; $i -lt $lines.Length; $i++) {
-      $stdin.WriteLine($lines[$i])
-      $log.WriteLine("# sent $(Get-Date -Format o): $($lines[$i])")
+    # Open with ReadWrite sharing so a tool appending to stdin.txt at the same moment is not refused.
+    $fs = [IO.File]::Open($cmdPath, 'Open', 'Read', 'ReadWrite')
+    $reader = New-Object System.IO.StreamReader($fs, $utf8)
+    $text = $reader.ReadToEnd()
+    $reader.Close()
+    if ($text.Length -gt $consumed) {
+      $chunk = $text.Substring($consumed)
+      $end = $chunk.LastIndexOf("`n")
+      if ($end -ge 0) {
+        foreach ($line in ($chunk.Substring(0, $end + 1) -split "`r?`n")) {
+          if ($line -eq '') { continue }
+          $stdin.WriteLine($line)
+          $log.WriteLine("# sent $(Get-Date -Format o): $line")
+        }
+        $consumed += $end + 1
+      }
     }
-    $sent = $lines.Length
   } catch [System.IO.IOException] {
-    # The tool is writing the file right now; try again on the next pass.
+    # Could not read this time; try again on the next pass.
   }
   Start-Sleep -Milliseconds 100
 }
