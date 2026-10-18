@@ -218,7 +218,7 @@ Every method is a pure read at one tick. All of them are implemented (Phase 2, `
 
 ```json
 "data": {
-  "addon": { "slug": "be-observer", "namespace": "to3izo_bo", "version": "0.1.0" },
+  "addon": { "slug": "be-observer", "namespace": "to3izo_bo", "version": "1.0.0" },
   "protocol": { "version": 1, "supported": [1] },
   "scriptApi": { "@minecraft/server": "2.10.0" },
   "transport": { "requestEventId": "to3izo_bo:query", "requestCommand": "to3izo_bo:query", "responsePrefix": "to3izo_bo.response ", "eventPrefix": "to3izo_bo.event " },

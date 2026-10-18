@@ -6,6 +6,10 @@ and must match `package.json` and both pack manifests (`pnpm version:set <x.y.z>
 
 ## [Unreleased]
 
+## [1.0.0] - 2026-10-18
+
+First public release: a read-only observation Add-On for Bedrock Dedicated Server, protocol 1.
+
 ### Added
 - Initial project structure created from the Bedrock Add-On template.
 - VS Code setup: `.vscode/launch.json` for the Minecraft Debugger (paths kept in sync by
@@ -46,6 +50,8 @@ and must match `package.json` and both pack manifests (`pnpm version:set <x.y.z>
   and open questions. It replaces `docs/PLAN.md`, whose decisions moved to ADR-0007 and ADR-0004.
 
 ### Changed
+- Version 1.0.0: "1.0.0" now means the first release outside users can install and use (ADR-0002), not
+  Marketplace publication.
 - Phase 3 closed: the optional BDS network adapter using `@minecraft/server-net` is rejected (ADR-0004). The core
   stays `@minecraft/server` only, no `"reply": "event"` / `to3izo_bo:response` is added, and forwarding
   observation lines off the BDS host is left to the external tool (`SECURITY.md`). OBS-ENV-07 is not applicable.

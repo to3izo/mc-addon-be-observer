@@ -291,10 +291,29 @@ overworld at (0, -60, 0), using `bo-verify.ps1`.
 | OBS-CMD-01–05 | pass | Operator command, Add-On build with ADR-0010, BDS restarted, `allow-cheats=false`. Console → answered. `member` → "コマンドの権限レベルが正しくありません: to3izo_bo:query。", nothing reached the Add-On. After `op` → answered, sender as source player, no chat output. After `reload` → answered. Regression 34/34. `permissions.json` restored from its backup afterwards |
 | Bridge re-test | pass | After the fix to `bds-console-bridge.ps1` (shared read, complete lines only): 131 requests sent in four runs, 131 answered, none lost |
 
+Release 1.0.0 — run 2026-10-18 on the same BDS (1.26.52.3) with the packaged `dist/be-observer-1.0.0.mcaddon`,
+installed as the README says: unzipped into `behavior_packs/` and `resource_packs/` (the 0.1.0 development packs
+moved aside), and the existing world `addon-lab-flat` switched from `[0,1,0]` to `[1,0,0]` in
+`world_*_packs.json`. Requests through `bds-console-bridge.ps1`; player PlayerA joined from the same VM.
+
+| ID | Result | Notes |
+| --- | --- | --- |
+| S-01 / S-02 / S-05 | pass | `Pack Stack - [00] Bedrock Observer [BP] … version: 1.0.0 @ behavior_packs/be-observer_BP`; one `scripts loaded` line; no warning or error from the Add-On. `capabilities` reports `addon.version` `1.0.0` |
+| S-03 | pass | Console `reload` → new `session`, one `scripts loaded` line, one response per request |
+| S-04 | pass | Leave and rejoin: `player_leave` then `player_join`/`player_spawn` events; same player id `-8589934591` |
+| Upgrade 0.1.0 → 1.0.0 | pass | Existing world from the 0.1.0 development build; only the pack version in `world_*_packs.json` changed |
+| Regression (`bo-verify-cases.json`) | pass | 34/34 |
+| All methods (`bo-verify-ro-cases.json`) | pass | 16/16 after preparing its state (diamond block at 3,-60,3, an armor stand, objective `bo_ro` with a score for PlayerA); removed afterwards. Without that state 5 cases fail by design |
+| Content log | clean | The only `ERROR` lines are BDS's replies to the test's own cleanup commands (`kill` / `scoreboard objectives remove` with nothing to remove) |
+
 ## Release checklist
 
-- [ ] All smoke tests pass on Windows (or the primary platform) with the target version
-- [ ] At least one secondary platform (mobile/console) checked for rendering and performance
-- [ ] Upgrade from the previous released version in an existing world works
-- [ ] Content log clean; no unreferenced-resource warnings left unexplained
-- [ ] `docs/CONTENT.md` and `CHANGELOG.md` updated; `pnpm version:set` applied
+The Add-On is BDS-only (ADR-0006), so the checks run on BDS with the packaged `.mcaddon` installed as the README
+describes. Last run: 1.0.0, 2026-10-18 (Results above).
+
+- [x] All smoke tests pass on BDS (Windows) with the target version, from the packaged `.mcaddon`
+- [x] Secondary platform: not applicable (BDS only; Linux BDS is stated as untested in the README)
+- [x] Upgrade from the previous version in an existing world works (first release: from the 0.1.0 development build)
+- [x] Regression sets pass (`bo-verify-cases.json`, `bo-verify-ro-cases.json`)
+- [x] Content log clean; no unreferenced-resource warnings left unexplained
+- [x] `docs/CONTENT.md` checked (no new identifiers) and `CHANGELOG.md` updated; `pnpm version:set` applied

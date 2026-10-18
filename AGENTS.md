@@ -180,8 +180,11 @@ or an equivalent v4 generator, never typed by hand.
 - Change it only with `pnpm version:set <major.minor.patch>` and add a `CHANGELOG.md` entry.
 - Release tags are `v<major.minor.patch>`; `release.yml` fails if the tag and `package.json` disagree.
 - Bump `minor` for new content/features, `patch` for fixes, `major` for world-incompatible changes.
-- **The major stays 0 until the Add-On is published on the official Marketplace** (then 1.0.0); a spec change
-  raises the minor, anything else the patch (`docs/adr/0002-versioning.md`).
+- **1.0.0 is the first public release that outside users can install and use** (protocol frozen, release
+  checklist passed on BDS); Marketplace publication is not a milestone for this BDS-only Add-On. After 1.0.0, the
+  major rises for changes that break tools or worlds (a new `protocol` number, world-incompatible changes, a
+  narrower set of supported environments); a compatible spec change raises the minor, anything else the patch
+  (`docs/adr/0002-versioning.md`).
 
 ## Generated files policy
 

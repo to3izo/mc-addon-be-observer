@@ -131,6 +131,9 @@ Phase 3（server-net のアダプター）は 2026-10-18 に却下した（ADR-0
 - **検証の薄いラッパー:** `scripts/bo-verify.ps1` は、ブリッジが動いている間に、ケースのファイル（例: `scripts/bo-verify-cases.json`）の手順を 1 件ずつ実行する。コンソールのコマンド（試験の準備と片付け）を送り、要求を送って `requestId` で応答を待ち、`ok`・`code`・項目の値を判定して、判定と応答を JSON に書く。前の応答の値（エンティティの id など）を `"$ref:<ケース ID>:<パス>"` で次の要求に使える。要求の ASCII 以外の文字は `\uXXXX` にして送る。
   - PowerShell の落とし穴: `ConvertFrom-Json` の結果で、ないキーを `$o.equals` と書くと、.NET の `Equals` メソッドが返り、「ある」と判定されてしまった（大文字・小文字を区別しないため）。キーは `$o.PSObject.Properties['equals']` で調べる。
 - 応答の 1 行は、3,965 文字まで欠けずに標準出力に出た（Phase 2 の OBS-SIZE-01）。
+- **`bo-verify-ro-cases.json` は、ワールドの状態を前提にしている（2026-10-18、実機）。** 3,-60,3 のダイヤモンドブロック、PlayerA の近くの防具立て、PlayerA の得点がある objective `bo_ro` がないと、RO-BLK・RO-ENTS・RO-ENT・RO-TOP・RO-SB2 の 5 件が失敗する。用意するコマンドの例: `setblock 3 -60 3 diamond_block`、`summon armor_stand BoRelStand 2 -60 1`、`scoreboard objectives add bo_ro dummy`、`scoreboard players set PlayerA bo_ro 5`。終わったら片付ける。
+- **パックを `behavior_packs/` に入れても読み込まれた（2026-10-18、実機、1.0.0 のリリース確認）。** ログは `Pack Stack - … @ behavior_packs/be-observer_BP`。同じ UUID のパックを `development_behavior_packs/` にも置くと二重になるので、どちらか一方にする。
+- **BDS を止めたあと、クライアントの「再接続」は「マルチプレイ接続失敗」（`NetherNet`）になった。** 「メニューに戻る」から、サーバーの一覧の「他のサーバー」で選んで「プレイ」すると参加できた。このとき、`127.0.0.1:19132` に「このサーバーを信頼しますか？」と初めて聞かれた（同じ VM の自分の BDS なので「信頼して参加」）。
 - **BDS の標準出力に、プレイヤーのチャットは出ない（2026-10-18、実機）。** `@PlayerB hello chatlog test 123` を送っても、何も出なかった。プレイヤーがチャットから打ったコマンド（`/scriptevent`）も出ない（アドオンの応答だけが出る）。コンソールから打ったコマンドは、`Script event … has been sent` などの結果が出る。チャットの検知は `docs/RESEARCH.md` §2.2.1。
 
 ### カスタムコマンド（試作で確認、2026-10-18、BDS 1.26.52.3）

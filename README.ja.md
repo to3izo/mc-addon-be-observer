@@ -22,7 +22,7 @@ Minecraft 統合版の Bedrock Dedicated Server（BDS）向けの、**読み取�
 - **上限つき。** 要求ごとに、大きさ・件数・半径・距離の上限があり、`capabilities` で分かります。
 - **安定版の API だけ。** `@minecraft/server` 2.10.0。実験的機能もベータ版の API も使いません。
 
-> **状態: 公開前（0.1.0）。** すべてのメソッドを実装し、Windows 版 BDS 1.26.52.3 で確認済みです。
+> **状態: 1.0.0（最初の公開版）。** すべてのメソッドを実装し、Windows 版 BDS 1.26.52.3 で確認済みです。
 > プロトコル 1（`docs/PROTOCOL.md`）は確定しました。今後の版は、項目を足すか、プロトコルの番号を上げます。
 
 ## 必要なもの
@@ -41,8 +41,8 @@ Minecraft 統合版の Bedrock Dedicated Server（BDS）向けの、**読み取�
    `<BDS>/resource_packs/`（または `development_resource_packs/`）にコピーします。
 3. ワールドで有効にします。`worlds/<ワールド名>/world_behavior_packs.json` と `world_resource_packs.json` に、パックの
    UUID とバージョンを書きます。例:
-   `[{"pack_id":"cbe4cdb9-3dc0-43c3-9750-a100b27a414e","version":[0,1,0]}]`（ビヘイビアーパック）、
-   `[{"pack_id":"3d21d349-fedb-4dd4-8b7c-a7f130ea5fe7","version":[0,1,0]}]`（リソースパック）。
+   `[{"pack_id":"cbe4cdb9-3dc0-43c3-9750-a100b27a414e","version":[1,0,0]}]`（ビヘイビアーパック）、
+   `[{"pack_id":"3d21d349-fedb-4dd4-8b7c-a7f130ea5fe7","version":[1,0,0]}]`（リソースパック）。
 4. `content-log-console-output-enabled=true` にしてサーバーを起動します。ログに
    `[Scripting] [be-observer] scripts loaded` が出ます。
 

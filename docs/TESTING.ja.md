@@ -277,10 +277,25 @@ Phase 2 の追加分 — 2026-10-18 に同じ BDS で実施（アドオン 0.1.0
 | OBS-CMD-01〜05 | 成功 | operator 用のコマンド（ADR-0010 の版、BDS を再起動、`allow-cheats=false`）。コンソール → 応答あり。`member` → 「コマンドの権限レベルが正しくありません: to3izo_bo:query。」で、アドオンには届かない。`op` のあと → 応答あり、送った人が source player、チャットには何も出ない。`reload` のあと → 応答あり。回帰 34/34。試験のあと `permissions.json` をバックアップから戻した |
 | ブリッジの再試験 | 成功 | `bds-console-bridge.ps1` の修正（共有モードで読む、改行で終わった行だけ送る）のあと、4 回の実行で 131 件を送り、131 件とも応答があった。取りこぼしなし |
 
+リリース 1.0.0 — 2026-10-18 に同じ BDS（1.26.52.3）で、`dist/be-observer-1.0.0.mcaddon` を README の手順どおりに入れて実施した。`behavior_packs/` と `resource_packs/` に展開し（0.1.0 の開発用パックはよけた）、既存のワールド `addon-lab-flat` の `world_*_packs.json` を `[0,1,0]` から `[1,0,0]` にした。要求は `bds-console-bridge.ps1` 経由。プレイヤー PlayerA は同じ VM から参加。
+
+| ID | 結果 | メモ |
+| --- | --- | --- |
+| S-01 / S-02 / S-05 | 成功 | `Pack Stack - [00] Bedrock Observer [BP] … version: 1.0.0 @ behavior_packs/be-observer_BP`。`scripts loaded` が 1 行。アドオンの警告・エラーなし。`capabilities` の `addon.version` が `1.0.0` |
+| S-03 | 成功 | コンソールの `reload` で `session` が新しくなり、`scripts loaded` が 1 行。要求 1 つに応答 1 つ |
+| S-04 | 成功 | 退出と再参加で `player_leave`、`player_join`・`player_spawn` の通知。プレイヤーの id は同じ（`-8589934591`） |
+| 0.1.0 → 1.0.0 の更新 | 成功 | 0.1.0 の開発用ビルドで使っていたワールド。変えたのは `world_*_packs.json` のパックのバージョンだけ |
+| 回帰（`bo-verify-cases.json`） | 成功 | 34/34 |
+| 全メソッド（`bo-verify-ro-cases.json`） | 成功 | 前提の状態（3,-60,3 のダイヤモンドブロック、防具立て、PlayerA の得点がある objective `bo_ro`）を用意して 16/16。あとで片付けた。用意しないと 5 件が失敗する（ケースの前提） |
+| コンテンツログ | 問題なし | `ERROR` の行は、試験の片付けのコマンド（対象のない `kill`、ない objective の `scoreboard objectives remove`）への BDS の返事だけ |
+
 ## リリース前チェックリスト
 
-- [ ] 対象バージョンの Windows（または主なプラットフォーム）で、スモークテストがすべて通る
-- [ ] 少なくとも1つの別プラットフォーム（モバイル/コンソール）で表示と性能を確認した
-- [ ] 既存ワールドで、前のリリース版からのアップデートが問題なくできる
-- [ ] コンテンツログがきれいで、未参照リソースの警告が説明なしに残っていない
-- [ ] `docs/CONTENT.md` と `CHANGELOG.md` を更新し、`pnpm version:set` を適用した
+このアドオンは BDS 専用（ADR-0006）なので、パッケージした `.mcaddon` を README の手順で BDS に入れて確かめる。最後の実施: 1.0.0、2026-10-18（上の結果）。
+
+- [x] 対象バージョンの BDS（Windows）で、パッケージした `.mcaddon` からスモークテストがすべて通る
+- [x] 別プラットフォーム: 対象外（BDS 専用。Linux の BDS は未確認と README に書いてある）
+- [x] 既存ワールドで、前の版からの更新が問題なくできる（初回なので、0.1.0 の開発用ビルドから）
+- [x] 回帰のケース（`bo-verify-cases.json`、`bo-verify-ro-cases.json`）が通る
+- [x] コンテンツログがきれいで、未参照リソースの警告が説明なしに残っていない
+- [x] `docs/CONTENT.md` を確認し（新しい識別子なし）、`CHANGELOG.md` を更新し、`pnpm version:set` を適用した
