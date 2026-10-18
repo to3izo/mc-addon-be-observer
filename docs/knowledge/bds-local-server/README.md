@@ -6,6 +6,7 @@ Windows 11 VM（VMPal）の中で Bedrock Dedicated Server（BDS）を動かし�
 - **公式資料**: BDS 同梱の `bedrock_server_how_to.html`（1.26.52.3）、Microsoft Learn、Microsoft・Apple の文書。
 - **非公式**: Minecraft Wiki、Mojira、ホスティング業者の記事など。
 - **推測／未確認**: 確かめ方を添える。
+- 公開のため、プレイヤー名は `PlayerA`（試験を行った人）・`PlayerB`（2 人目）に、この環境の IP アドレスは `<VM の LAN 側のアドレス>` などの名前に置き換えてある。VMPal のローカルネットワークと自宅 LAN は、どちらも `/24` のプライベートアドレス。
 
 > この文書の「推奨手順」は、**人が判断して実行する案**です。BDS の更新、ファイアウォールの変更、実験的機能の有効化、ネットワークの公開範囲の変更は、エージェントが勝手に行わない（`AGENTS.md`、`SECURITY.md`）。
 

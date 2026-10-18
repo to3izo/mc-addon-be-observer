@@ -1,5 +1,5 @@
 {
-  "about": "Cases for bo-verify.ps1: entity filters, entity, effects, top/tops, scoreboard (2026-10-18). Needs the player PlayerA online in a flat overworld whose scoreboard has no other objectives (SB-09); the console steps set up and clean up the test state.",
+  "about": "Cases for bo-verify.ps1: entity filters, entity, effects, top/tops, scoreboard (2026-10-18). Needs the player PlayerA online in a flat overworld whose scoreboard has no other objectives (SB-09); the console steps set up and clean up the test state. PlayerA stands for the name of the player who runs the test: replace it before running.",
   "steps": [
     { "console": "kill @e[type=pig,name=BoPig]" },
     { "console": "scoreboard objectives remove bo_test" },

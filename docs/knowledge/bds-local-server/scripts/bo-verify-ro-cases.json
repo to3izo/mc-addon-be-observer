@@ -1,5 +1,5 @@
 {
-  "about": "OBS-RO-01 battery for bo-verify.ps1: every method with its options, no console steps. Run it between two identical sets of console queries and compare (docs/TESTING.md OBS-RO-01). Needs the player PlayerA online near an armor stand.",
+  "about": "OBS-RO-01 battery for bo-verify.ps1: every method with its options, no console steps. Run it between two identical sets of console queries and compare (docs/TESTING.md OBS-RO-01). Needs the player PlayerA online near an armor stand. PlayerA stands for the name of the player who runs the test: replace it before running.",
   "steps": [
     { "id": "RO-CAP", "method": "capabilities" },
     { "id": "RO-PLS", "method": "players" },
