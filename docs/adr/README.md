@@ -55,3 +55,4 @@
 | [0004](0004-bds-network-adapter.md) | BDS 専用の通信アダプターは、観測コアから切り離し、初版には入れない | 保留（分け方は承認済み。採否は Phase 2 の後） |
 | [0005](0005-keep-template-resource-pack.md) | 中身のないリソースパックを、テンプレートどおり残す | 採用 |
 | [0006](0006-bds-only-target.md) | 対象環境を BDS だけにする | 採用 |
+| [0007](0007-phased-delivery-and-approvals.md) | 段階に分けて作り、段階ごとに完了の条件と承認を置く | 採用 |

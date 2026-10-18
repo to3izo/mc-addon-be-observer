@@ -2,7 +2,7 @@
 
 > Status: **draft**. Phase 1 implements the transport, the envelopes, the error handling, the size limits,
 > `capabilities` and `players`, verified on BDS 1.26.52.3; the other methods are specified but not implemented
-> (`docs/PLAN.md`). The protocol is frozen as version 1 when Phase 2 ends; until then fields may change.
+> (`docs/ROADMAP.md`). The protocol is frozen as version 1 when Phase 2 ends; until then fields may change.
 > Limits marked *provisional* are starting values, not documented Minecraft limits.
 > The Add-On targets **Bedrock Dedicated Server only** (ADR-0006).
 
@@ -161,7 +161,7 @@ Methods that observe a player take `params.player`:
 
 ## 5. Methods
 
-Every method is a pure read at one tick. "Planned phase" refers to `docs/PLAN.md`.
+Every method is a pure read at one tick. "Phase" refers to `docs/ROADMAP.md`.
 
 | Method | Phase | Summary |
 | --- | --- | --- |

@@ -103,7 +103,7 @@ Feature (script only, read-only)
 
 Status:
 in progress (Phase 1 implemented: transport, envelopes, `capabilities`, `players`; not yet verified in game.
-Phase 2 methods planned, see `docs/PLAN.md`)
+Phase 2 methods planned, see `docs/ROADMAP.md`)
 
 Behavior:
 - Reads players, blocks, ray hits and nearby entities with the stable `@minecraft/server` API and writes a

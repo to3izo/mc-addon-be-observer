@@ -23,7 +23,8 @@ and must match `package.json` and both pack manifests (`pnpm version:set <x.y.z>
 - Target narrowed to Bedrock Dedicated Server (ADR-0006); Phase 1 verified on BDS 1.26.52.3.
 - Reference script `docs/knowledge/bds-local-server/scripts/bds-console-bridge.ps1` to run BDS with its console
   redirected to files.
-- `docs/ROADMAP.md`: checklist of every phase up to the first release, with the current progress.
+- `docs/ROADMAP.md`: checklist of every phase up to the first release, with the current progress, task details
+  and open questions. It replaces `docs/PLAN.md`, whose decisions moved to ADR-0007 and ADR-0004.
 
 <!--
 Release checklist:

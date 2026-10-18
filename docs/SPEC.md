@@ -2,7 +2,7 @@
 
 > Agents read this file first. It states the current spec only; why it is this way is in `docs/adr/`
 > (0003 protocol, 0004 BDS adapter, 0005 resource pack, 0006 BDS only), the wire format in `docs/PROTOCOL.md`, the research
-> behind it in `docs/RESEARCH.md`, and the phased plan in `docs/PLAN.md`.
+> behind it in `docs/RESEARCH.md`, and the phased roadmap and progress in `docs/ROADMAP.md`.
 
 ## Purpose
 

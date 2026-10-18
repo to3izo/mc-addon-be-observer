@@ -5,7 +5,7 @@
 - 決定者: 運営（利用者の指示）
 
 ## 背景
-初期の計画（`docs/SPEC.md`、`docs/PLAN.md`）は「通常のローカルワールドと BDS の両方」を目指していた。Phase 1 の実機確認で、ローカルワールドでは応答の回収に次の制約があると分かった（`docs/knowledge/bds-local-server/`、`docs/knowledge/device-testing-windows-vm/`）。
+初期の計画（`docs/SPEC.md`、当時の `docs/PLAN.md`）は「通常のローカルワールドと BDS の両方」を目指していた。Phase 1 の実機確認で、ローカルワールドでは応答の回収に次の制約があると分かった（`docs/knowledge/bds-local-server/`、`docs/knowledge/device-testing-windows-vm/`）。
 
 - クライアントのコンテンツログのファイルは、約 4 KB ずつまとめて書かれる。静かなワールドでは、応答がしばらくファイルに出てこない。
 - 外部のツールが、ほかの経路で応答を受け取る方法がない。
@@ -28,7 +28,7 @@
 - コアの API の方針は変えない。安定版 `@minecraft/server` だけを使う（ADR-0001）。BDS 専用でも、ベータ版のモジュールには、ワールドで実験的機能を有効にする必要がある。そのため、ADR-0004（通信アダプターの分離）の理由のうち「ベータ版・実験的機能」は残る。一方、「通常ワールドで動かなくなる」は理由でなくなった。
 
 ## 影響
-- `docs/SPEC.md`（対応環境）、`docs/PROTOCOL.md`（送受信の前提）、`docs/TESTING.md`（環境のケース）、`docs/PLAN.md`、`SECURITY.md` を BDS 前提に直す。
+- `docs/SPEC.md`（対応環境）、`docs/PROTOCOL.md`（送受信の前提）、`docs/TESTING.md`（環境のケース）、`docs/ROADMAP.md`、`SECURITY.md` を BDS 前提に直す。
 - ADR-0004 は保留のまま。採否を決めるときは、BDS 専用であることを前提に考え直す。
 - Marketplace に出すことは、事実上考えない（Marketplace はクライアント向けの配布）。ADR-0002 の「1.0.0 = Marketplace 公開」は、最初のリリースの前に決め直す（ADR-0002 の経過）。
 

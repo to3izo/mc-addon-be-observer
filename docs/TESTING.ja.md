@@ -97,7 +97,7 @@ manifest.json* を開き、`"version"` で確認できます。
 
 ### observer（scripts/features/observer）— Phase 1 実装済み
 
-Phase 1・2（`docs/PLAN.md`）のテスト計画です。アドオンは **BDS 専用**（ADR-0006）。ゲーム内のケースは BDS で行い、「ローカルワールド」のケースは参考とする。自動テスト U-PROTO-*・V-* は `pnpm test` で実行する。Phase 1 の結果は、下の「結果」にある。**単体テストはゲームを使いません。単体テストが通っても、ゲーム内で確認したとは報告しません。**
+Phase 1・2（`docs/ROADMAP.md`）のテスト計画です。アドオンは **BDS 専用**（ADR-0006）。ゲーム内のケースは BDS で行い、「ローカルワールド」のケースは参考とする。自動テスト U-PROTO-*・V-* は `pnpm test` で実行する。Phase 1 の結果は、下の「結果」にある。**単体テストはゲームを使いません。単体テストが通っても、ゲーム内で確認したとは報告しません。**
 
 ゲーム内のケースの準備: BDS のワールド `addon-lab-flat`（フラット、クリエイティブ）、`content-log-console-output-enabled=true`。要求は BDS のコンソールに `scriptevent to3izo_bo:query <JSON>` と送る（ASCII だけ。ほかの文字は `\uXXXX`）か、チートありで operator のプレイヤーのチャットに `/scriptevent …` と打つ（コマンド全体で 448 文字以下）。応答は BDS の標準出力で読み、`to3izo_bo.response ` の後ろを JSON として読む。実行ごとに、機種・ゲーム／BDS のバージョン・環境（ローカルワールド／BDS）・合否・メモを記録する。
 

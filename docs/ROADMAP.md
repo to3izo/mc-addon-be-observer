@@ -1,9 +1,17 @@
 # ROADMAP — 完成までの道のりと進捗
 
-Bedrock Observer を最初の公開版（初回リリース）まで進めるための、チェックリストです。ここを見れば、どこまで終わっていて、次に何をするかが分かるようにします。
+Bedrock Observer を最初の公開版（初回リリース）まで進めるための、チェックリストと作業の中身です。ここを見れば、どこまで終わっていて、次に何をするかが分かるようにします。
 
-- **書き方:** 項目を終えたら `[x]` にし、根拠（`docs/TESTING.md` の結果、ADR、コミットなど）を添えます。項目を足したり外したりしたら、「現在地」の数も直します。
-- **ほかの文書との役割分担:** 各段階の作業の中身と手順は `docs/PLAN.md`、決めたことと理由は `docs/adr/`、仕様は `docs/SPEC.md`・`docs/PROTOCOL.md`、ゲーム内の確認結果は `docs/TESTING.md` にあります。
+- **書き方:**
+  - 項目を終えたら `[x]` にし、根拠（`docs/TESTING.md` の結果、ADR、コミットなど）を添えます。
+  - 項目を足したり外したりしたら、「現在地」の数も直します。
+  - 決めたことと理由はここに書かず、ADR に書きます。
+- **ほかの文書との役割分担:**
+  - 段階の進め方・完了の条件・承認した判断: ADR-0007
+  - 決めたことと理由: `docs/adr/`
+  - 仕様: `docs/SPEC.md`・`docs/PROTOCOL.md`
+  - ゲーム内の確認の手順と結果: `docs/TESTING.md`
+  - 調べた事実: `docs/RESEARCH.md`・`docs/knowledge/`
 - 最終更新: 2026-10-18（Phase 1 を BDS で確認したあと）
 
 ## 現在地
@@ -12,7 +20,7 @@ Bedrock Observer を最初の公開版（初回リリース）まで進めるた
 | --- | --- | --- |
 | Phase 0: 初期設定・調査・計画 | 8 / 8 | ✅ 完了 |
 | Phase 1: 最小の経路（scriptevent ＋ JSON ログ） | 9 / 11 | 🟡 ほぼ完了（残りは Phase 2 と一緒に） |
-| Phase 2: 主要な観測機能とプロトコル v1 の確定 | 0 / 11 | ⬜ 未着手 ← **次はここ** |
+| Phase 2: 主要な観測機能とプロトコル v1 の確定 | 0 / 12 | ⬜ 未着手 ← **次はここ** |
 | Phase 3: BDS からネットワークで送る仕組み（必要な場合だけ） | 0 / 5 | ⏸ Phase 2 のあとで要否を判断 |
 | 初回リリース | 0 / 6 | ⬜ 未着手 |
 | 運用・外部（このリポジトリの外の作業） | 2 / 6 | 🟡 一部 |
@@ -25,54 +33,84 @@ Bedrock Observer を最初の公開版（初回リリース）まで進めるた
 - [x] 既存 OSS の調査（`docs/RESEARCH.md` §1）
 - [x] 公式 API と対象バージョンの互換性の確認（`docs/RESEARCH.md` §2）
 - [x] ローカル BDS の環境の調査（`docs/knowledge/bds-local-server/`）
-- [x] 仕様・プロトコルの草案・セキュリティ・テスト計画・実装計画（`docs/SPEC.md`、`docs/PROTOCOL.md`、`SECURITY.md`、`docs/TESTING.md`、`docs/PLAN.md`、ADR 0003〜0005）
-- [x] 計画の承認（2026-10-18）
+- [x] 仕様・プロトコルの草案・セキュリティ・テスト計画・実装計画（`docs/SPEC.md`、`docs/PROTOCOL.md`、`SECURITY.md`、`docs/TESTING.md`、ADR 0003〜0005）
+- [x] 計画の承認（2026-10-18、ADR-0007）
 
 ## Phase 1: 最小の経路 🟡
 
-- [x] プロトコルの純粋な部分: 要求の検証、応答の形式（封筒）、サイズの上限と切り詰め、エラーコード（`scripts/shared/protocol/`）
-- [x] `capabilities`
-- [x] `players`
-- [x] `/scriptevent` の受信と、1 行 JSON の出力（`scripts/features/observer/`）
-- [x] 単体テストと、読み取り専用の検査（`pnpm test` 59 件成功）— コミット `9fb0782`
+目的は、要求が届き、1 行 JSON の応答を**外部から読めること**を、最初に確かめることです。完了の条件は ADR-0007 にあります。
+
+- [x] プロトコルの純粋な部分（`scripts/shared/protocol/`。`@minecraft/*` を読み込まない）
+  - 要求の長さの検査、JSON の解析、`requestId` の回収
+  - `method`・`params` の検証、エラーコード
+  - 応答の形式（封筒）、1 行への直列化（ASCII だけ）、サイズの上限と切り詰め
+  - 振り分け
+- [x] `capabilities`（`scripts/core/observation/capabilities.ts`。method の一覧は `scripts/shared/protocol/methods.ts`）
+- [x] `players`（`scripts/core/observation/players.ts`）
+- [x] `/scriptevent` の受信と 1 行 JSON の出力（`scripts/features/observer/`）
+  - 名前空間 `to3izo_bo` に絞って購読する
+  - 応答に `session`・`seq`・`tick`・`time` を付ける
+- [x] 単体テストと読み取り専用の検査 — `pnpm test` で 59 件成功、コミット `9fb0782`
+  - 単体テスト: U-PROTO-01〜10
+  - 検査: V-RO-01・V-DEP-01・V-VER-01
 - [x] BDS で、応答を標準出力から読めることの確認（OBS-ENV-02。`content-log-console-output-enabled=true` が必要）
-- [x] 要求の送り方と権限の確認（OBS-ENV-03。コンソールはチート不要、チャットはチート＋operator）
-- [x] 実測で決めること: 出力は `console.log`、応答は ASCII だけ、チャットのコマンドは 448 文字以下（ADR-0003 の経過）
+- [x] 要求の送り方と権限の確認（OBS-ENV-03。コンソールはチート不要、チャットはチートと operator が必要）
+- [x] 実測で決めること（ADR-0003 の経過）
+  - 出力は `console.log`
+  - 応答は ASCII だけ（BDS のコンソールが CP932 のため）
+  - 要求は、コンソールから ASCII で送る。チャットで送るコマンドは 448 文字以下
 - [x] 対象を BDS だけにする（ADR-0006）
 - [ ] 2 人のプレイヤーでの `players`（OBS-PLY-01。2 つ目のアカウントが必要）
 - [ ] VM の外から BDS に接続できないことの確認（OBS-ENV-06。運用者が公開範囲を絞ったあと）
 
 ## Phase 2: 主要な観測機能とプロトコル v1 の確定 ⬜
 
+使う API と注意点は `docs/RESEARCH.md` §2.2、応答の形は `docs/PROTOCOL.md` §5 にあります。
+
 - [ ] `player`（位置・頭の位置・回転・視線・速度・移動の状態・ゲームモード・選択スロット）
-- [ ] `block` / `blocks`（未ロード・範囲外を、空気と区別して返す）
-- [ ] `target`（視線の先のブロック。面と当たった位置。任意でエンティティ）
-- [ ] `entities`（半径と件数に上限を付け、距離順）
+  - 対象のプレイヤーは `params.player` で選ぶ（`docs/PROTOCOL.md` §3）
+- [ ] `block` / `blocks`
+  - 先に `isChunkLoaded` と `heightRange` で判定する
+  - 例外は `unloaded`・`out_of_bounds`・`error` に対応づける
+  - 空気は、未ロードと区別して返す
+- [ ] `target`（`getBlockFromViewDirection` で、面と当たった位置を返す）
+  - 任意で `getEntitiesFromViewDirection` も返す
+- [ ] `entities`（半径と件数に上限を付け、距離順に並べる）
 - [ ] 追加の項目: `health`・`inventory`・`equipment`・`world`（時刻）
 - [ ] `snapshot`（1 回の判断に必要な情報をまとめて取る。項目ごとにエラーを返す）
-- [ ] 単体テストの追加（新しい引数の検証、切り詰め）
+- [ ] 単体テストの追加（新しい引数の検証、入れ子のリストの切り詰め）
 - [ ] BDS でのゲーム内のテスト（OBS-PLY・OBS-BLK・OBS-TGT・OBS-ENT・OBS-SNP・OBS-SIZE・OBS-RO・OBS-PERF）
-- [ ] 上限値を実測で確定し、プロトコル v1 を確定する（`docs/PROTOCOL.md` から「draft」「provisional」を外す）
+- [ ] 上限値を実測で確定し、プロトコル v1 を確定する
+  - `docs/PROTOCOL.md` から「draft」「provisional」を外す
+  - 初期値は ADR-0007 の 7
+- [ ] README（英・日）を、テンプレートの説明から利用者向けの説明に書き換える（ADR-0007 の 8）
 - [ ] 判断: チートなしで使えるカスタムコマンドの入口を足すか
+  - 先に、JSON を 1 つの引数で渡せるかを試作で確かめる（下の「未確認の事項」の 3）
+  - 決めたら ADR に書く
 - [ ] 判断: Phase 3 を採るか（ADR-0004 を「採用」か「却下」にする）
 
 ## Phase 3: BDS からネットワークで送る仕組み（必要な場合だけ）⏸
 
-Phase 2 の判断で「採用」になった場合だけ進めます。「却下」なら、この段階は飛ばします。
+Phase 2 の判断で「採用」になった場合だけ進めます。設計の条件（送信側の規則、Play Conductor の受信口の条件）は、ADR-0004 の「採用する場合の条件」にあります。「却下」なら、この段階は飛ばします。
 
 - [ ] ADR-0004 の決定（採用 / 却下）
-- [ ] （採用時）別リポジトリのアダプター（`@minecraft/server-net`・`server-admin`、Beta APIs を有効にした別の検証用ワールド）
-- [ ] （採用時）コアの追加: 要求の `"reply": "event"` に応じて、`to3izo_bo:response` の script event でも応答する
-- [ ] （採用時）Play Conductor 側の、VM 向けの小さな受信口（`docs/PLAN.md` の提案 B）
-- [ ] （採用時）VM から Mac への、トークン付きの通信の確認（OBS-ENV-07）
+- [ ] （採用時）別のリポジトリのアダプター
+  - 使うモジュール: `@minecraft/server-net`・`server-admin`
+  - Beta APIs を有効にした、別の検証用ワールドで動かす
+  - 権限は `config/<script モジュールの UUID>/permissions.json` で与える
+- [ ] （採用時）コアへの追加: 要求に `"reply": "event"` があれば、`to3izo_bo:response` の script event でも応答する（互換な追加）
+- [ ] （採用時）Play Conductor 側の、VM 向けの小さな受信口（ADR-0004 の「受信側」）
+- [ ] （採用時）VM から Mac への、トークン付きの通信の確認（OBS-ENV-07、`docs/knowledge/bds-local-server/` §7）
 
 ## 初回リリース ⬜
 
 - [ ] ADR-0002: 「1.0.0」の意味を決め直す（Marketplace 公開のままか、最初の安定した公開版か）
-- [ ] README（英・日）を、テンプレートの説明から利用者向けの説明に書き換える
-- [ ] バージョンを決めて `pnpm version:set`、`scripts/shared/constants/version.ts` と CHANGELOG を合わせる
+- [ ] バージョンを決める
+  - `pnpm version:set` を実行する
+  - `scripts/shared/constants/version.ts` と CHANGELOG を合わせる
 - [ ] リリース前のチェックリスト（`docs/TESTING.md`）を BDS で通す
 - [ ] `pnpm package` と、タグによる GitHub Release
+- [ ] リポジトリを OSS として公開する（公開設定、ライセンス、`SECURITY.md` の窓口の確認）
 - [ ] テンプレート側の `docs/ADDONS.md` に 1 行を足す
 
 ## 運用・外部（このリポジトリの外の作業）🟡
@@ -80,6 +118,48 @@ Phase 2 の判断で「採用」になった場合だけ進めます。「却下
 - [x] Windows VM への BDS の導入と、ワールド `addon-lab-flat` の作成（利用者）
 - [x] BDS に開発用パックを入れ、`content-log-console-output-enabled=true` にする（2026-10-18。`docs/knowledge/bds-local-server/` §8）
 - [ ] BDS の公開範囲を絞る（運用者。手順案は `docs/knowledge/bds-local-server/` §6）
-- [ ] BDS を標準入出力をつないで常用する起動方法を決める（参考スクリプトは VMPal の exec では最大 24 時間で止まるので、タスク スケジューラなどにする）
-- [ ] Play Conductor 側の、要求の送信と応答の回収の部品（`docs/PLAN.md` の提案 A）
+- [ ] BDS を、標準入出力をつないで常用する起動方法を決める
+  - 参考のスクリプトは、VMPal の exec から起動すると最大 24 時間で止まる
+  - タスク スケジューラなどにする
+- [ ] Play Conductor 側の、要求の送信と応答の回収の部品（下の「Play Conductor への提案（Phase 1・2）」）
 - [ ] （任意）ループバックの例外なしでも接続できるかの確認（例外を外すかは利用者の判断）
+
+### Play Conductor への提案（Phase 1・2、ネットワークなし）
+
+Play Conductor の本体は、このリポジトリから参照できません。以下は連携に必要な部品の提案で、設計に合わせて取捨してください。外部ツール一般の責務は `docs/PROTOCOL.md` §9 にあります。
+
+1. **観測アダプター（ツールの中の部品）**
+   - `capabilities` で対応を確かめてから、必要な method を呼ぶ。`protocol` も確かめる。
+   - `requestId` を採番する（例: `pc-<連番>`。64 文字以内、`[A-Za-z0-9._:-]`）。
+   - タイムアウトは、初期値の案で 2 秒（実測で決める）。
+   - `session` が変わったら、スクリプトが読み直されたと判断する。
+2. **送信の手段（推奨は (b)）**
+   - (b) BDS の標準入力に `scriptevent to3izo_bo:query <JSON>` を書く。
+     - チートが要らず、プレイヤーの画面に何も出ない。
+     - ASCII だけで送る（日本語などは `\uXXXX`）。
+     - BDS は、標準入出力をつないで起動する（参考: `docs/knowledge/bds-local-server/scripts/bds-console-bridge.ps1`）。
+   - (a) operator のプレイヤーのチャットに `/scriptevent …` を入力する。
+     - チートと operator が必要。
+     - コマンド全体を 448 文字以下にする（511 文字以上でプレイヤーが切断された）。
+     - 入力は、クリップボードからの貼り付けが確実（`docs/knowledge/device-testing-windows-vm/`）。
+3. **回収の手段**
+   - BDS の標準出力（または、それを書き写したファイル）を VM から読む。
+   - 例: 参考のブリッジが書く `stdout.log` を、VMPal の `exec` で読む。標準出力を、Mac と共有するフォルダへ書く方法もある（VM の `Z:` は今は読み取り専用）。
+   - 応答の行は ASCII なので、文字コードを気にせず読める。BDS 自身のログ行（プレイヤー名など）は CP932 で書かれる。
+4. **データの扱い**: 応答にはプレイヤー名が入るので、記録を外部に送らない・公開しない。
+
+## 未確認の事項
+
+解決したものは `docs/RESEARCH.md` §2.6、`docs/TESTING.md` の結果、`docs/knowledge/` に記録してあります。ここには、まだ確かめていないものだけを置きます。
+
+| # | 項目 | 確かめ方 | 段階 |
+| --- | --- | --- | --- |
+| 1 | `Player.id` が、同じ BDS での再参加・再起動の後も同じか（ワールドが違うと違う id だった） | OBS-PLY-06 | 2 |
+| 2 | レイの `maxDistance` の上限と既定値 | OBS-TGT-04 | 2 |
+| 3 | カスタムコマンドに、JSON を 1 つの引数で渡せるか | 試作して確かめる | 2 |
+| 4 | BDS の標準出力の、1 行の長さの上限（569 文字は欠けなかった） | OBS-SIZE-01 | 2 |
+| 5 | チャットのコマンドで切断される長さの正確な境目（448 は通り、511 で切断） | 必要になったら二分探索 | 任意 |
+| 6 | 公開範囲を絞ったあと、VM の外から接続できないこと | OBS-ENV-06（運用者が設定を変えたあと） | 運用 |
+| 7 | ループバックの例外なしでも接続できるか | 例外を外して接続（利用者の判断） | 任意 |
+| 8 | VM から Mac に届くか、Mac がどのアドレスで待ち受けるか | `docs/knowledge/bds-local-server/` §7 | 3 |
+| 9 | server-net の上限値・許可リスト・`force_tls` の設定場所 | Phase 3 の試作 | 3 |

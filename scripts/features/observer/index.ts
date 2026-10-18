@@ -61,9 +61,9 @@ function contextOf(event: ScriptEventCommandMessageAfterEvent): RequestContext {
 }
 
 /**
- * Writes the machine-readable line. `console.log` is the provisional channel: Phase 1 measures where it
- * appears (BDS standard output, client content log) before the choice is final (docs/PLAN.md 1-7).
- * `console.warn` was not chosen because warnings are shown on the client's in-game content log overlay.
+ * Writes the machine-readable line. On BDS, `console.log` reaches standard output when
+ * `content-log-console-output-enabled=true` (ADR-0003, ADR-0006). `console.warn` is not used because warnings
+ * are shown on a client's in-game content log overlay.
  */
 function emitResponse(line: string): void {
   console.log(line);

@@ -96,7 +96,7 @@ Copy the relevant block into the feature section below and fill it in.
 
 ### observer (scripts/features/observer) — Phase 1 implemented
 
-Plan for Phases 1–2 (`docs/PLAN.md`). The Add-On is **BDS-only** (ADR-0006): in-game cases run on BDS; cases
+Plan for Phases 1–2 (`docs/ROADMAP.md`). The Add-On is **BDS-only** (ADR-0006): in-game cases run on BDS; cases
 marked "local world" are reference only. Automated cases U-PROTO-* and V-* run with `pnpm test`. Phase 1 results
 are under "Results" below. **Unit tests use no Minecraft runtime;
 a passing unit test is never reported as in-game verification.**
