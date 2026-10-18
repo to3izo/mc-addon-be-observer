@@ -129,6 +129,26 @@ Bedrock Observer の設計の前提にした調査の記録です（調査日 20
 | server-net | `http.request`（N:496）、`websocket.connect`（N:844） | ✕ | **ベータのみ** | ✕ / ○ | **Beta APIs の実験**、`config/<script module UUID>/permissions.json` で許可 | 待ち受け（listen）の API はない。外向きのクライアントだけ | 観測コアには入れない（ADR-0004） |
 | server-admin | `secrets.get`（A:407）→ `SecretString`、`variables.get`（A:458） | ✕ | **ベータのみ** | ✕ / ○ | Beta APIs の実験 | クライアントと Realms では使えない（A:9-17） | 観測コアには入れない（ADR-0004） |
 
+### 2.2.1 イベント（チャット・コマンド・死亡など）の検知（2026-10-18 追記）
+
+AI のプレイヤーが、ほかのプレイヤーの発言やゲーム内の出来事に反応できるようにするための調査。安定版（S）と、`2.11.0-beta.1.26.52-stable`（SB）の `WorldAfterEvents`・`WorldBeforeEvents` を比べた。
+
+| 知りたいこと | 安定版の API | 判断 |
+| --- | --- | --- |
+| チャット（メンションを含む） | **なし**。`chatSend`（before/after）と `messageReceive` は**ベータ版だけ**（SB） | アドオンの観測コアでは取れない。BDS のコンソールにもチャットは出ない（[実機]、下記） |
+| コマンドの使用（チートの使用） | **なし**。コマンドの実行を知らせるイベントがない | 直接は取れない。間接的な手がかりだけ（下の行） |
+| チートの手がかり | `playerGameModeChange`（ゲームモードの変更: `fromGameMode`・`toGameMode`）、`gameRuleChange`（ゲームルールの変更: `rule`・`value`）、`effectAdd`（効果の付与） | 取れる。ただし「誰がコマンドを打ったか」は分からない |
+| 死亡（デスログ） | `entityDie`（`deadEntity`、`damageSource.cause`、`damagingEntity`、`damagingProjectile`） | 取れる |
+| 参加・退出・リスポーン | `playerJoin`、`playerLeave`、`playerSpawn`（`initialSpawn`） | 取れる |
+| ディメンションの移動 | `playerDimensionChange` | 取れる |
+| ダメージ・回復 | `entityHurt`、`entityHeal`、`entityHealthChanged` | 取れる（量が多いので、絞り込みが要る） |
+
+- [実機] BDS 1.26.52.3 で、プレイヤーがチャットに `@PlayerB hello chatlog test 123` と送っても、BDS の標準出力には何も出なかった（`content-log-console-output-enabled=true`）。プレイヤーのチャットからの `/scriptevent` も、コマンドそのものは標準出力に出ず、アドオンの応答だけが出た。
+- チャットを機械的に読む方法は、どれもこのアドオンの観測コアの外にある:
+  - (a) AI のプレイヤー自身のクライアントの画面（チャット欄）を読む（操作ツール側）
+  - (b) ベータ版の `chatSend` を使う別のパック（Beta APIs の実験が必要。ADR-0001 の例外になるので、ADR-0004 のアダプターと同じく、観測コアとは分ける）
+  - (c) クライアントの `/connect`（WebSocket）の `PlayerMessage`（チートが必要、クライアント側。`docs/RESEARCH.md` §1.3 の既存 OSS C の方式）
+
 ### 2.3 読み取り専用であること
 
 - 取得系の API に、ワールドを変えると書かれたものはなかった。`getBlock` は未ロードのとき undefined を返し、チャンクを読み込むという記述はない。
